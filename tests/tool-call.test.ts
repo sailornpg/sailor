@@ -22,7 +22,7 @@ test('actual Thread renders each tool call once with Pi file paths, without a ti
   } finally { await vite.close() }
 })
 
-test('approval, cancellation and failures keep actionable fallback instead of a success checkmark', async () => {
+test('approval, cancellation and failures keep an error card instead of a success checkmark', async () => {
   const vite = await renderer()
   try {
     const { toolCallNeedsFallback, SailorToolCall, formatToolValue } = await vite.ssrLoadModule('/src/renderer/src/components/chat/tools/SailorToolCall.tsx')
@@ -37,8 +37,11 @@ test('approval, cancellation and failures keep actionable fallback instead of a 
       { approval: { id: 'approval', resolution: 'expired' } },
     ]) assert.equal(toolCallNeedsFallback({ ...call, ...changed }), true)
     const failed = renderToStaticMarkup(React.createElement(SailorToolCall, { ...call, isError: true, result: '读取失败' }))
-    assert.doesNotMatch(failed, /data-slot="tool-call"/)
-    assert.match(failed, /tool-fallback/)
+    assert.doesNotMatch(failed, /data-slot="tool-call"/, '不得渲染成成功态的 ToolCall 行')
+    assert.match(failed, /data-slot="tool-error"/, '失败态使用官方 ToolError 卡片')
+    assert.doesNotMatch(failed, /lucide-check/, '不得出现成功对勾')
+    assert.match(failed, /读取失败/)
+    assert.doesNotMatch(failed, /&quot;file_path&quot;/, '失败态不得打印原始参数 JSON')
     assert.equal(formatToolValue(undefined), '')
     assert.equal(formatToolValue('第一行\n第二行'), '第一行\n第二行')
     assert.deepEqual(JSON.parse(formatToolValue({ content: [{ text: '文件内容' }] })), { content: [{ text: '文件内容' }] })

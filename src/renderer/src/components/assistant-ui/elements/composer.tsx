@@ -28,6 +28,7 @@ import {
   paper,
   ShimmerLabel,
 } from "./surfaces";
+import { ContextBreakdown, type ContextSegment } from "./context-breakdown";
 import { clamp, pct } from "../utils/range";
 
 export interface ComposerAttachment {
@@ -52,13 +53,6 @@ export interface ComposerPerson {
 export interface ComposerModel {
   name: string;
   meta: string;
-}
-
-export interface ComposerUsage {
-  system: number;
-  tools: number;
-  messages: number;
-  total: number;
 }
 
 const ATTACHMENT_ICONS: Record<
@@ -478,22 +472,25 @@ export function ComposerModelItem({
 }
 
 export function ComposerContext({
-  usage,
-  details,
-  note,
-  unavailable = false,
+  segments,
+  limit,
+  used,
   className,
   ...props
-}: Omit<ComponentProps<"div">, "children"> & { usage: ComposerUsage; details?: { label: string; value: number }[]; note?: string; unavailable?: boolean }) {
-  const used = usage.system + usage.tools + usage.messages;
-  const fraction = usage.total === 0 ? 0 : used / usage.total;
+}: Omit<ComponentProps<"div">, "children" | "segments" | "limit" | "used"> & {
+  segments?: readonly ContextSegment[];
+  limit?: number;
+  /** 最近一次调用的输入 tokens：分类缺失时圆环仍要反映真实占用。 */
+  used?: number;
+}) {
+  const unavailable = used === undefined || !limit || limit <= 0;
+  const fraction = unavailable ? 0 : used / limit;
   const warn = fraction > 0.85;
   const circumference = 2 * Math.PI * 6;
-  const segments = details ? details.map((entry, index) => ({ ...entry, className: index ? "bg-foreground/45" : "bg-foreground/80" })) : [
-    { label: "System", value: usage.system, className: "bg-foreground/25" },
-    { label: "Tools", value: usage.tools, className: "bg-foreground/45" },
-    { label: "Messages", value: usage.messages, className: "bg-foreground/80" },
-  ];
+  // 官方 element 自己算 used / limit 与 Headroom，这里不再重复统计分类。
+  const card = segments && limit && limit > 0 && segments.length > 0
+    ? { segments, limit }
+    : undefined;
 
   return (
     <div
@@ -504,62 +501,23 @@ export function ComposerContext({
       <div
         className={cn(
           floating,
-          "absolute end-0 bottom-full z-10 mb-2 flex w-60 origin-bottom-right flex-col gap-3.5 rounded-2xl p-4",
+          "absolute end-0 bottom-full z-10 mb-2 flex w-64 origin-bottom-right flex-col gap-2.5 rounded-2xl p-3.5",
           "transition-[opacity,scale] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
           "pointer-events-none scale-[0.97] opacity-0",
           "group-hover/ctx:pointer-events-auto group-hover/ctx:scale-100 group-hover/ctx:opacity-100",
           "group-focus-within/ctx:pointer-events-auto group-focus-within/ctx:scale-100 group-focus-within/ctx:opacity-100",
         )}
       >
-        <div className="flex items-baseline justify-between">
-          <p className="text-[13.5px] font-medium">上下文</p>
-          <p
-            className={cn(
-              mono,
-              "tabular-nums",
-              warn ? "text-red-500 dark:text-red-400" : "text-foreground/35",
-            )}
-          >
-            {unavailable ? "—" : `${Math.round(fraction * 100)}%`}
-          </p>
-        </div>
-        <div className="bg-foreground/[0.06] flex h-[5px] w-full gap-px overflow-hidden rounded-full">
-          {segments.map((segment) => (
-            <span
-              key={segment.label}
-              className={cn(
-                "h-full transition-[width] duration-700 motion-reduce:transition-none",
-                segment.className,
-              )}
-              style={{ width: `${pct(segment.value, usage.total)}%` }}
-            />
-          ))}
-        </div>
-        <div className="flex flex-col gap-2">
-          {segments.map((segment) => (
-            <div
-              key={segment.label}
-              className="text-foreground/55 flex items-center gap-2.5 text-[13px]"
-            >
-              <span
-                aria-hidden
-                className={cn("size-1.5 rounded-full", segment.className)}
-              />
-              <span className="flex-1">{segment.label}</span>
-              <span className={cn(mono, "text-foreground/40 tabular-nums")}>
-                {Number(segment.value.toFixed(2))}k
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="bg-foreground/[0.06] h-px" />
-        <div className="text-foreground/55 flex items-center justify-between text-[13px]">
-          <span>用量 / 窗口</span>
-          <span className={cn(mono, "text-foreground/40 tabular-nums")}>
-            {unavailable ? "暂无用量" : `${Number(used.toFixed(2))}k / ${usage.total}k`}
-          </span>
-        </div>
-        {note && <p className="text-xs leading-5 text-muted-foreground">{note}</p>}
+        {card ? (
+          // 弹层已经提供卡片底，所以压平官方 element 自带的 paper 表面，避免双层边框。
+          <ContextBreakdown
+            segments={card.segments}
+            limit={card.limit}
+            className="max-w-none border-0 bg-transparent p-0"
+          />
+        ) : (
+          <p className="text-muted-foreground text-xs leading-5">暂无用量</p>
+        )}
       </div>
       <button
         type="button"

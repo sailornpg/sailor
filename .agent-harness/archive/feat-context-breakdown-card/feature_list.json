@@ -1,0 +1,355 @@
+{
+  "features": [
+    {
+      "id": "feat-context-breakdown-card",
+      "name": "上下文卡片换成官方 Context Breakdown",
+      "description": "composer 的上下文卡片改用官方 @assistant-ui/elements-context-breakdown：主进程精确测量本轮真实 payload（系统提示词、工具定义、会话文本、图片数），渲染端按 Pi 的 ceil(chars/4) 口径折算到 provider 报告的精确 inputTokens，分类和严格等于真实总量。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "主进程精确测量本轮真实 payload 的字符构成，并随 contextUsage 元数据下发",
+          "coverage": "unit",
+          "test": "node --test tests/pi-context-payload.test.ts",
+          "verify": [
+            "node --test tests/pi-context-payload.test.ts",
+            "node --test --test-name-pattern='真实用量' tests/pi-agent.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-context-payload.test.ts",
+            "verifiedAt": "2026-09-22T08:21:13.067Z",
+            "exitCode": 0,
+            "stdout": "✔ payload 测量：系统桶只算真正进入 prompt 的文本 (0.583833ms)\n✔ payload 测量：工具桶用 provider 形态的 JSON Schema，忽略可执行函数 (1.521417ms)\n✔ payload 测量：会话桶统计文本、推理、工具入参与结果，绝不统计图片字节 (0.1315ms)\n✔ payload 测量：未知 part 与非字符串内容不抛错，缺失输入按 0 处理 (0.6135ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 190.058625",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-context-payload.test.ts",
+              "verifiedAt": "2026-09-22T08:21:13.309Z",
+              "exitCode": 0,
+              "stdout": "✔ payload 测量：系统桶只算真正进入 prompt 的文本 (0.691125ms)\n✔ payload 测量：工具桶用 provider 形态的 JSON Schema，忽略可执行函数 (1.651042ms)\n✔ payload 测量：会话桶统计文本、推理、工具入参与结果，绝不统计图片字节 (0.142125ms)\n✔ payload 测量：未知 part 与非字符串内容不抛错，缺失输入按 0 处理 (0.653375ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 148.153416",
+              "stderr": ""
+            },
+            {
+              "command": "node --test --test-name-pattern='真实用量' tests/pi-agent.test.ts",
+              "verifiedAt": "2026-09-22T08:21:20.847Z",
+              "exitCode": 0,
+              "stdout": "npm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (7158.388209ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7442.772292",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:21:29.840Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 115ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-iNZl2viP.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CriAhyn1.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Do6bkqDS.js            0.65 kB\n../../out/renderer/assets/FilesPanel-wb_rVJB_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-CwAvqzSE.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-dtxtKSMc.js      1.40 kB\n../../out/renderer/assets/index-cLssL-Zj.js                6,661.46 kB\n✓ built in 6.90s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-context-payload.test.ts && node --test --test-name-pattern='真实用量' tests/pi-agent.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:21:29.840Z",
+            "exitCode": 0,
+            "stdout": "✔ payload 测量：系统桶只算真正进入 prompt 的文本 (0.691125ms)\n✔ payload 测量：工具桶用 provider 形态的 JSON Schema，忽略可执行函数 (1.651042ms)\n✔ payload 测量：会话桶统计文本、推理、工具入参与结果，绝不统计图片字节 (0.142125ms)\n✔ payload 测量：未知 part 与非字符串内容不抛错，缺失输入按 0 处理 (0.653375ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 148.153416\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (7158.388209ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7442.772292\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 115ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-iNZl2viP.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CriAhyn1.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Do6bkqDS.js            0.65 kB\n../../out/renderer/assets/FilesPanel-wb_rVJB_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-CwAvqzSE.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-dtxtKSMc.js      1.40 kB\n../../out/renderer/assets/index-cLssL-Zj.js                6,661.46 kB\n✓ built in 6.90s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "渲染端按最大余数法把测量值折算到 provider 精确 inputTokens，分类和严格等于总量",
+          "coverage": "unit",
+          "test": "node --test --test-name-pattern='折算' tests/composer-context.test.ts",
+          "verify": [
+            "node --test --test-name-pattern='折算' tests/composer-context.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test --test-name-pattern='折算' tests/composer-context.test.ts",
+            "verifiedAt": "2026-09-22T08:21:30.165Z",
+            "exitCode": 0,
+            "stdout": "✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (1.252583ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.155125ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.255084ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 129.260209",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test --test-name-pattern='折算' tests/composer-context.test.ts",
+              "verifiedAt": "2026-09-22T08:21:30.390Z",
+              "exitCode": 0,
+              "stdout": "✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (1.43525ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.140291ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.159958ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 130.451292",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:21:39.212Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 113ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-iNZl2viP.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CriAhyn1.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Do6bkqDS.js            0.65 kB\n../../out/renderer/assets/FilesPanel-wb_rVJB_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-CwAvqzSE.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-dtxtKSMc.js      1.40 kB\n../../out/renderer/assets/index-cLssL-Zj.js                6,661.46 kB\n✓ built in 6.84s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test --test-name-pattern='折算' tests/composer-context.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:21:39.212Z",
+            "exitCode": 0,
+            "stdout": "✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (1.43525ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.140291ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.159958ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 130.451292\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 113ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-iNZl2viP.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CriAhyn1.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Do6bkqDS.js            0.65 kB\n../../out/renderer/assets/FilesPanel-wb_rVJB_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-CwAvqzSE.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-dtxtKSMc.js      1.40 kB\n../../out/renderer/assets/index-cLssL-Zj.js                6,661.46 kB\n✓ built in 6.84s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "composer 上下文卡片渲染官方 ContextBreakdown，并接上真实 segments 与 limit",
+          "coverage": "static",
+          "coverage_reason": "卡片外观与弹层几何依赖真实渲染，Node 侧无布局引擎，只能断言接线；外观与交互另由 offscreen Electron 验收项覆盖。",
+          "test": "node --test --test-name-pattern='ContextBreakdown' tests/composer-context.test.ts",
+          "verify": [
+            "node --test --test-name-pattern='ContextBreakdown' tests/composer-context.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test --test-name-pattern='ContextBreakdown' tests/composer-context.test.ts",
+            "verifiedAt": "2026-09-22T08:21:39.540Z",
+            "exitCode": 0,
+            "stdout": "✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.528625ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 132.112708",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test --test-name-pattern='ContextBreakdown' tests/composer-context.test.ts",
+              "verifiedAt": "2026-09-22T08:21:39.769Z",
+              "exitCode": 0,
+              "stdout": "✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.10975ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 132.503875",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:21:48.863Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 114ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-iNZl2viP.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CriAhyn1.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Do6bkqDS.js            0.65 kB\n../../out/renderer/assets/FilesPanel-wb_rVJB_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-CwAvqzSE.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-dtxtKSMc.js      1.40 kB\n../../out/renderer/assets/index-cLssL-Zj.js                6,661.46 kB\n✓ built in 7.10s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test --test-name-pattern='ContextBreakdown' tests/composer-context.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:21:48.863Z",
+            "exitCode": 0,
+            "stdout": "✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.10975ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 132.503875\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 114ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-iNZl2viP.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CriAhyn1.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Do6bkqDS.js            0.65 kB\n../../out/renderer/assets/FilesPanel-wb_rVJB_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-CwAvqzSE.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-dtxtKSMc.js      1.40 kB\n../../out/renderer/assets/index-cLssL-Zj.js                6,661.46 kB\n✓ built in 7.10s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "offscreen Electron 验收卡片外观与 hover 弹层（浅色/深色/窄屏）",
+          "coverage": "manual-exception",
+          "tdd": false,
+          "coverage_reason": "卡片布局、弹层定位与主题对比只能在真实渲染下判断，无法用廉价的前置断言捕获。",
+          "verify": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/context-breakdown-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.checks.length<11)throw new Error(\\\"checks \\\"+r.checks.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/context-breakdown-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/context-breakdown-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.checks.length!==11)throw new Error(\\\"checks \\\"+r.checks.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/context-breakdown-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+            "verifiedAt": "2026-09-22T08:24:54.824Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/context-breakdown-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.checks.length!==11)throw new Error(\\\"checks \\\"+r.checks.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/context-breakdown-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+            "verifiedAt": "2026-09-22T08:24:54.824Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "对齐官方 demo：附件单独成类、官方配色、旧消息仍渲染官方卡片形状",
+          "coverage": "unit",
+          "test": "node --test tests/pi-context-payload.test.ts tests/composer-context.test.ts",
+          "verify": [
+            "node --test tests/pi-context-payload.test.ts tests/composer-context.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-context-payload.test.ts tests/composer-context.test.ts",
+            "verifiedAt": "2026-09-22T08:38:50.696Z",
+            "exitCode": 0,
+            "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (1.152708ms)\n✔ 最新回复缺少用量时保留本会话最近有效统计，切换空会话不串数据 (0.159042ms)\n✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (6.971875ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.165ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.121542ms)\n✔ 没有分类测量的消息用 provider 精确总量渲染单行，不编造分类 (0.22575ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.145ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (3.501375ms)\n✔ payload 测量：系统桶只算真正进入 prompt 的文本 (0.567125ms)\n✔ payload 测量：工具桶用 provider 形态的 JSON Schema，忽略可执行函数 (1.48125ms)\n✔ payload 测量：会话桶统计文本、推理、工具入参与结果，绝不统计图片字节 (0.149292ms)\n✔ payload 测量：附件正文与路径提示单独成类，不混进会话 (0.083666ms)\n✔ payload 测量：未知 part 与非字符串内容不抛错，缺失输入按 0 处理 (0.563792ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 191.096708",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-context-payload.test.ts tests/composer-context.test.ts",
+              "verifiedAt": "2026-09-22T08:38:50.939Z",
+              "exitCode": 0,
+              "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (1.2785ms)\n✔ 最新回复缺少用量时保留本会话最近有效统计，切换空会话不串数据 (0.16275ms)\n✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (6.918042ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.174708ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.122ms)\n✔ 没有分类测量的消息用 provider 精确总量渲染单行，不编造分类 (0.209916ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.185167ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (4.15675ms)\n✔ payload 测量：系统桶只算真正进入 prompt 的文本 (0.645833ms)\n✔ payload 测量：工具桶用 provider 形态的 JSON Schema，忽略可执行函数 (1.678375ms)\n✔ payload 测量：会话桶统计文本、推理、工具入参与结果，绝不统计图片字节 (0.165375ms)\n✔ payload 测量：附件正文与路径提示单独成类，不混进会话 (0.088709ms)\n✔ payload 测量：未知 part 与非字符串内容不抛错，缺失输入按 0 处理 (1.198042ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 149.150083",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:38:59.884Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           93.35 kB\n✓ built in 111ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-BifZ9PJC.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-v38w8778.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-CNGSj2At.js            0.65 kB\n../../out/renderer/assets/FilesPanel-pc7KYUOz.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DGeZjrAQ.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BUq06tur.js      1.40 kB\n../../out/renderer/assets/index-BrqzZVK5.js                6,662.22 kB\n✓ built in 6.88s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-context-payload.test.ts tests/composer-context.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:38:59.884Z",
+            "exitCode": 0,
+            "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (1.2785ms)\n✔ 最新回复缺少用量时保留本会话最近有效统计，切换空会话不串数据 (0.16275ms)\n✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (6.918042ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.174708ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.122ms)\n✔ 没有分类测量的消息用 provider 精确总量渲染单行，不编造分类 (0.209916ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.185167ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (4.15675ms)\n✔ payload 测量：系统桶只算真正进入 prompt 的文本 (0.645833ms)\n✔ payload 测量：工具桶用 provider 形态的 JSON Schema，忽略可执行函数 (1.678375ms)\n✔ payload 测量：会话桶统计文本、推理、工具入参与结果，绝不统计图片字节 (0.165375ms)\n✔ payload 测量：附件正文与路径提示单独成类，不混进会话 (0.088709ms)\n✔ payload 测量：未知 part 与非字符串内容不抛错，缺失输入按 0 处理 (1.198042ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 149.150083\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           93.35 kB\n✓ built in 111ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-BifZ9PJC.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-v38w8778.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-CNGSj2At.js            0.65 kB\n../../out/renderer/assets/FilesPanel-pc7KYUOz.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DGeZjrAQ.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BUq06tur.js      1.40 kB\n../../out/renderer/assets/index-BrqzZVK5.js                6,662.22 kB\n✓ built in 6.88s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "offscreen 重新验收官方四类配色与旧消息卡片形状",
+          "coverage": "manual-exception",
+          "tdd": false,
+          "coverage_reason": "配色与卡片外形只能在真实渲染下判断，无法用廉价的前置断言捕获；静态测试只能锁住类名接线。",
+          "verify": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/context-breakdown-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.checks.length<16)throw new Error(\\\"checks \\\"+r.checks.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/context-breakdown-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/context-breakdown-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.checks.length<16)throw new Error(\\\"checks \\\"+r.checks.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/context-breakdown-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+            "verifiedAt": "2026-09-22T08:39:00.072Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/context-breakdown-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.checks.length<16)throw new Error(\\\"checks \\\"+r.checks.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/context-breakdown-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+            "verifiedAt": "2026-09-22T08:39:00.072Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "修复分类测量字段增补导致的兼容性丢弃：缺字段按 0、空分类不占行",
+          "coverage": "unit",
+          "test": "node --test tests/composer-context.test.ts",
+          "verify": [
+            "node --test tests/composer-context.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/composer-context.test.ts",
+            "verifiedAt": "2026-09-22T08:44:38.447Z",
+            "exitCode": 0,
+            "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (1.124584ms)\n✔ 最新回复缺少用量时保留本会话最近有效统计，切换空会话不串数据 (0.147ms)\n✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (6.566416ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.150292ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.123459ms)\n✔ 旧版本主进程写入的 payload 缺字段时仍渲染已有分类，不整体丢弃 (0.22175ms)\n✔ 没有分类测量的消息用 provider 精确总量渲染单行，不编造分类 (0.122791ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.117083ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (3.082875ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 142.127958",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/composer-context.test.ts",
+              "verifiedAt": "2026-09-22T08:44:38.681Z",
+              "exitCode": 0,
+              "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (1.267042ms)\n✔ 最新回复缺少用量时保留本会话最近有效统计，切换空会话不串数据 (0.164541ms)\n✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (6.869375ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.132125ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.117667ms)\n✔ 旧版本主进程写入的 payload 缺字段时仍渲染已有分类，不整体丢弃 (0.22975ms)\n✔ 没有分类测量的消息用 provider 精确总量渲染单行，不编造分类 (0.117459ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.123125ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.575084ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 140.974291",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:44:47.614Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           93.35 kB\n✓ built in 112ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-GttcSwSY.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-ByuVx8pe.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-CrQ0x6HE.js            0.65 kB\n../../out/renderer/assets/FilesPanel-tSg_kpye.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-BLPdlHvw.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Dss_aCyF.js      1.40 kB\n../../out/renderer/assets/index-B2QEDYAS.js                6,662.30 kB\n✓ built in 6.88s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/composer-context.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:44:47.614Z",
+            "exitCode": 0,
+            "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (1.267042ms)\n✔ 最新回复缺少用量时保留本会话最近有效统计，切换空会话不串数据 (0.164541ms)\n✔ 分类按真实 payload 占比折算到 provider 精确总量，分类和严格等于总量 (6.869375ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.132125ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.117667ms)\n✔ 旧版本主进程写入的 payload 缺字段时仍渲染已有分类，不整体丢弃 (0.22975ms)\n✔ 没有分类测量的消息用 provider 精确总量渲染单行，不编造分类 (0.117459ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.123125ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.575084ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 140.974291\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           93.35 kB\n✓ built in 112ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-GttcSwSY.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-ByuVx8pe.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-CrQ0x6HE.js            0.65 kB\n../../out/renderer/assets/FilesPanel-tSg_kpye.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-BLPdlHvw.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Dss_aCyF.js      1.40 kB\n../../out/renderer/assets/index-B2QEDYAS.js                6,662.30 kB\n✓ built in 6.88s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "总量改用官方 API：主进程写官方 usage 形状，渲染端走 getThreadMessageTokenUsage",
+          "coverage": "unit",
+          "test": "node --test tests/composer-context.test.ts",
+          "verify": [
+            "node --test tests/composer-context.test.ts",
+            "node --test --test-name-pattern='真实用量' tests/pi-agent.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/composer-context.test.ts",
+            "verifiedAt": "2026-09-22T08:54:56.711Z",
+            "exitCode": 0,
+            "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (1.680666ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.154708ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.077417ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.095625ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.239292ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (8.228292ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.185583ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.142958ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.1555ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.262083ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.802083ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 636.652667",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/composer-context.test.ts",
+              "verifiedAt": "2026-09-22T08:54:57.163Z",
+              "exitCode": 0,
+              "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (1.535458ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.156792ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.075208ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.087167ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.247459ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (6.52325ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.11575ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.095708ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.155208ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.638792ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (3.883458ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 351.492917",
+              "stderr": ""
+            },
+            {
+              "command": "node --test --test-name-pattern='真实用量' tests/pi-agent.test.ts",
+              "verifiedAt": "2026-09-22T08:55:03.958Z",
+              "exitCode": 0,
+              "stdout": "npm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (6301.92425ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 6698.773792",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:55:12.033Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           94.07 kB\n✓ built in 102ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 5ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-B4MCclTG.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-AYM6Km2k.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DddM436z.js            0.65 kB\n../../out/renderer/assets/FilesPanel-CQTmFLO_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-Ch_jemyB.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DneL31cf.js      1.40 kB\n../../out/renderer/assets/index-DNy8ltvc.js                6,666.36 kB\n✓ built in 6.26s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/composer-context.test.ts && node --test --test-name-pattern='真实用量' tests/pi-agent.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:55:12.033Z",
+            "exitCode": 0,
+            "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (1.535458ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.156792ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.075208ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.087167ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.247459ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (6.52325ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.11575ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.095708ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.155208ms)\n✔ 说明文案讲清折算口径、未计入的输出与图片数量 (0.638792ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (3.883458ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 351.492917\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (6301.92425ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 6698.773792\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           94.07 kB\n✓ built in 102ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 5ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-B4MCclTG.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-AYM6Km2k.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DddM436z.js            0.65 kB\n../../out/renderer/assets/FilesPanel-CQTmFLO_.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-Ch_jemyB.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DneL31cf.js      1.40 kB\n../../out/renderer/assets/index-DNy8ltvc.js                6,666.36 kB\n✓ built in 6.26s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "去掉卡片下方的说明文案，只保留没有用量时的空态",
+          "coverage": "static",
+          "coverage_reason": "文案是否出现在卡片里属于渲染接线，Node 侧只能断言源码不再渲染该段落；真实外观由 offscreen 场景的“卡片不带说明文案”检查覆盖。",
+          "test": "node --test tests/composer-context.test.ts",
+          "verify": [
+            "node --test tests/composer-context.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/composer-context.test.ts",
+            "verifiedAt": "2026-09-22T08:58:18.573Z",
+            "exitCode": 0,
+            "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (1.118166ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.132084ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.070375ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.08125ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.1935ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (0.157ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.074459ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.086459ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.093042ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (3.042625ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 438.512416",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/composer-context.test.ts",
+              "verifiedAt": "2026-09-22T08:58:18.981Z",
+              "exitCode": 0,
+              "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (1.225333ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.140875ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.074ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.084667ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.21675ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (0.179125ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.084834ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.090334ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.098667ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.865958ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 312.146125",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:58:27.364Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           94.07 kB\n✓ built in 102ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-DVB7bK-S.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-DiFHARDK.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-OJn7y6ot.js            0.65 kB\n../../out/renderer/assets/FilesPanel-O0Mb2IT9.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-lK40GAQF.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DTw93xvi.js      1.40 kB\n../../out/renderer/assets/index-CK8kSjkL.js                6,665.32 kB\n✓ built in 6.47s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/composer-context.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:58:27.364Z",
+            "exitCode": 0,
+            "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (1.225333ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.140875ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.074ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.084667ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.21675ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (0.179125ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.084834ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.090334ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.098667ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (2.865958ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 312.146125\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           94.07 kB\n✓ built in 102ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DsEcciIG.css                 170.95 kB\n../../out/renderer/assets/SideChatPanel-DVB7bK-S.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-DiFHARDK.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-OJn7y6ot.js            0.65 kB\n../../out/renderer/assets/FilesPanel-O0Mb2IT9.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-lK40GAQF.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DTw93xvi.js      1.40 kB\n../../out/renderer/assets/index-CK8kSjkL.js                6,665.32 kB\n✓ built in 6.47s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-22T08:58:27.364Z"
+    }
+  ]
+}

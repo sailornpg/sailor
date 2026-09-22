@@ -125,13 +125,16 @@ test('tool registry preserves call ids, cancellation and error-json model output
   assert.ok(modelOutput.value.error.recovery.length > 0)
 })
 
-test('structured tool fallback renders ok:false as an expanded failure with recovery', async t => {
+test('structured tool fallback renders failures as the official ToolError card with recovery', async t => {
   const { vite } = await fixture(t)
   const { StructuredToolFallback } = await vite.ssrLoadModule('/src/renderer/src/components/chat/tools/StructuredToolFallback.tsx')
   const source = await readSource('src/renderer/src/components/chat/tools/StructuredToolFallback.tsx')
-  assert.match(source, /ToolFallback\.Root/)
-  assert.match(source, /ToolFallback\.Trigger/)
-  assert.match(source, /ToolFallback\.Result/)
+  assert.match(source, /<ToolError/, '失败态必须使用官方 ToolError 元素')
+  assert.doesNotMatch(
+    source,
+    /if \(!parsed\.success \|\| parsed\.data\.ok\) return <ToolFallback/,
+    '不得回退到会打印原始参数 JSON 的通用卡片',
+  )
 
   const result = {
     schemaVersion: 1, toolCallId: 'call-ui', tool: 'read_file', ok: false,
@@ -146,10 +149,13 @@ test('structured tool fallback renders ok:false as an expanded failure with reco
     argsText: '{"path":"missing.txt"}', result, status: { type: 'complete' },
     addResult: () => {}, resume: () => {}, respondToApproval: async () => {},
   }))
+  assert.match(markup, /data-slot="tool-error"/)
   assert.match(markup, /NOT_FOUND/)
   assert.match(markup, /文件不存在/)
-  assert.match(markup, /list_files/)
+  assert.match(markup, /list_files/, '恢复建议必须保留')
   assert.match(markup, /确认文件名/)
+  assert.match(markup, /missing\.txt/, '目标应显示为可读路径')
+  assert.doesNotMatch(markup, /&quot;path&quot;/, '不得打印原始参数 JSON')
 })
 
 async function readSource(path: string): Promise<string> {

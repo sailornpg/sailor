@@ -192,7 +192,7 @@ function ReasoningTrigger({
           active && "shimmer motion-reduce:animate-none",
         )}
       >
-        呀嘞呀嘞...{durationText}
+        思考{durationText}
       </span>
       <ChevronDownIcon
         data-slot="reasoning-trigger-chevron"

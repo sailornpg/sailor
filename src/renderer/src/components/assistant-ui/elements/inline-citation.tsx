@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
+import { useState, type ComponentProps, type ReactNode } from "react";
 import { PreviewCard } from "@base-ui/react/preview-card";
 import { cn } from "@/lib/utils";
 import { floating, mono } from "./surfaces";
@@ -9,6 +9,8 @@ export interface Source {
   domain: string;
   title: string;
   snippet: string;
+  /** Source page. The preview title links to it when present. */
+  url?: string;
 }
 
 interface CitationProps {
@@ -24,6 +26,7 @@ function Citation({ index, source, open, onOpenChange }: CitationProps) {
       <PreviewCard.Trigger
         delay={0}
         render={<button type="button" />}
+        aria-label={`来源 ${index + 1}：${source.title || source.domain}`}
         className={cn(
           "mx-0.5 inline-flex h-4 min-w-4 translate-y-[-2px] cursor-default items-center justify-center rounded-[5px] px-1 align-middle font-mono text-[10px] font-medium tabular-nums transition-colors",
           open
@@ -52,9 +55,20 @@ function Citation({ index, source, open, onOpenChange }: CitationProps) {
                 {source.domain}
               </span>
             </div>
-            <p className="mt-2 text-[13px] leading-snug font-medium">
-              {source.title}
-            </p>
+            {source.url ? (
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 block text-[13px] leading-snug font-medium underline-offset-2 hover:underline"
+              >
+                {source.title}
+              </a>
+            ) : (
+              <p className="mt-2 text-[13px] leading-snug font-medium">
+                {source.title}
+              </p>
+            )}
             <p className="text-foreground/50 mt-1 text-[13px] leading-relaxed">
               {source.snippet}
             </p>
@@ -62,6 +76,30 @@ function Citation({ index, source, open, onOpenChange }: CitationProps) {
         </PreviewCard.Positioner>
       </PreviewCard.Portal>
     </PreviewCard.Root>
+  );
+}
+
+/**
+ * A single reference number that owns its hover state, for citations that sit
+ * inside rendered answer text instead of the element's fixed two-reference
+ * layout. The registry copy hardcodes those two positions and its demo prose;
+ * this stays a plain marker so callers place it where the link actually is.
+ */
+export function CitationMarker({
+  index,
+  source,
+}: {
+  index: number;
+  source: Source;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Citation
+      index={index}
+      source={source}
+      open={open}
+      onOpenChange={setOpen}
+    />
   );
 }
 

@@ -1,0 +1,208 @@
+{
+  "features": [
+    {
+      "id": "feat-panel-dock-skeleton",
+      "name": "面板宿主骨架（Codex 风格 dock 与 tab）",
+      "description": "把硬编码的 InspectorPanel 升级为注册表驱动的面板宿主：PanelDescriptor 描述符 + 布局 reducer + 版本化 localStorage 持久化 + 统一快捷键表；PanelDock / PanelTabStrip / PanelPickerMenu / PanelHost 组件；注册审查、文件、终端、浏览器（只读预览）、侧边聊天五个面板；退役 sailor:web-preview 全局事件改为类型化面板打开动作。不新增依赖、不改公共 IPC 契约、不改持久化格式。设计见 docs/panels.md。",
+      "status": "done",
+      "trd_spec": "docs/panels.md",
+      "checklist": [
+        {
+          "action": "实现面板布局状态机与版本化持久化：open/close/activate/setVisible/setWidth 不变式（单实例去重、关闭激活项后焦点回退、宽度 clamp、tab 上限），以及 localStorage 往返与非法数据整体降级",
+          "coverage": "unit",
+          "test": "node --test tests/panel-layout.test.ts",
+          "verify": [
+            "node --test tests/panel-layout.test.ts",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/panel-layout.test.ts",
+            "verifiedAt": "2026-09-22T08:27:00.361Z",
+            "exitCode": 0,
+            "stdout": "✔ 打开面板会去重、激活并保持 tab 顺序 (3.911917ms)\n✔ 单实例面板按 panel+scope 去重，多实例面板按 instanceId 区分 (0.169709ms)\n✔ 关闭激活 tab 后激活相邻项，关闭最后一个 tab 后面板隐藏 (0.221542ms)\n✔ 激活不存在的实例、空布局显示、tab 上限与宽度越界都被约束 (0.127625ms)\n✔ 持久化往返保留布局，非法输入整体降级且不抛错 (0.56725ms)\n✔ 读取时修复越界宽度、失效激活项与未知面板 (0.289583ms)\n✔ 切换上下文时会话/工作区面板重新绑定 scope (0.284708ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 136.389084",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/panel-layout.test.ts",
+              "verifiedAt": "2026-09-22T08:27:00.593Z",
+              "exitCode": 0,
+              "stdout": "✔ 打开面板会去重、激活并保持 tab 顺序 (3.952125ms)\n✔ 单实例面板按 panel+scope 去重，多实例面板按 instanceId 区分 (0.154167ms)\n✔ 关闭激活 tab 后激活相邻项，关闭最后一个 tab 后面板隐藏 (0.135917ms)\n✔ 激活不存在的实例、空布局显示、tab 上限与宽度越界都被约束 (0.119875ms)\n✔ 持久化往返保留布局，非法输入整体降级且不抛错 (0.341292ms)\n✔ 读取时修复越界宽度、失效激活项与未知面板 (0.151791ms)\n✔ 切换上下文时会话/工作区面板重新绑定 scope (0.133917ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 135.494708",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:27:11.375Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 134ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 8.77s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/panel-layout.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:27:11.375Z",
+            "exitCode": 0,
+            "stdout": "✔ 打开面板会去重、激活并保持 tab 顺序 (3.952125ms)\n✔ 单实例面板按 panel+scope 去重，多实例面板按 instanceId 区分 (0.154167ms)\n✔ 关闭激活 tab 后激活相邻项，关闭最后一个 tab 后面板隐藏 (0.135917ms)\n✔ 激活不存在的实例、空布局显示、tab 上限与宽度越界都被约束 (0.119875ms)\n✔ 持久化往返保留布局，非法输入整体降级且不抛错 (0.341292ms)\n✔ 读取时修复越界宽度、失效激活项与未知面板 (0.151791ms)\n✔ 切换上下文时会话/工作区面板重新绑定 scope (0.133917ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 135.494708\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 134ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 8.77s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "实现统一快捷键表与面板可用性解析：平台感知修饰键与展示文案、输入焦点内不触发、不可用面板返回真实原因，同一份描述符驱动菜单与快捷键",
+          "coverage": "unit",
+          "test": "node --test tests/panel-shortcuts.test.ts",
+          "verify": [
+            "node --test tests/panel-shortcuts.test.ts",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/panel-shortcuts.test.ts",
+            "verifiedAt": "2026-09-22T08:27:11.633Z",
+            "exitCode": 0,
+            "stdout": "✔ 按平台格式化展示文案 (2.899959ms)\n✔ 平台检测区分 macOS 与其它平台 (0.263834ms)\n✔ 修饰键必须精确匹配，多余修饰键不触发 (0.176291ms)\n✔ macOS 上 ⌘ 与 ⌃ 是不同修饰键，其它平台统一落到 Ctrl (0.096375ms)\n✔ 输入焦点内不接受无修饰键的快捷键 (0.1495ms)\n✔ 不可用面板不吞掉快捷键 (0.10175ms)\n✔ 快捷键签名稳定，可用于注册期冲突检测 (0.118083ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 141.721458",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/panel-shortcuts.test.ts",
+              "verifiedAt": "2026-09-22T08:27:11.918Z",
+              "exitCode": 0,
+              "stdout": "✔ 按平台格式化展示文案 (2.552625ms)\n✔ 平台检测区分 macOS 与其它平台 (0.146ms)\n✔ 修饰键必须精确匹配，多余修饰键不触发 (0.156708ms)\n✔ macOS 上 ⌘ 与 ⌃ 是不同修饰键，其它平台统一落到 Ctrl (0.093958ms)\n✔ 输入焦点内不接受无修饰键的快捷键 (0.198625ms)\n✔ 不可用面板不吞掉快捷键 (0.097125ms)\n✔ 快捷键签名稳定，可用于注册期冲突检测 (0.442916ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 187.719875",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:27:20.838Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 126ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 10ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 6.98s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/panel-shortcuts.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:27:20.838Z",
+            "exitCode": 0,
+            "stdout": "✔ 按平台格式化展示文案 (2.552625ms)\n✔ 平台检测区分 macOS 与其它平台 (0.146ms)\n✔ 修饰键必须精确匹配，多余修饰键不触发 (0.156708ms)\n✔ macOS 上 ⌘ 与 ⌃ 是不同修饰键，其它平台统一落到 Ctrl (0.093958ms)\n✔ 输入焦点内不接受无修饰键的快捷键 (0.198625ms)\n✔ 不可用面板不吞掉快捷键 (0.097125ms)\n✔ 快捷键签名稳定，可用于注册期冲突检测 (0.442916ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 187.719875\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 126ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 10ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 6.98s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "实现 PanelDock / PanelTabStrip / PanelPickerMenu / PanelHost：ARIA tablist 与方向键导航、关闭按钮与关闭后焦点回退、+ 菜单、宽度变量驱动 grid 列，并在 AppShell 中替换 InspectorPanel",
+          "coverage": "integration",
+          "test": "node --test tests/panel-dock.test.ts",
+          "verify": [
+            "node --test tests/panel-dock.test.ts",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/panel-dock.test.ts",
+            "verifiedAt": "2026-09-22T08:27:22.629Z",
+            "exitCode": 0,
+            "stdout": "✔ dock 渲染 tablist、激活态与 tabpanel 接线 (382.144042ms)\n✔ 隐藏状态与空布局不渲染 dock 外壳 (277.871333ms)\n✔ 浏览器面板渲染真实预览，缺数据时给出真实空态 (282.808459ms)\n✔ 占位面板显示真实不可用原因，而不是伪造内容 (267.25925ms)\n✔ 失效的激活项回退到第一个 tab，而不是渲染空白 dock (283.681875ms)\n✔ dock 由布局数据驱动 grid 列与应用外壳接线 (0.674792ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1686.899042",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/panel-dock.test.ts",
+              "verifiedAt": "2026-09-22T08:27:24.369Z",
+              "exitCode": 0,
+              "stdout": "✔ dock 渲染 tablist、激活态与 tabpanel 接线 (371.61075ms)\n✔ 隐藏状态与空布局不渲染 dock 外壳 (278.323167ms)\n✔ 浏览器面板渲染真实预览，缺数据时给出真实空态 (281.78825ms)\n✔ 占位面板显示真实不可用原因，而不是伪造内容 (264.965708ms)\n✔ 失效的激活项回退到第一个 tab，而不是渲染空白 dock (270.422333ms)\n✔ dock 由布局数据驱动 grid 列与应用外壳接线 (0.513792ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1646.65075",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:27:32.998Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 121ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 6.72s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/panel-dock.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:27:32.998Z",
+            "exitCode": 0,
+            "stdout": "✔ dock 渲染 tablist、激活态与 tabpanel 接线 (371.61075ms)\n✔ 隐藏状态与空布局不渲染 dock 外壳 (278.323167ms)\n✔ 浏览器面板渲染真实预览，缺数据时给出真实空态 (281.78825ms)\n✔ 占位面板显示真实不可用原因，而不是伪造内容 (264.965708ms)\n✔ 失效的激活项回退到第一个 tab，而不是渲染空白 dock (270.422333ms)\n✔ dock 由布局数据驱动 grid 列与应用外壳接线 (0.513792ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1646.65075\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 121ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 6.72s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "注册审查、文件、终端、浏览器、侧边聊天五个面板描述符；浏览器面板承载现有 WebPreview；把 sailor:web-preview 全局事件替换为类型化面板打开动作，未接入能力显示真实原因",
+          "coverage": "integration",
+          "test": "node --test tests/panel-registry.test.ts",
+          "verify": [
+            "node --test tests/panel-registry.test.ts",
+            "node --test tests/assistant-ui-boundaries.test.ts",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/panel-registry.test.ts",
+            "verifiedAt": "2026-09-22T08:27:33.977Z",
+            "exitCode": 0,
+            "stdout": "✔ 面板注册表描述符完整、无冲突，懒加载模块都能解析 (381.855167ms)\n✔ 类型化面板打开请求拒绝非法结构 (279.123625ms)\n✔ 面板打开不再经全局 DOM 事件广播 (0.567292ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 870.341875",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/panel-registry.test.ts",
+              "verifiedAt": "2026-09-22T08:27:34.686Z",
+              "exitCode": 0,
+              "stdout": "✔ 面板注册表描述符完整、无冲突，懒加载模块都能解析 (366.872791ms)\n✔ 类型化面板打开请求拒绝非法结构 (13.174708ms)\n✔ 面板打开不再经全局 DOM 事件广播 (0.486292ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 605.199083",
+              "stderr": ""
+            },
+            {
+              "command": "node --test tests/assistant-ui-boundaries.test.ts",
+              "verifiedAt": "2026-09-22T08:27:34.907Z",
+              "exitCode": 0,
+              "stdout": "✔ legacy AI Elements sources and imports are absent (17.535125ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (3.493375ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (0.791875ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 128.529583",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T08:27:43.880Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 120ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 7.06s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/panel-registry.test.ts && node --test tests/assistant-ui-boundaries.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T08:27:43.880Z",
+            "exitCode": 0,
+            "stdout": "✔ 面板注册表描述符完整、无冲突，懒加载模块都能解析 (366.872791ms)\n✔ 类型化面板打开请求拒绝非法结构 (13.174708ms)\n✔ 面板打开不再经全局 DOM 事件广播 (0.486292ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 605.199083\n✔ legacy AI Elements sources and imports are absent (17.535125ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (3.493375ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (0.791875ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 128.529583\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 28 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           92.41 kB\n✓ built in 120ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3289 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-Ix9CJ9ey.css                 170.69 kB\n../../out/renderer/assets/SideChatPanel-Dn6znKk2.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-GM__5erY.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DX6I9h1W.js            0.65 kB\n../../out/renderer/assets/FilesPanel-BALim76K.js               0.67 kB\n../../out/renderer/assets/PanelPlaceholder-DJpD7ItL.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BzRAirsk.js      1.40 kB\n../../out/renderer/assets/index-BjnNKZWq.js                6,661.68 kB\n✓ built in 7.06s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "offscreen Electron 验收 dock 外观与交互状态：浅色/深色、1440 宽与窄窗口、无面板空态，截图与 report.json 落盘",
+          "coverage": "manual-exception",
+          "tdd": false,
+          "coverage_reason": "dock 的列宽、tab 密度、边框与深浅色对比只能在真实渲染下判断，Node 侧无布局引擎，无法用廉价前置断言捕获。",
+          "verify": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/panel-dock-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.shots.length!==4)throw new Error(\\\"shots \\\"+r.shots.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/panel-dock-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/panel-dock-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.shots.length!==4)throw new Error(\\\"shots \\\"+r.shots.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/panel-dock-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+            "verifiedAt": "2026-09-22T08:27:43.975Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node -e \"const fs=require(\\\"node:fs\\\");const r=JSON.parse(fs.readFileSync(\\\".agent-harness/evidence/panel-dock-preview/report.json\\\",\\\"utf8\\\"));if(r.failures.length!==0)throw new Error(JSON.stringify(r.failures));if(r.shots.length!==4)throw new Error(\\\"shots \\\"+r.shots.length);for(const s of r.shots){if(!fs.existsSync(\\\".agent-harness/evidence/panel-dock-preview/\\\"+s))throw new Error(\\\"missing \\\"+s);}\"",
+            "verifiedAt": "2026-09-22T08:27:43.975Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-22T08:27:43.976Z"
+    }
+  ]
+}

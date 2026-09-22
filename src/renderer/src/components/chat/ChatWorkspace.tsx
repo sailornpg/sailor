@@ -1,6 +1,6 @@
 import type { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { PanelRightClose } from "lucide-react";
+import type { ReactNode } from "react";
 import type {
   ModelSelection,
   ProjectSummary,
@@ -8,12 +8,6 @@ import type {
 } from "@shared/contracts";
 import type { WorkspaceChatSummary } from "@shared/workspaces";
 import type { WorkspaceChats } from "@/lib/WorkspaceChats";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { SailorChatProvider } from "./runtime/SailorChatProvider";
 import { SailorThread } from "./thread/SailorThread";
 
@@ -27,7 +21,8 @@ interface ChatWorkspaceProps {
   settings: SettingsSnapshot;
   onSelectModel: (selection: ModelSelection) => Promise<void>;
   onOpenSettings: () => void;
-  onToggleInspector: () => void;
+  /** Panel picker and dock toggle, owned by the layout layer. */
+  panelToolbar?: ReactNode;
 }
 
 export function ChatWorkspace({
@@ -40,7 +35,7 @@ export function ChatWorkspace({
   settings,
   onSelectModel,
   onOpenSettings,
-  onToggleInspector,
+  panelToolbar,
 }: ChatWorkspaceProps) {
   const isGenerating = summary?.status === "running";
 
@@ -61,21 +56,7 @@ export function ChatWorkspace({
           </div>
           <div className="topbar-actions no-drag">
             {/* <span className="workspace-path" title={project?.rootPath}>{project?.name}</span> */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  aria-label="切换检查器"
-                  className="icon-button"
-                  onClick={onToggleInspector}
-                  size="icon"
-                  type="button"
-                  variant="ghost"
-                >
-                  <PanelRightClose size={17} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>切换检查器</TooltipContent>
-            </Tooltip>
+            {panelToolbar}
           </div>
         </header>
 

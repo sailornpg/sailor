@@ -10,6 +10,7 @@ import { ThreadFollowupSuggestions } from "@/components/assistant-ui/elements/fo
 import { Image } from "@/components/assistant-ui/elements/image";
 import { GenerationLoader } from "@/components/assistant-ui/elements/loading-state";
 import { MarkdownText } from "@/components/assistant-ui/elements/markdown-text";
+import { collectWebCitations } from "@/lib/webCitationSources";
 import { Sources } from "@/components/assistant-ui/elements/sources.aui";
 import {
   Reasoning,
@@ -68,6 +69,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ComponentType,
   type FC,
@@ -192,8 +194,11 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
   isEmpty,
   autoFocus,
 }) => {
-  const { Welcome = ThreadWelcome, Composer: ComposerComponent = Composer, ViewportNavigation } =
-    useContext(ThreadComponentsContext);
+  const {
+    Welcome = ThreadWelcome,
+    Composer: ComposerComponent = Composer,
+    ViewportNavigation,
+  } = useContext(ThreadComponentsContext);
 
   return (
     <ThreadPrimitive.Root
@@ -206,8 +211,12 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
         ["--composer-padding" as string]: "8px",
       }}
     >
+      {/* Sailor deviation from the upstream element, which pins the user turn to
+          the top and stops following the tail. Bottom anchoring makes streaming
+          follow the tail, pausing when the reader scrolls up and resuming from
+          ThreadScrollToBottom. Keep this on `assistant-ui add thread` updates. */}
       <ThreadPrimitive.Viewport
-        turnAnchor="top"
+        turnAnchor="bottom"
         data-slot="aui_thread-viewport"
         className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
       >
@@ -326,9 +335,7 @@ const SpokenMessage: FC = () => {
             <AudioLinesIcon className="size-3.5" />
           )}
         </span>
-        <span className="sr-only">
-          {role === "user" ? "你说" : "助手说"}
-        </span>
+        <span className="sr-only">{role === "user" ? "你说" : "助手说"}</span>
         <div className="min-w-0 flex-1 wrap-break-word">
           <MessagePrimitive.Parts components={{ Text: SpokenText }} />
           {isSpeaking && (
@@ -371,7 +378,11 @@ const SpokenActionBar: FC = () => {
 
 const ThreadScrollToBottom: FC = () => {
   return (
-    <ThreadPrimitive.ScrollToBottom asChild>
+    // `instant` because the viewport is `scroll-smooth`: the default "auto"
+    // resolves to a smooth animation that keeps getting retargeted while tokens
+    // stream, so the view chases the tail instead of landing on it and the
+    // control never hides.
+    <ThreadPrimitive.ScrollToBottom behavior="instant" asChild>
       <TooltipIconButton
         tooltip="滚动到底部"
         variant="outline"
@@ -459,17 +470,19 @@ export const Composer: FC<ComposerProps> = ({
             enterKeyHint="send"
             aria-label="消息输入"
           />
-          <ComposerAction leadingAction={leadingAction} trailingAction={trailingAction} />
+          <ComposerAction
+            leadingAction={leadingAction}
+            trailingAction={trailingAction}
+          />
         </div>
       </ComposerPrimitive.AttachmentDropzone>
     </ComposerPrimitive.Root>
   );
 };
 
-const ComposerAction: FC<Pick<ComposerProps, "leadingAction" | "trailingAction">> = ({
-  leadingAction,
-  trailingAction,
-}) => {
+const ComposerAction: FC<
+  Pick<ComposerProps, "leadingAction" | "trailingAction">
+> = ({ leadingAction, trailingAction }) => {
   return (
     <div className="aui-composer-action-wrapper relative flex items-center justify-between">
       {leadingAction ?? <ComposerAddAttachment />}
@@ -580,12 +593,23 @@ const GeneratingIndicator: FC = () => {
   // the first tokens will use.
   return (
     <GenerationLoader
-      label="正在思考"
+      label="呀嘞呀嘞..."
       tick={tick}
       role="status"
       className="py-2"
     />
   );
+};
+
+/**
+ * Citation collection lives on the answer text alone: only the answer's own
+ * links should become references, so reasoning keeps rendering plain markdown.
+ */
+const AssistantAnswerText: FC = () => {
+  const content = useAuiState((s) => s.message.content);
+  const citations = useMemo(() => collectWebCitations(content), [content]);
+
+  return <MarkdownText citations={citations} />;
 };
 
 const AssistantMessage: FC = () => {
@@ -641,7 +665,11 @@ const AssistantMessage: FC = () => {
                 }
                 const running = part.status.type === "running";
                 return (
-                  <ReasoningRoot variant="ghost" className="my-1" streaming={running}>
+                  <ReasoningRoot
+                    variant="ghost"
+                    className="my-1"
+                    streaming={running}
+                  >
                     <ReasoningTrigger active={running} />
                     <ReasoningContent aria-busy={running}>
                       <ReasoningText>{children}</ReasoningText>
@@ -650,7 +678,7 @@ const AssistantMessage: FC = () => {
                 );
               }
               case "text":
-                return <MarkdownText />;
+                return <AssistantAnswerText />;
               case "reasoning":
                 return <Reasoning {...part} />;
               case "tool-call":

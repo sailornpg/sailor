@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import test from 'node:test'
+import { getThreadMessageTokenUsage } from '@assistant-ui/ai-sdk'
 import { createServer } from 'vite'
 import { createXlsx, createZip } from './helpers/document-fixtures.ts'
 
@@ -52,7 +53,7 @@ async function fixture(t: test.TestContext) {
   const events: any[] = []
   const createAgent = (onEvent?: (runId: string, event: any) => void) => new AgentService((id: string, event: any) => { events.push(event); onEvent?.(id, event) }, { resolveActiveModel: async () => ({ ...config }) }, { workspace, piStorageDirectory: join(root, 'pi') })
   const request = async (text: string) => ({ runId: crypto.randomUUID(), chatId: chat.id, reasoning: 'provider-default', messages: [...(await store.getChat(chat.id)).messages, { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text }] }] })
-  return { root, store, workspace, chat, config, requests, replies, events, createAgent, request }
+  return { root, store, workspace, chat, config, requests, replies, events, createAgent, request, vite }
 }
 
 test('真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具', { timeout: 30000 }, async t => {
@@ -226,10 +227,22 @@ test('Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调
   await f.createAgent().start(await f.request('第一轮'))
   let message = (await f.store.getChat(f.chat.id)).messages.at(-1)
   assert.ok(message.metadata, JSON.stringify(f.events.filter((e: any) => e.chunk?.type === "message-metadata")))
-  assert.deepEqual(message.metadata.contextUsage, { inputTokens: 100, outputTokens: 5, contextWindow: 32768, modelId: 'fixture' })
+  // 总量走官方形状：主进程写出的 metadata 必须能被 @assistant-ui/ai-sdk 的官方提取器直接消费。
+  assert.deepEqual(message.metadata.usage, { inputTokens: 100, outputTokens: 5, totalTokens: 105 })
+  assert.deepEqual(getThreadMessageTokenUsage({ role: 'assistant', metadata: message.metadata }), { inputTokens: 100, outputTokens: 5, totalTokens: 105 })
+  // 官方没有的部分：窗口上限 + 本轮真实 payload 的分类测量。
+  const { payload, ...extras } = message.metadata.contextUsage
+  assert.deepEqual(extras, { contextWindow: 32768, modelId: 'fixture' })
+  const { SAILOR_INSTRUCTIONS } = await f.vite.ssrLoadModule('/src/main/agent/pi/PiRunner.ts')
+  assert.equal(payload.systemChars, SAILOR_INSTRUCTIONS.length)
+  assert.match(JSON.stringify(f.requests[0]), new RegExp(SAILOR_INSTRUCTIONS.slice(0, 40).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.equal(payload.conversationChars, '第一轮'.length)
+  assert.equal(payload.attachmentChars, 0)
+  assert.equal(payload.images, 0)
+  assert.ok(payload.toolChars > 0, JSON.stringify(payload))
   await f.createAgent().start(await f.request('第二轮'))
   message = (await f.store.getChat(f.chat.id)).messages.at(-1)
-  assert.equal(message.metadata.contextUsage.inputTokens, 200)
+  assert.equal(message.metadata.usage.inputTokens, 200)
 })
 
 test('同一会话切换视觉模型后图片实际送达 provider', { timeout: 30000 }, async t => {

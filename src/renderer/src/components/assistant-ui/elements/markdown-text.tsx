@@ -9,17 +9,25 @@ import {
   useIsMarkdownCodeBlock,
 } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
-import { type FC, memo, useMemo, useRef } from "react";
+import { type FC, memo, useMemo, useRef, type ComponentProps } from "react";
 import type { TextMessagePartProps } from "@assistant-ui/react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/elements/tooltip-icon-button";
+import { CitationMarker } from "@/components/assistant-ui/elements/inline-citation";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
+import {
+  citationForUrl,
+  isBareUrlText,
+  type WebCitation,
+} from "@/lib/webCitationSources";
 import { MermaidDiagram } from "@/components/assistant-ui/elements/mermaid-diagram.aui";
 
 type MarkdownTextProps = Partial<TextMessagePartProps> & {
   components?: Parameters<typeof memoizeMarkdownComponents>[0];
+  /** Sources the surrounding turn searched; links to them become references. */
+  citations?: readonly WebCitation[];
 };
 
 const useShallowStable = <T extends Record<string, unknown> | undefined>(
@@ -38,15 +46,18 @@ const useShallowStable = <T extends Record<string, unknown> | undefined>(
   return ref.current;
 };
 
-const MarkdownTextImpl: FC<MarkdownTextProps> = ({ components }) => {
+const MarkdownTextImpl: FC<MarkdownTextProps> = ({ components, citations }) => {
   const stableComponents = useShallowStable(components);
   const markdownComponents = useMemo(() => {
-    if (!stableComponents) return defaultComponents;
-    return {
-      ...defaultComponents,
-      ...memoizeMarkdownComponents(stableComponents),
-    };
-  }, [stableComponents]);
+    const merged = stableComponents
+      ? {
+          ...defaultComponents,
+          ...memoizeMarkdownComponents(stableComponents),
+        }
+      : defaultComponents;
+    if (!citations || citations.length === 0) return merged;
+    return { ...merged, a: createCitationLink(citations) };
+  }, [stableComponents, citations]);
 
   return (
     <MarkdownTextPrimitive
@@ -86,6 +97,58 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
     </div>
   );
 };
+
+const MarkdownLink: FC<ComponentProps<"a">> = ({ className, ...props }) => (
+  <a
+    className={cn(
+      "aui-md-a text-primary hover:text-primary/80 underline underline-offset-2",
+      className,
+    )}
+    {...props}
+  />
+);
+
+/**
+ * Links pointing at a page this turn actually searched gain a reference number.
+ * A link whose visible text is that same bare URL is replaced by the number
+ * outright, because the address adds nothing the popover does not already show.
+ * Links with no matching source keep rendering exactly as before.
+ */
+const createCitationLink =
+  (citations: readonly WebCitation[]) =>
+  function CitationLink({ href, children, ...props }: ComponentProps<"a">) {
+    const target = typeof href === "string" ? href : "";
+    const citation = target ? citationForUrl(citations, target) : undefined;
+    if (!citation) {
+      return (
+        <MarkdownLink href={href} {...props}>
+          {children}
+        </MarkdownLink>
+      );
+    }
+    const marker = (
+      <CitationMarker
+        index={citation.number - 1}
+        source={{
+          domain: citation.domain,
+          title: citation.title,
+          snippet: citation.snippet,
+          url: citation.url,
+        }}
+      />
+    );
+    if (typeof children === "string" && isBareUrlText(children, target)) {
+      return marker;
+    }
+    return (
+      <>
+        <MarkdownLink href={href} {...props}>
+          {children}
+        </MarkdownLink>
+        {marker}
+      </>
+    );
+  };
 
 const defaultComponents = memoizeMarkdownComponents({
   h1: ({ className, ...props }) => (
@@ -151,15 +214,7 @@ const defaultComponents = memoizeMarkdownComponents({
       {...props}
     />
   ),
-  a: ({ className, ...props }) => (
-    <a
-      className={cn(
-        "aui-md-a text-primary hover:text-primary/80 underline underline-offset-2",
-        className,
-      )}
-      {...props}
-    />
-  ),
+  a: MarkdownLink,
   blockquote: ({ className, ...props }) => (
     <blockquote
       className={cn(

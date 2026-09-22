@@ -244,6 +244,34 @@
       "status": "done",
       "archived_at": "2026-09-22T07:05:28.512Z",
       "archive_path": ".agent-harness/archive/feat-read-document-tool"
+    },
+    {
+      "id": "fix-thread-autoscroll-follow-tail",
+      "title": "聊天区改为跟随尾部滚动",
+      "status": "done",
+      "archived_at": "2026-09-22T08:02:28.067Z",
+      "archive_path": ".agent-harness/archive/fix-thread-autoscroll-follow-tail"
+    },
+    {
+      "id": "fix-pi-image-input",
+      "title": "Pi 图片输入与模型切换诊断",
+      "status": "done",
+      "archived_at": "2026-09-22T08:02:35.049Z",
+      "archive_path": ".agent-harness/archive/fix-pi-image-input"
+    },
+    {
+      "id": "feat-panel-dock-skeleton",
+      "title": "面板宿主骨架（Codex 风格 dock 与 tab）",
+      "status": "done",
+      "archived_at": "2026-09-22T09:04:05.051Z",
+      "archive_path": ".agent-harness/archive/feat-panel-dock-skeleton"
+    },
+    {
+      "id": "feat-context-breakdown-card",
+      "title": "上下文卡片换成官方 Context Breakdown",
+      "status": "done",
+      "archived_at": "2026-09-22T09:04:05.136Z",
+      "archive_path": ".agent-harness/archive/feat-context-breakdown-card"
     }
   ]
 }

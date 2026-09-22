@@ -4,7 +4,7 @@ import type {
   ToolCallMessagePartStatus,
 } from "@assistant-ui/react";
 import { useState } from "react";
-import { ToolFallback } from "@/components/assistant-ui/elements/tool-fallback.aui";
+import { ToolFallback, formatUnknownValue } from "@/components/assistant-ui/elements/tool-fallback.aui";
 import { isPendingApprovalRequest, SailorApprovalCard } from "./SailorApprovalCard";
 import { toolResultSchema } from "@shared/toolFeedback";
 import {
@@ -24,6 +24,7 @@ import { Sources } from "@/components/assistant-ui/elements/sources.aui";
 import { InlineCitation } from "@/components/assistant-ui/elements/inline-citation";
 import { ToolError } from "@/components/assistant-ui/elements/tool-error";
 import { WebPreview } from "@/components/assistant-ui/elements/web-preview";
+import { requestPanelOpen } from "@/lib/panels/panelData";
 
 function fileStatus(
   view: FileChangeFeedback,
@@ -292,7 +293,7 @@ function WebPagePreviewToolFallback(props: ToolCallMessagePartProps) {
   const content = typeof value.mainText === "string" ? value.mainText : typeof value.markdown === "string" ? value.markdown : "";
   if (!url || !content) return <ToolFallback {...props} />;
   const openPreview = () => {
-    window.dispatchEvent(new CustomEvent("sailor:web-preview", { detail: { url, content, title: typeof value.title === "string" ? value.title : url } }));
+    requestPanelOpen({ panelId: "browser", data: { preview: { url, content, title: typeof value.title === "string" ? value.title : url } } });
   };
   return (
     <ToolFallback.Root defaultOpen>
@@ -306,6 +307,59 @@ function WebPagePreviewToolFallback(props: ToolCallMessagePartProps) {
   );
 }
 
+/** What the model aimed at, in one readable line, instead of the raw argument JSON. */
+function toolTarget(args: unknown, toolName: string): string {
+  const record = args && typeof args === "object" ? (args as Record<string, unknown>) : {};
+  const candidate = [
+    record.file_path,
+    record.path,
+    record.command,
+    record.pattern,
+    record.query,
+  ].find((value): value is string => typeof value === "string" && value.length > 0);
+  return candidate ?? toolName;
+}
+
+function statusErrorText(status: ToolCallMessagePartStatus | undefined): string | undefined {
+  if (status?.type !== "incomplete") return undefined;
+  const error = (status as { error?: unknown }).error;
+  return typeof error === "string" && error.length > 0 ? error : undefined;
+}
+
+/**
+ * Every state that reaches this component is actionable or failed: the official
+ * `ToolCall` element only draws running/success, and the generic `ToolFallback`
+ * would print the raw argument JSON. Failures therefore render the official
+ * `ToolError` card, which names the tool and its target and keeps the recovery
+ * hint the tool result carries.
+ */
+function ToolFailureResult(props: ToolCallMessagePartProps) {
+  const parsed = toolResultSchema.safeParse(props.result);
+  const failure = parsed.success && !parsed.data.ok ? parsed.data : undefined;
+  const recovery = failure?.error.recovery
+    .map((item) => `${item.action}（${item.reason}）`)
+    .join("；");
+  const message = failure
+    ? `${failure.error.code}：${failure.error.message}${recovery ? `；建议：${recovery}` : ""}`
+    : props.status?.type === "incomplete" && props.status.reason === "cancelled"
+      ? "已取消"
+      : statusErrorText(props.status) ??
+        (props.status?.type === "requires-action"
+          ? "需要你的操作后才能继续"
+          : formatUnknownValue(props.result) || "工具未完成");
+
+  return (
+    <ToolError
+      name={props.toolName}
+      target={toolTarget(props.args, props.toolName)}
+      message={message}
+      attempt={1}
+      maxAttempts={1}
+      retrying={false}
+    />
+  );
+}
+
 export const StructuredToolFallback: ToolCallMessagePartComponent = (props) => {
   if (isPendingApprovalRequest(props)) return <SailorApprovalCard key={props.approval?.id ?? props.toolCallId} {...props} />;
   if (props.toolName === "apply_patch")
@@ -316,29 +370,6 @@ export const StructuredToolFallback: ToolCallMessagePartComponent = (props) => {
     return <WebSearchToolFallback {...props} />;
   if (props.toolName === "fetch_page")
     return <WebPagePreviewToolFallback {...props} />;
-  const parsed = toolResultSchema.safeParse(props.result);
-  if (!parsed.success || parsed.data.ok) return <ToolFallback {...props} />;
 
-  const failure = parsed.data;
-  const status: ToolCallMessagePartStatus = {
-    type: "incomplete",
-    reason: "error",
-    error: `${failure.error.code}: ${failure.error.message}`,
-  };
-
-  return (
-    <ToolFallback.Root defaultOpen>
-      <ToolFallback.Trigger toolName={props.toolName} status={status} />
-      <ToolFallback.Content>
-        <ToolError
-          name={props.toolName}
-          target={props.argsText || props.toolName}
-          message={`${failure.error.code}：${failure.error.message}`}
-          attempt={1}
-          maxAttempts={1}
-          retrying={false}
-        />
-      </ToolFallback.Content>
-    </ToolFallback.Root>
-  );
+  return <ToolFailureResult {...props} />;
 };
