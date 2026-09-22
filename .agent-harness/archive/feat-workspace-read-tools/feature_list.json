@@ -1,0 +1,239 @@
+{
+  "features": [
+    {
+      "id": "feat-workspace-read-tools",
+      "name": "结构化反馈与工作区只读工具",
+      "description": "建立工具结果及生命周期契约，打通 list_files、search_files、read_file 与官方 assistant-ui 工具展示。",
+      "status": "done",
+      "dependencies": [],
+      "trd_spec": "docs/agent-tools-execution-plan.md",
+      "interface_spec": "docs/agent-tools-execution-plan.md",
+      "test_case_spec": "docs/agent-tools-execution-plan.md",
+      "checklist": [
+        {
+          "action": "定义并实现结果 schema、错误码、恢复指引、截断信息与副作用状态；覆盖参数无效、未知异常脱敏、失败不伪装成功、模型输出与 UI 摘要一致及预算限制。",
+          "coverage": "unit",
+          "test": "node --test tests/tool-feedback-contract.test.ts",
+          "verify": [
+            "node --test tests/tool-feedback-contract.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/tool-feedback-contract.test.ts",
+            "verifiedAt": "2026-09-20T09:20:45.680Z",
+            "exitCode": 0,
+            "stdout": "✔ validates a strict discriminated tool result contract (85.745208ms)\n✔ maps invalid input and unknown exceptions to safe failures (0.518625ms)\n✔ keeps failure state and summary aligned for UI and model output (0.136666ms)\n✔ centralizes read budgets and reports truncation explicitly (0.813875ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 250.753834",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/tool-feedback-contract.test.ts",
+              "verifiedAt": "2026-09-20T09:20:45.944Z",
+              "exitCode": 0,
+              "stdout": "✔ validates a strict discriminated tool result contract (80.425916ms)\n✔ maps invalid input and unknown exceptions to safe failures (0.495666ms)\n✔ keeps failure state and summary aligned for UI and model output (0.175333ms)\n✔ centralizes read budgets and reports truncation explicitly (0.936333ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 236.668625",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-20T09:20:46.567Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/tool-feedback-contract.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-20T09:20:46.567Z",
+            "exitCode": 0,
+            "stdout": "✔ validates a strict discriminated tool result contract (80.425916ms)\n✔ maps invalid input and unknown exceptions to safe failures (0.495666ms)\n✔ keeps failure state and summary aligned for UI and model output (0.175333ms)\n✔ centralizes read budgets and reports truncation explicitly (0.936333ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 236.668625",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "按 chatId 在 main 解析并注入 workspace 上下文；实现工作区只读授权及路径验证，覆盖绝对路径、../、目录失效、符号链接越界、敏感文件拒绝、取消及会话隔离；不得向 renderer 暴露通用 fs。",
+          "coverage": "integration",
+          "test": "node --test tests/workspace-tool-scope.test.ts",
+          "verify": [
+            "node --test tests/workspace-tool-scope.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/workspace-tool-scope.test.ts",
+            "verifiedAt": "2026-09-20T09:25:00.809Z",
+            "exitCode": 0,
+            "stdout": "✔ resolves a canonical read-only scope from chatId and isolates chats (200.040625ms)\n✔ rejects absolute traversal, symlink escape and sensitive paths (97.952542ms)\n✔ reports invalid workspaces and cancellation without crossing sessions (97.194916ms)\n✔ does not expose generic filesystem access to the renderer bridge (0.859417ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 570.935709",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/workspace-tool-scope.test.ts",
+              "verifiedAt": "2026-09-20T09:25:01.517Z",
+              "exitCode": 0,
+              "stdout": "✔ resolves a canonical read-only scope from chatId and isolates chats (240.689042ms)\n✔ rejects absolute traversal, symlink escape and sensitive paths (168.576083ms)\n✔ reports invalid workspaces and cancellation without crossing sessions (121.040917ms)\n✔ does not expose generic filesystem access to the renderer bridge (0.516208ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 679.084",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-20T09:25:02.189Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/workspace-tool-scope.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-20T09:25:02.189Z",
+            "exitCode": 0,
+            "stdout": "✔ resolves a canonical read-only scope from chatId and isolates chats (240.689042ms)\n✔ rejects absolute traversal, symlink escape and sensitive paths (168.576083ms)\n✔ reports invalid workspaces and cancellation without crossing sessions (121.040917ms)\n✔ does not expose generic filesystem access to the renderer bridge (0.516208ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 679.084",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "实现 list_files/search_files/read_file：限制文件数/深度/字节数，文本搜索默认按字面量，返回路径/行号/完整文件 hash、分页或截断信息；覆盖空结果、二进制、不存在和权限错误。",
+          "coverage": "integration",
+          "test": "node --test tests/workspace-read-tools.test.ts",
+          "verify": [
+            "node --test tests/workspace-read-tools.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/workspace-read-tools.test.ts",
+            "verifiedAt": "2026-09-20T09:29:31.547Z",
+            "exitCode": 0,
+            "stdout": "✔ read_file returns selected text, full hash and explicit truncation (182.501125ms)\n✔ read_file reports binary and missing files as structured failures (96.633583ms)\n✔ list_files enforces depth and stable pagination while hiding sensitive paths (212.607917ms)\n✔ search_files treats the query literally and returns line numbers with full hashes (37.204292ms)\n✔ read tools expose permission and cancellation failures without side effects (34.528209ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 812.716708",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/workspace-read-tools.test.ts",
+              "verifiedAt": "2026-09-20T09:29:32.072Z",
+              "exitCode": 0,
+              "stdout": "✔ read_file returns selected text, full hash and explicit truncation (105.001833ms)\n✔ read_file reports binary and missing files as structured failures (39.60575ms)\n✔ list_files enforces depth and stable pagination while hiding sensitive paths (111.379375ms)\n✔ search_files treats the query literally and returns line numbers with full hashes (27.425959ms)\n✔ read tools expose permission and cancellation failures without side effects (26.16125ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 493.157958",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-20T09:29:32.744Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/workspace-read-tools.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-20T09:29:32.744Z",
+            "exitCode": 0,
+            "stdout": "✔ read_file returns selected text, full hash and explicit truncation (105.001833ms)\n✔ read_file reports binary and missing files as structured failures (39.60575ms)\n✔ list_files enforces depth and stable pagination while hiding sensitive paths (111.379375ms)\n✔ search_files treats the query literally and returns line numbers with full hashes (27.425959ms)\n✔ read tools expose permission and cancellation failures without side effects (26.16125ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 493.157958",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "接入 ToolLoopAgent 和原生 UIMessageChunk；优先直接组合官方 ToolFallback/ToolGroup/render/renderText，用最薄适配把结构化失败显示为失败且保留模型恢复信息；覆盖工具失败后模型修正、稳定 toolCallId、历史往返和取消，不恢复 updatePlan。",
+          "coverage": "integration",
+          "test": "node --test tests/tool-feedback-ui.test.ts",
+          "verify": [
+            "node --test tests/tool-feedback-ui.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/tool-feedback-ui.test.ts",
+            "verifiedAt": "2026-09-20T09:41:44.528Z",
+            "exitCode": 0,
+            "stdout": "✔ ToolLoopAgent exposes read tools, returns structured failure and lets the model recover (259.672917ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (52.568792ms)\n✔ structured tool fallback renders ok:false as an expanded failure with recovery (471.164041ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1049.928959",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/tool-feedback-ui.test.ts",
+              "verifiedAt": "2026-09-20T09:41:45.560Z",
+              "exitCode": 0,
+              "stdout": "✔ ToolLoopAgent exposes read tools, returns structured failure and lets the model recover (267.470208ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (56.255666ms)\n✔ structured tool fallback renders ok:false as an expanded failure with recovery (427.579042ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1001.227666",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-20T09:41:46.055Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/tool-feedback-ui.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-20T09:41:46.055Z",
+            "exitCode": 0,
+            "stdout": "✔ ToolLoopAgent exposes read tools, returns structured failure and lets the model recover (267.470208ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (56.255666ms)\n✔ structured tool fallback renders ok:false as an expanded failure with recovery (427.579042ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1001.227666",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "在真实 Electron 中验收 workspace-read-tools：桌面与窄窗口、运行/成功/错误/停止、后台会话及重启历史；检查错误原因和修复建议可见，清理隔离 fixture，记录截图和实际步骤到 .agent-harness/evidence/workspace-read-tools-acceptance.md；同步 README、architecture 和权限约定后执行全量回归及 clean-state。",
+          "coverage": "manual-exception",
+          "verify": [
+            "test -s .agent-harness/evidence/workspace-read-tools-acceptance.md",
+            "rg -n '^Acceptance: PASS$' .agent-harness/evidence/workspace-read-tools-acceptance.md",
+            "node --test tests/*.test.ts",
+            "pnpm run build",
+            "node .agent-harness/scripts/clean-state-check.mjs --skip-verification"
+          ],
+          "tdd": false,
+          "coverage_reason": "视觉清晰度、折叠层级和窄窗口可读性不能用廉价的前置自动断言替代；状态与执行行为由前面各项确定性测试覆盖。证据文件只能在实际验收通过后写 PASS。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "test -s .agent-harness/evidence/workspace-read-tools-acceptance.md",
+              "verifiedAt": "2026-09-20T09:55:45.046Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "rg -n '^Acceptance: PASS$' .agent-harness/evidence/workspace-read-tools-acceptance.md",
+              "verifiedAt": "2026-09-20T09:55:45.060Z",
+              "exitCode": 0,
+              "stdout": "43:Acceptance: PASS",
+              "stderr": ""
+            },
+            {
+              "command": "node --test tests/*.test.ts",
+              "verifiedAt": "2026-09-20T09:55:48.786Z",
+              "exitCode": 0,
+              "stdout": "✔ splits a coarse Chinese provider delta into incremental UI chunks before end (739.904791ms)\n✔ aborting an active stream stops later chunks and emits one end event (204.293917ms)\n✔ does not advertise the retired tool and still streams an answer (701.076667ms)\n✔ reads valid preferences and falls back on invalid persisted values (5.290042ms)\n✔ persists preferences and reports storage failures without throwing (0.601416ms)\n✔ applies the saved appearance before consumers read runtime state (207.182875ms)\n✔ system mode follows OS changes while explicit themes ignore them (202.090416ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (270.155667ms)\n✔ legacy AI Elements sources and imports are absent (135.151375ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (6.645583ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (0.938ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1651.60525ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (142.885875ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (894.963375ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (35.337125ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (229.667625ms)\n✔ consolidates multiple reasoning parts into one presentation block (137.431708ms)\n✔ stops the reasoning indicator when answer text has started (58.3985ms)\n✔ filters the provider catalog and excludes configured models (5.420917ms)\n✔ toggles an individual model selection without duplicates (0.227084ms)\n✔ selects or clears all visible models while preserving hidden selections (0.179041ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.125042ms)\n✔ uses the provider default model factory for the Responses protocol (0.77ms)\n✔ uses chat completions for custom OpenAI-compatible providers (0.082417ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (26.795125ms)\n✔ uses an unsaved API key for a new provider (2.014959ms)\n✔ reports provider errors and malformed catalogs in Chinese (1.208042ms)\n✔ requires a key when neither the form nor saved settings provide one (1.273125ms)\n✔ uses the dedicated DeepSeek provider factory for the built-in provider (0.89075ms)\n✔ enables OpenAI Responses reasoning summaries only for that protocol (0.111542ms)\n✔ passes supported reasoning to the model and falls back for unsupported levels (338.72925ms)\n✔ exposes only supported reasoning efforts in stable UI order (1.073209ms)\n✔ creates an agent request carrying the selected reasoning effort (0.08675ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (8.785041ms)\n✔ persists only encrypted credentials and never returns a saved API key (5.140083ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (11.454833ms)\n✔ migrates version 1 string models without losing credentials or active selection (4.21625ms)\n✔ rejects non-positive model limits (1.903625ms)\n✔ rejects invalid provider IDs and active models outside the provider catalog (4.21575ms)\n✔ validates a strict discriminated tool result contract (203.457375ms)\n✔ maps invalid input and unknown exceptions to safe failures (0.455375ms)\n✔ keeps failure state and summary aligned for UI and model output (0.1395ms)\n✔ centralizes read budgets and reports truncation explicitly (0.879209ms)\n✔ ToolLoopAgent exposes read tools, returns structured failure and lets the model recover (621.520459ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (367.162166ms)\n✔ structured tool fallback renders ok:false as an expanded failure with recovery (925.860791ms)\n✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (674.550541ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (616.36775ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (170.348083ms)\n✔ renderer 实例跨视图保留，快速切换只采用\n... output truncated ...",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-20T09:55:52.873Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 18 modules transformed.\nrendering chunks...\nout/main/index.js  57.08 kB\n✓ built in 102ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.52 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3082 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-BDZJhOjg.css    148.01 kB\n../../out/renderer/assets/index-Be3q_hFW.js   2,790.59 kB\n✓ built in 2.83s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            },
+            {
+              "command": "node .agent-harness/scripts/clean-state-check.mjs --skip-verification",
+              "verifiedAt": "2026-09-20T09:55:52.910Z",
+              "exitCode": 0,
+              "stdout": "=== Clean-state passed ===",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "test -s .agent-harness/evidence/workspace-read-tools-acceptance.md && rg -n '^Acceptance: PASS$' .agent-harness/evidence/workspace-read-tools-acceptance.md && node --test tests/*.test.ts && pnpm run build && node .agent-harness/scripts/clean-state-check.mjs --skip-verification",
+            "verifiedAt": "2026-09-20T09:55:52.910Z",
+            "exitCode": 0,
+            "stdout": "43:Acceptance: PASS\n✔ splits a coarse Chinese provider delta into incremental UI chunks before end (739.904791ms)\n✔ aborting an active stream stops later chunks and emits one end event (204.293917ms)\n✔ does not advertise the retired tool and still streams an answer (701.076667ms)\n✔ reads valid preferences and falls back on invalid persisted values (5.290042ms)\n✔ persists preferences and reports storage failures without throwing (0.601416ms)\n✔ applies the saved appearance before consumers read runtime state (207.182875ms)\n✔ system mode follows OS changes while explicit themes ignore them (202.090416ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (270.155667ms)\n✔ legacy AI Elements sources and imports are absent (135.151375ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (6.645583ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (0.938ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1651.60525ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (142.885875ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (894.963375ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (35.337125ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (229.667625ms)\n✔ consolidates multiple reasoning parts into one presentation block (137.431708ms)\n✔ stops the reasoning indicator when answer text has started (58.3985ms)\n✔ filters the provider catalog and excludes configured models (5.420917ms)\n✔ toggles an individual model selection without duplicates (0.227084ms)\n✔ selects or clears all visible models while preserving hidden selections (0.179041ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.125042ms)\n✔ uses the provider default model factory for the Responses protocol (0.77ms)\n✔ uses chat completions for custom OpenAI-compatible providers (0.082417ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (26.795125ms)\n✔ uses an unsaved API key for a new provider (2.014959ms)\n✔ reports provider errors and malformed catalogs in Chinese (1.208042ms)\n✔ requires a key when neither the form nor saved settings provide one (1.273125ms)\n✔ uses the dedicated DeepSeek provider factory for the built-in provider (0.89075ms)\n✔ enables OpenAI Responses reasoning summaries only for that protocol (0.111542ms)\n✔ passes supported reasoning to the model and falls back for unsupported levels (338.72925ms)\n✔ exposes only supported reasoning efforts in stable UI order (1.073209ms)\n✔ creates an agent request carrying the selected reasoning effort (0.08675ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (8.785041ms)\n✔ persists only encrypted credentials and never returns a saved API key (5.140083ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (11.454833ms)\n✔ migrates version 1 string models without losing credentials or active selection (4.21625ms)\n✔ rejects non-positive model limits (1.903625ms)\n✔ rejects invalid provider IDs and active models outside the provider catalog (4.21575ms)\n✔ validates a strict discriminated tool result contract (203.457375ms)\n✔ maps invalid input and unknown exceptions to safe failures (0.455375ms)\n✔ keeps failure state and summary aligned for UI and model output (0.1395ms)\n✔ centralizes read budgets and reports truncation explicitly (0.879209ms)\n✔ ToolLoopAgent exposes read tools, returns structured failure and lets the model recover (621.520459ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (367.162166ms)\n✔ structured tool fallback renders ok:false as an expanded failure with recovery (925.860791ms)\n✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (674.550541ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (616.36775ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (170.348083ms)\n✔ rend\n... output truncated ...",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-20T09:55:52.910Z"
+    }
+  ]
+}

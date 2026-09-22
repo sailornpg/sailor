@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Sailor</title>
+    <script>
+      (() => {
+        const root = document.documentElement
+        const themeModes = ['system', 'light', 'dark']
+        const accentColors = ['default', 'blue', 'green', 'purple']
+        let theme = 'system'
+        let accent = 'default'
+
+        try {
+          const saved = JSON.parse(localStorage.getItem('sailor.appearance.v1') || 'null')
+          if (themeModes.includes(saved?.theme)) theme = saved.theme
+          if (accentColors.includes(saved?.accent)) accent = saved.accent
+        } catch {
+          // Invalid or unavailable local storage falls back to system defaults.
+        }
+
+        const resolvedTheme = theme === 'system'
+          ? matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          : theme
+        root.classList.toggle('dark', resolvedTheme === 'dark')
+        root.dataset.theme = resolvedTheme
+        root.dataset.accent = accent
+        root.style.colorScheme = resolvedTheme
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+node_modules/
+out/
+dist/
+.DS_Store
+*.log
+*.tsbuildinfo
+.env
+.env.local
+coverage/
+.artifacts/
+.devtools/
+
+.agent-harness/evidence/

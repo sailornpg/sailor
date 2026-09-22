@@ -1,0 +1,35 @@
+import { join } from 'node:path'
+import { BrowserWindow, nativeTheme, shell } from 'electron'
+
+export function createMainWindow(): BrowserWindow {
+  const window = new BrowserWindow({
+    width: 1440,
+    height: 920,
+    minWidth: 680,
+    minHeight: 640,
+    show: false,
+    titleBarStyle: 'hiddenInset',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0d0d0d' : '#ffffff',
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  })
+
+  window.once('ready-to-show', () => window.show())
+
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    void shell.openExternal(url)
+    return { action: 'deny' }
+  })
+
+  if (process.env.ELECTRON_RENDERER_URL) {
+    void window.loadURL(process.env.ELECTRON_RENDERER_URL)
+  } else {
+    void window.loadFile(join(__dirname, '../renderer/index.html'))
+  }
+
+  return window
+}

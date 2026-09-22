@@ -1,0 +1,95 @@
+import type { Chat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
+import { PanelRightClose } from "lucide-react";
+import type {
+  ModelSelection,
+  ProjectSummary,
+  SettingsSnapshot,
+} from "@shared/contracts";
+import type { WorkspaceChatSummary } from "@shared/workspaces";
+import type { WorkspaceChats } from "@/lib/WorkspaceChats";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { SailorChatProvider } from "./runtime/SailorChatProvider";
+import { SailorThread } from "./thread/SailorThread";
+
+interface ChatWorkspaceProps {
+  chat: Chat<UIMessage>;
+  summary?: WorkspaceChatSummary;
+  project?: ProjectSummary;
+  registry: WorkspaceChats;
+  switching: boolean;
+  onRetrySave: () => void;
+  settings: SettingsSnapshot;
+  onSelectModel: (selection: ModelSelection) => Promise<void>;
+  onOpenSettings: () => void;
+  onToggleInspector: () => void;
+}
+
+export function ChatWorkspace({
+  chat,
+  summary,
+  project,
+  registry,
+  switching,
+  onRetrySave,
+  settings,
+  onSelectModel,
+  onOpenSettings,
+  onToggleInspector,
+}: ChatWorkspaceProps) {
+  const isGenerating = summary?.status === "running";
+
+  return (
+    <SailorChatProvider chat={chat}>
+      <main className="workspace">
+        <header className="topbar window-drag">
+          <div className="title-group no-drag">
+            <span className="workspace-current-title" title={summary?.title}>
+              {summary?.title ?? "新会话"}
+            </span>
+            {switching && (
+              <span className="muted" role="status">
+                切换中…
+              </span>
+            )}
+            <span className={isGenerating ? "status-dot busy" : "status-dot"} />
+          </div>
+          <div className="topbar-actions no-drag">
+            {/* <span className="workspace-path" title={project?.rootPath}>{project?.name}</span> */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  aria-label="切换检查器"
+                  className="icon-button"
+                  onClick={onToggleInspector}
+                  size="icon"
+                  type="button"
+                  variant="ghost"
+                >
+                  <PanelRightClose size={17} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>切换检查器</TooltipContent>
+            </Tooltip>
+          </div>
+        </header>
+
+        <SailorThread
+          chatId={chat.id}
+          onOpenSettings={onOpenSettings}
+          onRetrySave={onRetrySave}
+          onSelectModel={onSelectModel}
+          project={project}
+          registry={registry}
+          settings={settings}
+          summary={summary}
+        />
+      </main>
+    </SailorChatProvider>
+  );
+}

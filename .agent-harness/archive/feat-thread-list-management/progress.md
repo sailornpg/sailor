@@ -1,0 +1,99 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-21T07:58:46.174Z
+**Feature ID:** feat-thread-list-management
+**Feature Name:** 官方任务列表与会话管理
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** none
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+按工作区显示官方 ThreadList，支持持久化重命名、归档恢复与删除，保护运行中及未保存会话。
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-21T07:39:56.831Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "checklist": [
+    {
+      "action": "主进程管理会话并保持旧数据兼容，标题固定、归档恢复和删除原子保存",
+      "coverage": "unit",
+      "tdd": true,
+      "test": "node --test tests/workspace-store.test.ts tests/workspace-management.test.ts",
+      "verify": "node --test tests/workspace-ipc.test.ts tests/workspace-chat-lifecycle.test.ts",
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/workspace-store.test.ts tests/workspace-management.test.ts",
+        "verifiedAt": "2026-09-21T07:39:47.424Z",
+        "exitCode": 0,
+        "stdout": "✔ 会话管理校验输入、阻止运行和未保存时修改，并清理 live 缓存 (1215.661792ms)\n✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (241.089958ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (136.921333ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (173.90275ms)\n✔ 损坏和非法外键文件不被覆盖 (123.692208ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (123.955125ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1576.844083",
+        "stderr": ""
+      },
+      "verifyEvidence": {
+        "command": "node --test tests/workspace-ipc.test.ts tests/workspace-chat-lifecycle.test.ts",
+        "verifiedAt": "2026-09-21T07:39:50.716Z",
+        "exitCode": 0,
+        "stdout": "✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (1283.771958ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (369.435208ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (102.666083ms)\n✔ renderer 实例跨视图保留，快速切换只采用最后一次选择 (145.343666ms)\n✔ 取消后的未完成工具 parts 保留历史且可安全续聊 (282.446583ms)\n✔ 恢复中断运行不自动调用模型，运行前异常仍释放会话锁 (266.009291ms)\n✔ 切换视图不等待偏好写盘，偏好失败不会阻止访问其他会话 (122.271291ms)\n✔ 已删除工具的成功历史可恢复且不会重新执行 (288.18675ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (767.339083ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (167.860416ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (146.47275ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3262.627208",
+        "stderr": ""
+      },
+      "evidence": {
+        "command": "node --test tests/workspace-ipc.test.ts tests/workspace-chat-lifecycle.test.ts",
+        "verifiedAt": "2026-09-21T07:39:50.716Z",
+        "exitCode": 0,
+        "stdout": "✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (1283.771958ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (369.435208ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (102.666083ms)\n✔ renderer 实例跨视图保留，快速切换只采用最后一次选择 (145.343666ms)\n✔ 取消后的未完成工具 parts 保留历史且可安全续聊 (282.446583ms)\n✔ 恢复中断运行不自动调用模型，运行前异常仍释放会话锁 (266.009291ms)\n✔ 切换视图不等待偏好写盘，偏好失败不会阻止访问其他会话 (122.271291ms)\n✔ 已删除工具的成功历史可恢复且不会重新执行 (288.18675ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (767.339083ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (167.860416ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (146.47275ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3262.627208",
+        "stderr": ""
+      }
+    },
+    {
+      "action": "官方任务列表接线及类型构建验证，更新文档",
+      "coverage": "static",
+      "tdd": false,
+      "coverage_reason": "官方 UI 接线通过类型和渲染回归校验。",
+      "verify": [
+        "node --test tests/thread-list.test.ts",
+        "pnpm run build"
+      ],
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/thread-list.test.ts",
+          "verifiedAt": "2026-09-21T07:39:51.574Z",
+          "exitCode": 0,
+          "stdout": "✔ 官方列表展示本工作区会话、活动项和状态，归档列表默认收起 (649.79475ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 829.341625",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-21T07:39:56.831Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  69.08 kB\n✓ built in 116ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.15 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3246 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-Ds9xpySe.css    166.49 kB\n../../out/renderer/assets/index-ByqqudbZ.js   3,124.00 kB\n✓ built in 3.64s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/thread-list.test.ts && pnpm run build",
+        "verifiedAt": "2026-09-21T07:39:56.831Z",
+        "exitCode": 0,
+        "stdout": "✔ 官方列表展示本工作区会话、活动项和状态，归档列表默认收起 (649.79475ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 829.341625\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  69.08 kB\n✓ built in 116ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.15 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3246 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-Ds9xpySe.css    166.49 kB\n../../out/renderer/assets/index-ByqqudbZ.js   3,124.00 kB\n✓ built in 3.64s",
+        "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    }
+  ]
+}
+```

@@ -1,0 +1,235 @@
+{
+  "archives": [
+    {
+      "id": "feat-001",
+      "title": "Desktop Architecture Baseline",
+      "status": "done",
+      "archived_at": "2026-09-20T02:15:24.516Z",
+      "archive_path": ".agent-harness/archive/feat-001"
+    },
+    {
+      "id": "feat-model-provider-settings",
+      "title": "In-app Model Provider Settings",
+      "status": "done",
+      "archived_at": "2026-09-20T02:15:24.586Z",
+      "archive_path": ".agent-harness/archive/feat-model-provider-settings"
+    },
+    {
+      "id": "feat-provider-model-catalog",
+      "title": "Provider Model Catalog and Chinese UI",
+      "status": "done",
+      "archived_at": "2026-09-20T02:15:24.654Z",
+      "archive_path": ".agent-harness/archive/feat-provider-model-catalog"
+    },
+    {
+      "id": "feat-model-picker-dialog",
+      "title": "Model Catalog Picker Dialog",
+      "status": "done",
+      "archived_at": "2026-09-20T02:15:24.722Z",
+      "archive_path": ".agent-harness/archive/feat-model-picker-dialog"
+    },
+    {
+      "id": "feat-streaming-reasoning-tools",
+      "title": "流式回答、推理过程与工具调用",
+      "status": "done",
+      "archived_at": "2026-09-20T03:46:17.451Z",
+      "archive_path": ".agent-harness/archive/feat-streaming-reasoning-tools"
+    },
+    {
+      "id": "feat-appearance-settings",
+      "title": "设置弹窗外观与深浅主题",
+      "status": "done",
+      "archived_at": "2026-09-20T04:39:16.034Z",
+      "archive_path": ".agent-harness/archive/feat-appearance-settings"
+    },
+    {
+      "id": "feat-split-provider-settings-dialog",
+      "title": "拆分设置弹窗组件结构",
+      "status": "done",
+      "archived_at": "2026-09-20T04:39:16.107Z",
+      "archive_path": ".agent-harness/archive/feat-split-provider-settings-dialog"
+    },
+    {
+      "id": "feat-workspace-chat-sidebar",
+      "title": "按工作目录组织会话的侧边栏",
+      "status": "done",
+      "archived_at": "2026-09-20T06:40:40.745Z",
+      "archive_path": ".agent-harness/archive/feat-workspace-chat-sidebar"
+    },
+    {
+      "id": "feat-assistant-ui-migration",
+      "title": "聊天 UI 全量迁移至 assistant-ui",
+      "status": "done",
+      "archived_at": "2026-09-20T08:49:09.554Z",
+      "archive_path": ".agent-harness/archive/feat-assistant-ui-migration"
+    },
+    {
+      "id": "feat-remove-update-plan",
+      "title": "移除 updatePlan 并复用官方工具 UI",
+      "status": "done",
+      "archived_at": "2026-09-20T08:49:09.629Z",
+      "archive_path": ".agent-harness/archive/feat-remove-update-plan"
+    },
+    {
+      "id": "feat-assistant-ui-composer",
+      "title": "使用 assistant-ui Composer 重做任务输入区",
+      "status": "done",
+      "archived_at": "2026-09-21T02:12:34.598Z",
+      "archive_path": ".agent-harness/archive/feat-assistant-ui-composer"
+    },
+    {
+      "id": "feat-workspace-read-tools",
+      "title": "结构化反馈与工作区只读工具",
+      "status": "done",
+      "archived_at": "2026-09-21T02:12:34.625Z",
+      "archive_path": ".agent-harness/archive/feat-workspace-read-tools"
+    },
+    {
+      "id": "feat-workspace-write-tools",
+      "title": "可靠文件写入与补丁",
+      "status": "done",
+      "archived_at": "2026-09-21T02:12:34.652Z",
+      "archive_path": ".agent-harness/archive/feat-workspace-write-tools"
+    },
+    {
+      "id": "feat-shell-execution-tool",
+      "title": "可取消的本机命令执行",
+      "status": "done",
+      "archived_at": "2026-09-21T02:12:34.679Z",
+      "archive_path": ".agent-harness/archive/feat-shell-execution-tool"
+    },
+    {
+      "id": "feat-web-search-tool",
+      "title": "可追溯 Web 搜索",
+      "status": "done",
+      "archived_at": "2026-09-21T02:12:34.706Z",
+      "archive_path": ".agent-harness/archive/feat-web-search-tool"
+    },
+    {
+      "id": "feat-pi-harness",
+      "title": "Pi Harness 本地编程会话",
+      "status": "done",
+      "archived_at": "2026-09-21T05:38:15.591Z",
+      "archive_path": ".agent-harness/archive/feat-pi-harness"
+    },
+    {
+      "id": "feat-thinking-tool-timeline",
+      "title": "Thinking Indicator 与 Tool Timeline 样式接入",
+      "status": "done",
+      "archived_at": "2026-09-21T06:04:19.098Z",
+      "archive_path": ".agent-harness/archive/feat-thinking-tool-timeline"
+    },
+    {
+      "id": "feat-composer-model-style",
+      "title": "模型选择入口对齐官方 Composer 样式",
+      "status": "done",
+      "archived_at": "2026-09-21T06:04:19.172Z",
+      "archive_path": ".agent-harness/archive/feat-composer-model-style"
+    },
+    {
+      "id": "feat-official-timeline-parity",
+      "title": "修正时间线重复展示并恢复官方样式",
+      "status": "done",
+      "archived_at": "2026-09-21T06:04:19.244Z",
+      "archive_path": ".agent-harness/archive/feat-official-timeline-parity"
+    },
+    {
+      "id": "feat-tool-call-display",
+      "title": "工具展示从 ToolTimeline 替换为官方 ToolCall",
+      "status": "done",
+      "archived_at": "2026-09-21T06:27:00.039Z",
+      "archive_path": ".agent-harness/archive/feat-tool-call-display"
+    },
+    {
+      "id": "feat-approval-card-style",
+      "title": "精简推理与命令展示并接入官方 Approval Card",
+      "status": "done",
+      "archived_at": "2026-09-21T06:27:00.118Z",
+      "archive_path": ".agent-harness/archive/feat-approval-card-style"
+    },
+    {
+      "id": "fix-default-border-color",
+      "title": "修复组件默认黑边",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:45.950Z",
+      "archive_path": ".agent-harness/archive/fix-default-border-color"
+    },
+    {
+      "id": "docs-assistant-ui-design-rules",
+      "title": "强制 assistant-ui 页面设计约束",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:45.978Z",
+      "archive_path": ".agent-harness/archive/docs-assistant-ui-design-rules"
+    },
+    {
+      "id": "fix-thread-menu-border",
+      "title": "修正会话菜单黑边",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:46.005Z",
+      "archive_path": ".agent-harness/archive/fix-thread-menu-border"
+    },
+    {
+      "id": "feat-composer-model-context",
+      "title": "简洁模型菜单与上下文用量",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:46.034Z",
+      "archive_path": ".agent-harness/archive/feat-composer-model-context"
+    },
+    {
+      "id": "feat-unified-approval-card",
+      "title": "统一权限提示卡片",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:46.065Z",
+      "archive_path": ".agent-harness/archive/feat-unified-approval-card"
+    },
+    {
+      "id": "fix-context-usage-after-chat",
+      "title": "修复会话结束后上下文用量缺失",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:46.093Z",
+      "archive_path": ".agent-harness/archive/fix-context-usage-after-chat"
+    },
+    {
+      "id": "feat-white-composer-surface",
+      "title": "白色 Composer 与轻阴影",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:46.120Z",
+      "archive_path": ".agent-harness/archive/feat-white-composer-surface"
+    },
+    {
+      "id": "feat-conversation-map",
+      "title": "官方会话摘要导航",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:46.147Z",
+      "archive_path": ".agent-harness/archive/feat-conversation-map"
+    },
+    {
+      "id": "feat-thread-list-management",
+      "title": "官方任务列表与会话管理",
+      "status": "done",
+      "archived_at": "2026-09-21T07:58:46.174Z",
+      "archive_path": ".agent-harness/archive/feat-thread-list-management"
+    },
+    {
+      "id": "feat-settings-design-cleanup",
+      "title": "统一设置设计并移除旧搜索与本机执行",
+      "status": "done",
+      "archived_at": "2026-09-21T08:40:39.872Z",
+      "archive_path": ".agent-harness/archive/feat-settings-design-cleanup"
+    },
+    {
+      "id": "feat-sidebar-simplify",
+      "title": "简化侧栏工作区入口",
+      "status": "done",
+      "archived_at": "2026-09-21T08:40:39.945Z",
+      "archive_path": ".agent-harness/archive/feat-sidebar-simplify"
+    },
+    {
+      "id": "feat-sidebar-active-highlight",
+      "title": "增强当前会话选中效果",
+      "status": "done",
+      "archived_at": "2026-09-21T08:40:40.016Z",
+      "archive_path": ".agent-harness/archive/feat-sidebar-active-highlight"
+    }
+  ]
+}

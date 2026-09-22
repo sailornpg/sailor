@@ -1,0 +1,80 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-21T07:58:46.034Z
+**Feature ID:** feat-composer-model-context
+**Feature Name:** 简洁模型菜单与上下文用量
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** none
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+复用官方 ComposerModelTrigger/Menu/ModelItem 与 ComposerContext；保留模型持久化和推理设置，展示最近一次模型调用用量快照，缺失时明确未知。
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-21T06:41:33.805Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "checklist": [
+    {
+      "action": "接入简洁模型菜单、推理选择与官方上下文圆环，并通过类型检查和构建",
+      "coverage": "static",
+      "tdd": false,
+      "coverage_reason": "官方 source component 的视觉及接线修改，以构建及视觉验收核查。",
+      "verify": "pnpm run build",
+      "status": "done",
+      "verifyEvidence": {
+        "command": "pnpm run build",
+        "verifiedAt": "2026-09-21T06:41:22.310Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  66.23 kB\n✓ built in 105ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3118 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-CkbYoWPh.css    159.02 kB\n../../out/renderer/assets/index-YVzGhpOk.js   2,853.77 kB\n✓ built in 2.96s",
+        "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      },
+      "evidence": {
+        "command": "pnpm run build",
+        "verifiedAt": "2026-09-21T06:41:22.310Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  66.23 kB\n✓ built in 105ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3118 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-CkbYoWPh.css    159.02 kB\n../../out/renderer/assets/index-YVzGhpOk.js   2,853.77 kB\n✓ built in 2.96s",
+        "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    },
+    {
+      "action": "验证用量快照数据投影与 Pi 原有运行链路",
+      "coverage": "integration",
+      "tdd": false,
+      "coverage_reason": "复用真实 Pi 集成测试，追加边界投影检查。",
+      "verify": "node --test tests/composer-context.test.ts tests/pi-agent.test.ts",
+      "status": "done",
+      "verifyEvidence": {
+        "command": "node --test tests/composer-context.test.ts tests/pi-agent.test.ts",
+        "verifiedAt": "2026-09-21T06:41:33.805Z",
+        "exitCode": 0,
+        "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (0.49975ms)\n✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (1984.065084ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (551.852916ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (961.574334ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (2124.570959ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (522.559209ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (1025.391791ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (623.347291ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (569.030208ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (1967.710916ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (972.165875ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 11460.123167",
+        "stderr": ""
+      },
+      "evidence": {
+        "command": "node --test tests/composer-context.test.ts tests/pi-agent.test.ts",
+        "verifiedAt": "2026-09-21T06:41:33.805Z",
+        "exitCode": 0,
+        "stdout": "✔ 用量按最近调用快照读取，历史缺失和非法统计保持未知 (0.49975ms)\n✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (1984.065084ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (551.852916ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (961.574334ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (2124.570959ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (522.559209ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (1025.391791ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (623.347291ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (569.030208ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (1967.710916ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (972.165875ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 11460.123167",
+        "stderr": ""
+      }
+    }
+  ]
+}
+```

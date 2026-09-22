@@ -1,0 +1,58 @@
+{
+  "features": [
+    {
+      "id": "feat-composer-model-style",
+      "name": "模型选择入口对齐官方 Composer 样式",
+      "status": "done",
+      "scope": [
+        "模型选择按钮与弹出面板样式",
+        "保留选择模型和推理等级行为"
+      ],
+      "checklist": [
+        {
+          "action": "使用官方 surface tokens 调整按钮与面板并验证构建",
+          "status": "done",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "可逆的纯样式调整，不新增镜像实现测试；复用模型与推理选择回归。",
+          "test": "node --test tests/model-catalog-selection.test.ts tests/reasoning-selection.test.ts",
+          "verify": [
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "testEvidence": {
+            "command": "node --test tests/model-catalog-selection.test.ts tests/reasoning-selection.test.ts",
+            "verifiedAt": "2026-09-21T05:47:00.372Z",
+            "exitCode": 0,
+            "stdout": "✔ filters the provider catalog and excludes configured models (3.568666ms)\n✔ toggles an individual model selection without duplicates (0.474625ms)\n✔ selects or clears all visible models while preserving hidden selections (0.309209ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.482875ms)\n✔ exposes only supported reasoning efforts in stable UI order (0.860167ms)\n✔ creates an agent request carrying the selected reasoning effort (0.116959ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 180.277625",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-21T05:47:01.334Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-21T05:47:06.199Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  65.24 kB\n✓ built in 108ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3120 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-DnDIomHL.css    157.73 kB\n../../out/renderer/assets/index-BlvdvJTN.js   2,913.97 kB\n✓ built in 3.38s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-21T05:47:06.199Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  65.24 kB\n✓ built in 108ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3120 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-DnDIomHL.css    157.73 kB\n../../out/renderer/assets/index-BlvdvJTN.js   2,913.97 kB\n✓ built in 3.38s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-21T05:47:06.200Z"
+    }
+  ]
+}

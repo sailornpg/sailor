@@ -1,0 +1,59 @@
+import { contextBridge, ipcRenderer } from 'electron'
+import {
+  IPC,
+  type AgentRunEvent,
+  type AgentRunRequest,
+  type FetchProviderModelsInput,
+  type ModelSelection,
+  type ProviderInput,
+  type SailorApi,
+  type WriteApprovalResponse,
+} from '@shared/contracts.js'
+
+const api: SailorApi = {
+  app: {
+    getVersion: () => ipcRenderer.invoke(IPC.appVersion),
+  },
+  agent: {
+    start: (request: AgentRunRequest) => ipcRenderer.invoke(IPC.agentStart, request),
+    abort: (runId: string) => ipcRenderer.invoke(IPC.agentAbort, runId),
+    respondToApproval: (response: WriteApprovalResponse) =>
+      ipcRenderer.invoke(IPC.agentRespondToApproval, response),
+    revokeApprovals: (chatId: string) => ipcRenderer.invoke(IPC.agentRevokeApprovals, chatId),
+    subscribe: (listener) => {
+      const handler = (
+        _event: Electron.IpcRendererEvent,
+        payload: { runId: string; event: AgentRunEvent },
+      ) => listener(payload.runId, payload.event)
+
+      ipcRenderer.on(IPC.agentEvent, handler)
+      return () => ipcRenderer.removeListener(IPC.agentEvent, handler)
+    },
+  },
+  workspaces: {
+    manageChat: (id, input) => ipcRenderer.invoke(IPC.workspaceManageChat, id, input),
+    subscribe: (listener) => {
+      const handler = () => listener()
+      ipcRenderer.on(IPC.workspaceChanged, handler)
+      return () => ipcRenderer.removeListener(IPC.workspaceChanged, handler)
+    },
+    retrySave: (id) => ipcRenderer.invoke(IPC.workspaceRetrySave, id),
+    snapshot: () => ipcRenderer.invoke(IPC.workspaceSnapshot),
+    pickProject: () => ipcRenderer.invoke(IPC.workspacePick),
+    createChat: (id) => ipcRenderer.invoke(IPC.workspaceCreateChat, id),
+    getChat: (id) => ipcRenderer.invoke(IPC.workspaceGetChat, id),
+    setPreferences: (input) => ipcRenderer.invoke(IPC.workspacePreferences, input),
+  },
+  settings: {
+    getSnapshot: () => ipcRenderer.invoke(IPC.settingsProviders),
+    saveProvider: (input: ProviderInput) => ipcRenderer.invoke(IPC.settingsSaveProvider, input),
+    deleteProvider: (providerId: string) =>
+      ipcRenderer.invoke(IPC.settingsDeleteProvider, providerId),
+    setActiveModel: (selection: ModelSelection) =>
+      ipcRenderer.invoke(IPC.settingsSetActiveModel, selection),
+    fetchModels: (input: FetchProviderModelsInput) =>
+      ipcRenderer.invoke(IPC.settingsFetchModels, input),
+  },
+}
+
+contextBridge.exposeInMainWorld('sailor', api)

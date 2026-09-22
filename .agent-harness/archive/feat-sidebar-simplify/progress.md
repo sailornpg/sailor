@@ -1,0 +1,71 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-21T08:40:39.945Z
+**Feature ID:** feat-sidebar-simplify
+**Feature Name:** 简化侧栏工作区入口
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** feat-sidebar-active-highlight
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+保留工作区标题与加号，删除品牌旁重复标签和空态大图标/按钮，仅留一行提示。
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-21T08:30:58.073Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "checklist": [
+    {
+      "action": "简化侧栏重复入口并实际检查浅深色和窄窗口",
+      "coverage": "manual-exception",
+      "tdd": false,
+      "coverage_reason": "可逆的静态视觉精简，复用既有添加操作；无需新增镜像测试。",
+      "verify": [
+        "pnpm run typecheck",
+        "pnpm run build"
+      ],
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-21T08:30:51.650Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-21T08:30:58.072Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 19 modules transformed.\nrendering chunks...\nout/main/index.js  63.64 kB\n✓ built in 121ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3245 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-C_ib_sJ2.css    163.23 kB\n../../out/renderer/assets/index-NKDm6GRy.js   3,119.17 kB\n✓ built in 4.45s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        }
+      ],
+      "evidence": {
+        "command": "pnpm run typecheck && pnpm run build",
+        "verifiedAt": "2026-09-21T08:30:58.072Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 19 modules transformed.\nrendering chunks...\nout/main/index.js  63.64 kB\n✓ built in 121ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3245 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-C_ib_sJ2.css    163.23 kB\n../../out/renderer/assets/index-NKDm6GRy.js   3,119.17 kB\n✓ built in 4.45s",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      },
+      "visualEvidence": ".agent-harness/evidence/sidebar-simple-light.png; sidebar-simple-dark.png; sidebar-simple-narrow.png"
+    }
+  ]
+}
+```

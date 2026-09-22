@@ -1,0 +1,100 @@
+{
+  "features": [
+    {
+      "id": "feat-model-picker-dialog",
+      "name": "Model Catalog Picker Dialog",
+      "description": "获取提供商模型目录后使用独立小弹窗搜索和多选模型，支持选择当前筛选结果中的全部模型并批量加入配置。",
+      "dependencies": [
+        "feat-provider-model-catalog"
+      ],
+      "trd_spec": "docs/architecture.md",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "实现模型目录选择的搜索、筛除已配置模型、切换选择、筛选结果全选和批量合并纯逻辑",
+          "coverage": "unit",
+          "test": "node --test tests/model-catalog-selection.test.ts",
+          "verify": [
+            "node --test tests/model-catalog-selection.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/model-catalog-selection.test.ts",
+            "verifiedAt": "2026-09-18T12:04:02.621Z",
+            "exitCode": 0,
+            "stdout": "✔ filters the provider catalog and excludes configured models (3.3485ms)\n✔ toggles an individual model selection without duplicates (0.13525ms)\n✔ selects or clears all visible models while preserving hidden selections (0.111833ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.127167ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 70.615666",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/model-catalog-selection.test.ts",
+              "verifiedAt": "2026-09-18T12:04:02.715Z",
+              "exitCode": 0,
+              "stdout": "✔ filters the provider catalog and excludes configured models (3.098042ms)\n✔ toggles an individual model selection without duplicates (0.126334ms)\n✔ selects or clears all visible models while preserving hidden selections (0.117209ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.127625ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 64.956833",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-18T12:04:03.321Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/model-catalog-selection.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-18T12:04:03.321Z",
+            "exitCode": 0,
+            "stdout": "✔ filters the provider catalog and excludes configured models (3.098042ms)\n✔ toggles an individual model selection without duplicates (0.126334ms)\n✔ selects or clears all visible models while preserving hidden selections (0.117209ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.127625ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 64.956833",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "将获取可用模型交互改为中文小弹窗，接入搜索、逐项勾选、全选、取消和添加所选，并完成桌面与窄视口验收",
+          "coverage": "static",
+          "verify": [
+            "pnpm run typecheck",
+            "rg \"选择要添加的模型|全选|添加所选\" src/renderer/src/components/settings",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "coverage_reason": "该项主要验收嵌套弹窗的视觉布局、焦点交互和桌面窗口响应式表现，需要通过构建与真实 Electron 界面检查。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-18T12:24:18.348Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "rg \"选择要添加的模型|全选|添加所选\" src/renderer/src/components/settings",
+              "verifiedAt": "2026-09-18T12:24:18.363Z",
+              "exitCode": 0,
+              "stdout": "src/renderer/src/components/settings/ProviderSettingsDialog.tsx:            <DialogTitle>选择要添加的模型</DialogTitle>\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:              {allVisibleSelected ? '取消全选' : '全选'}\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:                添加所选{selectedModelIds.length > 0 ? `（${selectedModelIds.length}）` : ''}",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-18T12:24:27.616Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 9 modules transformed.\nrendering chunks...\nout/main/index.js  17.25 kB\n✓ built in 77ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  1.49 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 5720 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                           0.46 kB\n../../out/renderer/assets/index-J4W9ubpL.css                           79.05 kB\n../../out/renderer/assets/channel-RgCniJy2.js                           0.19 kB\n../../out/renderer/assets/init-ZxktEp_H.js                              0.26 kB\n../../out/renderer/assets/chunk-JWPE2WC7-B1GlrNFn.js                    0.36 kB\n../../out/renderer/assets/chunk-2Q5K7J3B-Ck_DXtxq.js                    0.37 kB\n../../out/renderer/assets/chunk-5VM5RSS4-WCEfn62t.js                    0.43 kB\n../../out/renderer/assets/chunk-XXDRQBXY-BppiiZO4.js                    0.48 kB\n../../out/renderer/assets/codeowners-awy7PWCD.js                        0.59 kB\n../../out/renderer/assets/codeowners-Gyog2tLO.js                        0.59 kB\n../../out/renderer/assets/stateDiagram-v2-MP3YSRHH-BM5bMaxO.js          0.67 kB\n../../out/renderer/assets/highlighted-body-KPVGNVTW-CBU_0LhD.js         0.70 kB\n../../out/renderer/assets/classDiagram-ZZMXUADV-_ZcP-iQk.js             0.71 kB\n../../out/renderer/assets/classDiagram-v2-VYDZK3BY-_ZcP-iQk.js          0.71 kB\n../../out/renderer/assets/swimlanesDiagram-VR7AAH4N-iSza2Uol.js         0.72 kB\n../../out/renderer/assets/tsv-ChRVFvMy.js                               0.77 kB\n../../out/renderer/assets/tsv-D5Ia16T4.js                               0.77 kB\n../../out/renderer/assets/shellsession-CkeTp4M1.js                      0.79 kB\n../../out/renderer/assets/shellsession-DF07J-v0.js                      0.79 kB\n../../out/renderer/assets/infoDiagram-27XIBGKW-CWEbufOu.js              0.95 kB\n../../out/renderer/assets/html-derivative-HU9p64q4.js                   0.97 kB\n../../out/renderer/assets/html-derivative-hBF5i0yR.js                   0.97 kB\n../../out/renderer/assets/qmldir-DuMSk0Oz.js                            1.04 kB\n../../out/renderer/assets/qmldir-CkkEh37r.js                            1.04 kB\n../../out/renderer/assets/git-rebase-D-XQSvDj.js                        1.05 kB\n../../out/renderer/assets/git-rebase-CBPs_8pF.js                        1.05 kB\n../../out/renderer/assets/chunk-POPQ4Y6H-DVLMpGAt.js                    1.06 kB\n../../out/renderer/assets/csv-Ba84L8e5.js                               1.17 kB\n../../out/renderer/assets/csv-D9W9MoyR.js                               1.17 kB\n../../out/renderer/assets/git-commit-PP9xCApN.js                        1.28 kB\n../../out/renderer/assets/git-commit-Dv4XKH0P.js                        1.29 kB\n../../out/renderer/assets/xsl-CnwVr_6q.js                               1.43 kB\n../../out/renderer/assets/xsl-DDzizk_a.js                               1.43 kB\n../../out/renderer/assets/dotenv-Bb4iNxXK.js                            1.46 kB\n../../out/renderer/assets/dotenv-C36DH-Tt.js                            1.46 kB\n../../out/renderer/assets/sparql-DswowMAp.js                            1.53 kB\n../../out/renderer/assets/sparql-B6gmlPDA.js                            1.53 kB\n../../out/renderer/assets/ini-B84Ha1bx.js                               1.56 kB\n../../out/renderer/assets/ini-CE4isUWa.js                               1.56 kB\n../../out/renderer/assets/sizeCapture-INFHLROL-rXGUF0-t.js              1.74 kB\n../../out/renderer/assets/fortran-fixed-form-CpmOyvS5.js                1.76 kB\n../../out/renderer/assets/fortran-fixed-form-CiZ197_F.js                1.76 kB\n../../out/renderer/assets/docker-CUaLOm2I.js                            1.78 kB\n../../out/renderer/assets/docker-CPCU3osI.js                            1.78 kB\n../../out/renderer/assets/hxml-Jle7o\n... output truncated ...",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run typecheck && rg \"选择要添加的模型|全选|添加所选\" src/renderer/src/components/settings && pnpm run build",
+            "verifiedAt": "2026-09-18T12:24:27.616Z",
+            "exitCode": 0,
+            "stdout": "src/renderer/src/components/settings/ProviderSettingsDialog.tsx:            <DialogTitle>选择要添加的模型</DialogTitle>\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:              {allVisibleSelected ? '取消全选' : '全选'}\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:                添加所选{selectedModelIds.length > 0 ? `（${selectedModelIds.length}）` : ''}\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 9 modules transformed.\nrendering chunks...\nout/main/index.js  17.25 kB\n✓ built in 77ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  1.49 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 5720 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                           0.46 kB\n../../out/renderer/assets/index-J4W9ubpL.css                           79.05 kB\n../../out/renderer/assets/channel-RgCniJy2.js                           0.19 kB\n../../out/renderer/assets/init-ZxktEp_H.js                              0.26 kB\n../../out/renderer/assets/chunk-JWPE2WC7-B1GlrNFn.js                    0.36 kB\n../../out/renderer/assets/chunk-2Q5K7J3B-Ck_DXtxq.js                    0.37 kB\n../../out/renderer/assets/chunk-5VM5RSS4-WCEfn62t.js                    0.43 kB\n../../out/renderer/assets/chunk-XXDRQBXY-BppiiZO4.js                    0.48 kB\n../../out/renderer/assets/codeowners-awy7PWCD.js                        0.59 kB\n../../out/renderer/assets/codeowners-Gyog2tLO.js                        0.59 kB\n../../out/renderer/assets/stateDiagram-v2-MP3YSRHH-BM5bMaxO.js          0.67 kB\n../../out/renderer/assets/highlighted-body-KPVGNVTW-CBU_0LhD.js         0.70 kB\n../../out/renderer/assets/classDiagram-ZZMXUADV-_ZcP-iQk.js             0.71 kB\n../../out/renderer/assets/classDiagram-v2-VYDZK3BY-_ZcP-iQk.js          0.71 kB\n../../out/renderer/assets/swimlanesDiagram-VR7AAH4N-iSza2Uol.js         0.72 kB\n../../out/renderer/assets/tsv-ChRVFvMy.js                               0.77 kB\n../../out/renderer/assets/tsv-D5Ia16T4.js                               0.77 kB\n../../out/renderer/assets/shellsession-CkeTp4M1.js                      0.79 kB\n../../out/renderer/assets/shellsession-DF07J-v0.js                      0.79 kB\n../../out/renderer/assets/infoDiagram-27XIBGKW-CWEbufOu.js              0.95 kB\n../../out/renderer/assets/html-derivative-HU9p64q4.js                   0.97 kB\n../../out/renderer/assets/html-derivative-hBF5i0yR.js                   0.97 kB\n../../out/renderer/assets/qmldir-DuMSk0Oz.js                            1.04 kB\n../../out/renderer/assets/qmldir-CkkEh37r.js                            1.04 kB\n../../out/renderer/assets/git-rebase-D-XQSvDj.js                        1.05 kB\n../../out/renderer/assets/git-rebase-CBPs_8pF.js                        1.05 kB\n../../out/renderer/assets/chunk-POPQ4Y6H-DVLMpGAt.js                    1.06 kB\n../../out/renderer/assets/csv-Ba84L8e5.js                               1.17 kB\n../../out/renderer/assets/csv-D9W9MoyR.js                               1.17 kB\n../../out/renderer/assets/git-commit-PP9xCApN.js                        1.28 kB\n../../out/renderer/assets/git-commit-Dv4XKH0P.js                        1.29 kB\n../../out/renderer/assets/xsl-CnwVr_6q.js                               1.43 kB\n../../out/renderer/assets/xsl-DDzizk_a.js                               1.43 kB\n../../out/renderer/assets/dotenv-Bb4iNxXK.js                            1.46 kB\n../../out/renderer/assets/dotenv-C36DH-Tt.js                            1.46 kB\n../../out/renderer/assets/sparql-DswowMAp.js                            1.53 kB\n../../out/renderer/assets/sparql-B6gmlPDA.js                            1.53 kB\n../../out/renderer/assets/ini-B84Ha1bx.js                               1.56 kB\n../../out/renderer/assets/ini-CE4isUWa.js                               1.56 kB\n../../out/renderer/assets/sizeCapture-INFHLROL-rXGUF0-t.j\n... output truncated ...",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-18T12:24:27.617Z"
+    }
+  ]
+}

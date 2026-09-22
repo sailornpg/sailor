@@ -1,0 +1,35 @@
+{
+  "features": [
+    {
+      "id": "docs-assistant-ui-design-rules",
+      "name": "强制 assistant-ui 页面设计约束",
+      "description": "在 CLAUDE.md 中记录官方设计来源、页面设计规则、项目例外和视觉验收要求。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "补充设计约束与完成前自检，校验文档关键入口",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "仅修改协作规范，不影响运行代码；检查文档入口及约束存在。",
+          "verify": "node -e \"const s=require('node:fs').readFileSync('CLAUDE.md','utf8'); for(const text of ['### 3.1 页面与组件设计（强制）','https://www.assistant-ui.com/design.md','UI 变更符合 §3.1']) if(!s.includes(text)) throw new Error('Missing: '+text)\"",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "node -e \"const s=require('node:fs').readFileSync('CLAUDE.md','utf8'); for(const text of ['### 3.1 页面与组件设计（强制）','https://www.assistant-ui.com/design.md','UI 变更符合 §3.1']) if(!s.includes(text)) throw new Error('Missing: '+text)\"",
+            "verifiedAt": "2026-09-21T07:51:41.211Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node -e \"const s=require('node:fs').readFileSync('CLAUDE.md','utf8'); for(const text of ['### 3.1 页面与组件设计（强制）','https://www.assistant-ui.com/design.md','UI 变更符合 §3.1']) if(!s.includes(text)) throw new Error('Missing: '+text)\"",
+            "verifiedAt": "2026-09-21T07:51:41.211Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-21T07:51:41.214Z"
+    }
+  ]
+}

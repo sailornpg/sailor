@@ -1,0 +1,57 @@
+{
+  "features": [
+    {
+      "id": "feat-conversation-map",
+      "name": "官方会话摘要导航",
+      "description": "安装官方 conversation-map，在当前会话右侧展示每轮摘要预览、阅读位置和点击定位。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "安装官方组件并接入 viewport 内的侧边导航，保持现有消息 runtime",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "官方 source component 接线与布局，通过类型检查和构建校验。",
+          "verify": "pnpm run build",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "pnpm run build",
+            "verifiedAt": "2026-09-21T07:14:45.330Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  66.32 kB\n✓ built in 115ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3243 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-6eLmvLRf.css    163.59 kB\n../../out/renderer/assets/index-Cg2DqhAM.js   3,039.75 kB\n✓ built in 3.25s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          },
+          "evidence": {
+            "command": "pnpm run build",
+            "verifiedAt": "2026-09-21T07:14:45.330Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  66.32 kB\n✓ built in 115ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3243 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-6eLmvLRf.css    163.59 kB\n../../out/renderer/assets/index-Cg2DqhAM.js   3,039.75 kB\n✓ built in 3.25s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "验证真实 Thread 中每轮导航、空会话与附件工具摘要",
+          "coverage": "integration",
+          "tdd": false,
+          "coverage_reason": "对官方导入组件与现有 Thread 做组合渲染验证。",
+          "verify": "node --test tests/conversation-map.test.ts",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "node --test tests/conversation-map.test.ts",
+            "verifiedAt": "2026-09-21T07:14:46.350Z",
+            "exitCode": 0,
+            "stdout": "✔ 会话导航在真实 Thread viewport 内按轮分组，并挂接实际消息锚点 (829.411875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 986.970083",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node --test tests/conversation-map.test.ts",
+            "verifiedAt": "2026-09-21T07:14:46.350Z",
+            "exitCode": 0,
+            "stdout": "✔ 会话导航在真实 Thread viewport 内按轮分组，并挂接实际消息锚点 (829.411875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 986.970083",
+            "stderr": ""
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-21T07:14:46.350Z"
+    }
+  ]
+}

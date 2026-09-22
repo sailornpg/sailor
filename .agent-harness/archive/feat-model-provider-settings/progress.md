@@ -1,0 +1,211 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-20T02:15:24.586Z
+**Feature ID:** feat-model-provider-settings
+**Feature Name:** In-app Model Provider Settings
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** feat-model-picker-dialog
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+在应用设置中管理 OpenAI、DeepSeek 与自定义 OpenAI 兼容提供商，安全保存 API Key，并允许会话区选择当前模型，不再依赖环境变量。
+
+## Dependencies
+
+- feat-001
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-18T11:05:30.125Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "trd_spec": "docs/architecture.md",
+  "checklist": [
+    {
+      "action": "实现主进程提供商配置领域逻辑与安全持久化，预置 OpenAI 和 DeepSeek，并确保渲染层摘要不返回已保存的明文 API Key",
+      "coverage": "unit",
+      "test": "node --test tests/settings-config.test.ts",
+      "verify": [
+        "node --test tests/settings-config.test.ts",
+        "pnpm run typecheck"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/settings-config.test.ts",
+        "verifiedAt": "2026-09-18T10:15:19.593Z",
+        "exitCode": 0,
+        "stdout": "✔ starts with editable OpenAI and DeepSeek provider presets (2.932917ms)\n✔ persists only encrypted credentials and never returns a saved API key (1.797334ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (2.307375ms)\n✔ rejects invalid provider IDs and active models outside the provider catalog (0.537208ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 76.087458",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/settings-config.test.ts",
+          "verifiedAt": "2026-09-18T10:15:19.700Z",
+          "exitCode": 0,
+          "stdout": "✔ starts with editable OpenAI and DeepSeek provider presets (2.826375ms)\n✔ persists only encrypted credentials and never returns a saved API key (2.491833ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (3.136833ms)\n✔ rejects invalid provider IDs and active models outside the provider catalog (0.832208ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 75.909375",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-18T10:15:20.254Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/settings-config.test.ts && pnpm run typecheck",
+        "verifiedAt": "2026-09-18T10:15:20.254Z",
+        "exitCode": 0,
+        "stdout": "✔ starts with editable OpenAI and DeepSeek provider presets (2.826375ms)\n✔ persists only encrypted credentials and never returns a saved API key (2.491833ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (3.136833ms)\n✔ rejects invalid provider IDs and active models outside the provider catalog (0.832208ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 75.909375",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+      }
+    },
+    {
+      "action": "增加经过运行时校验的设置 IPC/preload 契约，并让 AgentService 使用当前提供商、协议和模型而不是环境变量",
+      "coverage": "unit",
+      "test": "node --test tests/model-resolution.test.ts",
+      "verify": [
+        "node --test tests/model-resolution.test.ts",
+        "pnpm run typecheck",
+        "rg \"settings:providers|createOpenAI\" src/main src/preload src/shared"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/model-resolution.test.ts",
+        "verifiedAt": "2026-09-18T10:17:54.757Z",
+        "exitCode": 0,
+        "stdout": "✔ uses the provider default model factory for the Responses protocol (0.871875ms)\n✔ uses chat completions for OpenAI-compatible chat providers (0.096042ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 109.630125",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/model-resolution.test.ts",
+          "verifiedAt": "2026-09-18T10:17:54.892Z",
+          "exitCode": 0,
+          "stdout": "✔ uses the provider default model factory for the Responses protocol (0.670458ms)\n✔ uses chat completions for OpenAI-compatible chat providers (0.089333ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 106.402708",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-18T10:17:55.360Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "rg \"settings:providers|createOpenAI\" src/main src/preload src/shared",
+          "verifiedAt": "2026-09-18T10:17:55.377Z",
+          "exitCode": 0,
+          "stdout": "src/shared/contracts.ts:  settingsProviders: 'settings:providers',\nsrc/main/agent/createConfiguredModel.ts:import { createOpenAI } from '@ai-sdk/openai'\nsrc/main/agent/createConfiguredModel.ts:  providerFactory: CompatibleProviderFactory = createOpenAI as CompatibleProviderFactory,",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/model-resolution.test.ts && pnpm run typecheck && rg \"settings:providers|createOpenAI\" src/main src/preload src/shared",
+        "verifiedAt": "2026-09-18T10:17:55.377Z",
+        "exitCode": 0,
+        "stdout": "✔ uses the provider default model factory for the Responses protocol (0.670458ms)\n✔ uses chat completions for OpenAI-compatible chat providers (0.089333ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 106.402708\nsrc/shared/contracts.ts:  settingsProviders: 'settings:providers',\nsrc/main/agent/createConfiguredModel.ts:import { createOpenAI } from '@ai-sdk/openai'\nsrc/main/agent/createConfiguredModel.ts:  providerFactory: CompatibleProviderFactory = createOpenAI as CompatibleProviderFactory,",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+      }
+    },
+    {
+      "action": "实现从侧栏打开的模型设置弹窗，支持新增、编辑和删除提供商，并让会话输入区选择已配置模型",
+      "coverage": "static",
+      "verify": [
+        "pnpm run typecheck",
+        "rg \"ProviderSettingsDialog|onOpenSettings|activeModel\" src/renderer/src"
+      ],
+      "tdd": false,
+      "coverage_reason": "该项主要是视觉布局、交互接线和桌面窗口响应式表现，需要通过构建与实际 Electron 界面验收，前置单元断言无法表达主要验收标准。",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-18T10:21:49.283Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "rg \"ProviderSettingsDialog|onOpenSettings|activeModel\" src/renderer/src",
+          "verifiedAt": "2026-09-18T10:21:49.302Z",
+          "exitCode": 0,
+          "stdout": "src/renderer/src/components/chat/ChatWorkspace.tsx:  onOpenSettings: () => void\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:  onOpenSettings,\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:    ({ id }) => id === settings.activeModel?.providerId,\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:                    {settings.activeModel?.modelId ?? 'Select model'}\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:                      <button className=\"model-empty-action\" onClick={onOpenSettings} type=\"button\">\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:interface ProviderSettingsDialogProps {\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:export function ProviderSettingsDialog({\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:}: ProviderSettingsDialogProps) {\nsrc/renderer/src/components/layout/ProjectSidebar.tsx:  onOpenSettings: () => void\nsrc/renderer/src/components/layout/ProjectSidebar.tsx:export function ProjectSidebar({ onOpenSettings }: ProjectSidebarProps) {\nsrc/renderer/src/components/layout/ProjectSidebar.tsx:              onClick={onOpenSettings}\nsrc/renderer/src/components/layout/AppShell.tsx:import { ProviderSettingsDialog } from '@/components/settings/ProviderSettingsDialog'\nsrc/renderer/src/components/layout/AppShell.tsx:const emptySettings: SettingsSnapshot = { providers: [], activeModel: null }\nsrc/renderer/src/components/layout/AppShell.tsx:      <ProjectSidebar onOpenSettings={() => setSettingsOpen(true)} />\nsrc/renderer/src/components/layout/AppShell.tsx:        onOpenSettings={() => setSettingsOpen(true)}\nsrc/renderer/src/components/layout/AppShell.tsx:      <ProviderSettingsDialog",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "pnpm run typecheck && rg \"ProviderSettingsDialog|onOpenSettings|activeModel\" src/renderer/src",
+        "verifiedAt": "2026-09-18T10:21:49.302Z",
+        "exitCode": 0,
+        "stdout": "src/renderer/src/components/chat/ChatWorkspace.tsx:  onOpenSettings: () => void\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:  onOpenSettings,\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:    ({ id }) => id === settings.activeModel?.providerId,\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:                    {settings.activeModel?.modelId ?? 'Select model'}\nsrc/renderer/src/components/chat/ChatWorkspace.tsx:                      <button className=\"model-empty-action\" onClick={onOpenSettings} type=\"button\">\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:interface ProviderSettingsDialogProps {\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:export function ProviderSettingsDialog({\nsrc/renderer/src/components/settings/ProviderSettingsDialog.tsx:}: ProviderSettingsDialogProps) {\nsrc/renderer/src/components/layout/ProjectSidebar.tsx:  onOpenSettings: () => void\nsrc/renderer/src/components/layout/ProjectSidebar.tsx:export function ProjectSidebar({ onOpenSettings }: ProjectSidebarProps) {\nsrc/renderer/src/components/layout/ProjectSidebar.tsx:              onClick={onOpenSettings}\nsrc/renderer/src/components/layout/AppShell.tsx:import { ProviderSettingsDialog } from '@/components/settings/ProviderSettingsDialog'\nsrc/renderer/src/components/layout/AppShell.tsx:const emptySettings: SettingsSnapshot = { providers: [], activeModel: null }\nsrc/renderer/src/components/layout/AppShell.tsx:      <ProjectSidebar onOpenSettings={() => setSettingsOpen(true)} />\nsrc/renderer/src/components/layout/AppShell.tsx:        onOpenSettings={() => setSettingsOpen(true)}\nsrc/renderer/src/components/layout/AppShell.tsx:      <ProviderSettingsDialog",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+      }
+    },
+    {
+      "action": "移除模型和 API Key 的环境变量配置说明，更新架构文档并完成生产构建与 Electron 交互验收",
+      "coverage": "integration",
+      "verify": [
+        "test ! -f .env.example",
+        "! rg -n 'OPENAI_API_KEY|OPENAI_MODEL|loadEnvFile' src README.md docs",
+        "pnpm run build",
+        "test -f out/preload/index.cjs"
+      ],
+      "tdd": false,
+      "coverage_reason": "该项整合文档、构建产物与真实 Electron 窗口交互，结果依赖打包和人工视觉检查，不适合通过单个先失败的单元测试刻画。",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "test ! -f .env.example",
+          "verifiedAt": "2026-09-18T10:56:36.877Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": "! rg -n 'OPENAI_API_KEY|OPENAI_MODEL|loadEnvFile' src README.md docs",
+          "verifiedAt": "2026-09-18T10:56:36.903Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-18T10:56:46.151Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 8 modules transformed.\nrendering chunks...\nout/main/index.js  12.68 kB\n✓ built in 74ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  1.36 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 5719 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                           0.46 kB\n../../out/renderer/assets/index-BDUMtkRx.css                           73.15 kB\n../../out/renderer/assets/channel-B4Sfq7ri.js                           0.19 kB\n../../out/renderer/assets/init-ZxktEp_H.js                              0.26 kB\n../../out/renderer/assets/chunk-JWPE2WC7-DMi2tzL5.js                    0.36 kB\n../../out/renderer/assets/chunk-2Q5K7J3B-4D5Rbfrx.js                    0.37 kB\n../../out/renderer/assets/chunk-5VM5RSS4-BTfz934S.js                    0.43 kB\n../../out/renderer/assets/chunk-XXDRQBXY-DXaPmelQ.js                    0.48 kB\n../../out/renderer/assets/codeowners-awy7PWCD.js                        0.59 kB\n../../out/renderer/assets/codeowners-Gyog2tLO.js                        0.59 kB\n../../out/renderer/assets/stateDiagram-v2-MP3YSRHH-DWhN2RhA.js          0.67 kB\n../../out/renderer/assets/highlighted-body-KPVGNVTW-CL9HQDy4.js         0.70 kB\n../../out/renderer/assets/classDiagram-ZZMXUADV-_5nxfG_C.js             0.71 kB\n../../out/renderer/assets/classDiagram-v2-VYDZK3BY-_5nxfG_C.js          0.71 kB\n../../out/renderer/assets/swimlanesDiagram-VR7AAH4N-Dx0LaHxf.js         0.72 kB\n../../out/renderer/assets/tsv-ChRVFvMy.js                               0.77 kB\n../../out/renderer/assets/tsv-D5Ia16T4.js                               0.77 kB\n../../out/renderer/assets/shellsession-CkeTp4M1.js                      0.79 kB\n../../out/renderer/assets/shellsession-DF07J-v0.js                      0.79 kB\n../../out/renderer/assets/infoDiagram-27XIBGKW-65Vjge_u.js              0.95 kB\n../../out/renderer/assets/html-derivative-HU9p64q4.js                   0.97 kB\n../../out/renderer/assets/html-derivative-hBF5i0yR.js                   0.97 kB\n../../out/renderer/assets/qmldir-DuMSk0Oz.js                            1.04 kB\n../../out/renderer/assets/qmldir-CkkEh37r.js                            1.04 kB\n../../out/renderer/assets/git-rebase-D-XQSvDj.js                        1.05 kB\n../../out/renderer/assets/git-rebase-CBPs_8pF.js                        1.05 kB\n../../out/renderer/assets/chunk-POPQ4Y6H-DBZzmQss.js                    1.06 kB\n../../out/renderer/assets/csv-Ba84L8e5.js                               1.17 kB\n../../out/renderer/assets/csv-D9W9MoyR.js                               1.17 kB\n../../out/renderer/assets/git-commit-PP9xCApN.js                        1.28 kB\n../../out/renderer/assets/git-commit-Dv4XKH0P.js                        1.29 kB\n../../out/renderer/assets/xsl-CnwVr_6q.js                               1.43 kB\n../../out/renderer/assets/xsl-DDzizk_a.js                               1.43 kB\n../../out/renderer/assets/dotenv-Bb4iNxXK.js                            1.46 kB\n../../out/renderer/assets/dotenv-C36DH-Tt.js                            1.46 kB\n../../out/renderer/assets/sparql-DswowMAp.js                            1.53 kB\n../../out/renderer/assets/sparql-B6gmlPDA.js                            1.53 kB\n../../out/renderer/assets/ini-B84Ha1bx.js                               1.56 kB\n../../out/renderer/assets/ini-CE4isUWa.js                               1.56 kB\n../../out/renderer/assets/sizeCapture-INFHLROL-a0YmbKES.js              1.74 kB\n../../out/renderer/assets/fortran-fixed-form-CpmOyvS5.js                1.76 kB\n../../out/renderer/assets/fortran-fixed-form-CiZ197_F.js                1.76 kB\n../../out/renderer/assets/docker-CUaLOm2I.js                            1.78 kB\n../../out/renderer/assets/docker-CPCU3osI.js                            1.78 kB\n../../out/renderer/assets/hxml-Jle7o\n... output truncated ...",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        },
+        {
+          "command": "test -f out/preload/index.cjs",
+          "verifiedAt": "2026-09-18T10:56:46.154Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "test ! -f .env.example && ! rg -n 'OPENAI_API_KEY|OPENAI_MODEL|loadEnvFile' src README.md docs && pnpm run build && test -f out/preload/index.cjs",
+        "verifiedAt": "2026-09-18T10:56:46.154Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 8 modules transformed.\nrendering chunks...\nout/main/index.js  12.68 kB\n✓ built in 74ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  1.36 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 5719 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                           0.46 kB\n../../out/renderer/assets/index-BDUMtkRx.css                           73.15 kB\n../../out/renderer/assets/channel-B4Sfq7ri.js                           0.19 kB\n../../out/renderer/assets/init-ZxktEp_H.js                              0.26 kB\n../../out/renderer/assets/chunk-JWPE2WC7-DMi2tzL5.js                    0.36 kB\n../../out/renderer/assets/chunk-2Q5K7J3B-4D5Rbfrx.js                    0.37 kB\n../../out/renderer/assets/chunk-5VM5RSS4-BTfz934S.js                    0.43 kB\n../../out/renderer/assets/chunk-XXDRQBXY-DXaPmelQ.js                    0.48 kB\n../../out/renderer/assets/codeowners-awy7PWCD.js                        0.59 kB\n../../out/renderer/assets/codeowners-Gyog2tLO.js                        0.59 kB\n../../out/renderer/assets/stateDiagram-v2-MP3YSRHH-DWhN2RhA.js          0.67 kB\n../../out/renderer/assets/highlighted-body-KPVGNVTW-CL9HQDy4.js         0.70 kB\n../../out/renderer/assets/classDiagram-ZZMXUADV-_5nxfG_C.js             0.71 kB\n../../out/renderer/assets/classDiagram-v2-VYDZK3BY-_5nxfG_C.js          0.71 kB\n../../out/renderer/assets/swimlanesDiagram-VR7AAH4N-Dx0LaHxf.js         0.72 kB\n../../out/renderer/assets/tsv-ChRVFvMy.js                               0.77 kB\n../../out/renderer/assets/tsv-D5Ia16T4.js                               0.77 kB\n../../out/renderer/assets/shellsession-CkeTp4M1.js                      0.79 kB\n../../out/renderer/assets/shellsession-DF07J-v0.js                      0.79 kB\n../../out/renderer/assets/infoDiagram-27XIBGKW-65Vjge_u.js              0.95 kB\n../../out/renderer/assets/html-derivative-HU9p64q4.js                   0.97 kB\n../../out/renderer/assets/html-derivative-hBF5i0yR.js                   0.97 kB\n../../out/renderer/assets/qmldir-DuMSk0Oz.js                            1.04 kB\n../../out/renderer/assets/qmldir-CkkEh37r.js                            1.04 kB\n../../out/renderer/assets/git-rebase-D-XQSvDj.js                        1.05 kB\n../../out/renderer/assets/git-rebase-CBPs_8pF.js                        1.05 kB\n../../out/renderer/assets/chunk-POPQ4Y6H-DBZzmQss.js                    1.06 kB\n../../out/renderer/assets/csv-Ba84L8e5.js                               1.17 kB\n../../out/renderer/assets/csv-D9W9MoyR.js                               1.17 kB\n../../out/renderer/assets/git-commit-PP9xCApN.js                        1.28 kB\n../../out/renderer/assets/git-commit-Dv4XKH0P.js                        1.29 kB\n../../out/renderer/assets/xsl-CnwVr_6q.js                               1.43 kB\n../../out/renderer/assets/xsl-DDzizk_a.js                               1.43 kB\n../../out/renderer/assets/dotenv-Bb4iNxXK.js                            1.46 kB\n../../out/renderer/assets/dotenv-C36DH-Tt.js                            1.46 kB\n../../out/renderer/assets/sparql-DswowMAp.js                            1.53 kB\n../../out/renderer/assets/sparql-B6gmlPDA.js                            1.53 kB\n../../out/renderer/assets/ini-B84Ha1bx.js                               1.56 kB\n../../out/renderer/assets/ini-CE4isUWa.js                               1.56 kB\n../../out/renderer/assets/sizeCapture-INFHLROL-a0YmbKES.js              1.74 kB\n../../out/renderer/assets/fortran-fixed-form-CpmOyvS5.js                1.76 kB\n../../out/renderer/assets/fortran-fixed-form-CiZ197_F.js                1.76 kB\n../../out/renderer/assets/docker-CUaLOm2I.js                            1.78 kB\n../../out/renderer/assets/docker-CPCU3osI.js                            1.78 kB\n../../out/renderer/assets/hxml-Jle7o\n... output truncated ...",
+        "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    }
+  ]
+}
+```

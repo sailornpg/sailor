@@ -1,0 +1,83 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-21T06:27:00.039Z
+**Feature ID:** feat-tool-call-display
+**Feature Name:** 工具展示从 ToolTimeline 替换为官方 ToolCall
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** feat-approval-card-style
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+No description recorded.
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-21T06:12:22.552Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "scope": [
+    "官方逐次调用组件及请求结果展开",
+    "去除时间线接入及专属文件",
+    "保留审批错误取消，恢复原生推理展示"
+  ],
+  "checklist": [
+    {
+      "action": "验证逐次工具展示、状态回退、类型检查与构建",
+      "status": "done",
+      "coverage": "integration",
+      "tdd": false,
+      "coverage_reason": "复用官方组件，集成测试覆盖真实 Thread 单次展示和异常状态，不重复测试库实现。",
+      "test": "node --test tests/tool-call.test.ts tests/tool-feedback-ui.test.ts tests/assistant-ui-message-rendering.test.ts",
+      "verify": [
+        "pnpm run typecheck",
+        "pnpm run build"
+      ],
+      "testEvidence": {
+        "command": "node --test tests/tool-call.test.ts tests/tool-feedback-ui.test.ts tests/assistant-ui-message-rendering.test.ts",
+        "verifiedAt": "2026-09-21T06:12:17.090Z",
+        "exitCode": 0,
+        "stdout": "✔ official tool UI renders structured results and errors without a custom plan view (1100.518084ms)\n✔ actual Thread renders each tool call once with Pi file paths, without a timeline or extra group (1511.007417ms)\n✔ approval, cancellation and failures keep actionable fallback instead of a success checkmark (150.339417ms)\n✔ official expanded ToolCall includes both request and result (34.66825ms)\n✔ AgentService exposes read tools through its runner, returns structured failure and lets the model recover (1912.878584ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (155.555125ms)\n✔ structured tool fallback renders ok:false as an expanded failure with recovery (542.769584ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3173.774208",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-21T06:12:18.011Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-21T06:12:22.552Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  65.24 kB\n✓ built in 103ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3120 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-ChiVmdet.css    157.06 kB\n../../out/renderer/assets/index-DLzV75cW.js   2,910.29 kB\n✓ built in 3.17s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        }
+      ],
+      "evidence": {
+        "command": "pnpm run typecheck && pnpm run build",
+        "verifiedAt": "2026-09-21T06:12:22.552Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  65.24 kB\n✓ built in 103ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3120 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-ChiVmdet.css    157.06 kB\n../../out/renderer/assets/index-DLzV75cW.js   2,910.29 kB\n✓ built in 3.17s",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    }
+  ]
+}
+```

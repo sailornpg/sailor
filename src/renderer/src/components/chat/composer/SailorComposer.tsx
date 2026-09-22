@@ -1,0 +1,316 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ComposerPrimitive,
+  useAuiEvent,
+  useAuiState,
+} from "@assistant-ui/react";
+import { Server } from "lucide-react";
+import {
+  Composer,
+  ComposerActions,
+  ComposerAttachButton,
+  ComposerBar,
+  ComposerModelTrigger,
+  ComposerMenu,
+  ComposerModelItem,
+  ComposerSend,
+  ComposerToolbar,
+} from "@/components/assistant-ui/elements/composer";
+import { ComposerAttachments } from "@/components/assistant-ui/elements/attachment.aui";
+import { Button } from "@/components/ui/button";
+import { ghostButton } from "@/components/assistant-ui/elements/surfaces";
+import { cn } from "@/lib/utils";
+import type { WorkspaceChats } from "@/lib/WorkspaceChats";
+import {
+  getAvailableReasoningEfforts,
+  type ModelSelection,
+  type ReasoningEffort,
+  type SettingsSnapshot,
+} from "@shared/contracts";
+import type { WorkspaceChatSummary } from "@shared/workspaces";
+import { UNSUPPORTED_ATTACHMENT_MESSAGE } from "@shared/attachments";
+import { useSailorChat } from "../runtime/SailorChatProvider";
+import { SailorComposerContext } from "./SailorComposerContext";
+import { stopChatRun } from "./composerPolicy";
+
+interface SailorComposerProps {
+  chatId: string;
+  registry: WorkspaceChats;
+  summary?: WorkspaceChatSummary;
+  settings: SettingsSnapshot;
+  onSelectModel: (selection: ModelSelection) => Promise<void>;
+  onOpenSettings: () => void;
+  onRetrySave: () => void;
+}
+
+const reasoningLabels: Record<ReasoningEffort, string> = {
+  "provider-default": "模型默认",
+  none: "关闭",
+  minimal: "最少",
+  low: "较低",
+  medium: "中等",
+  high: "较高",
+  xhigh: "最高",
+};
+
+export function SailorComposer({
+  chatId,
+  registry,
+  summary,
+  settings,
+  onSelectModel,
+  onOpenSettings,
+  onRetrySave,
+}: SailorComposerProps) {
+  const { clearError, error, stop } = useSailorChat();
+  const runtimeRunning = useAuiState((state) => state.thread.isRunning);
+  const composerEmpty = useAuiState((state) => state.composer.isEmpty);
+  const [reasoning, setReasoning] = useState<ReasoningEffort>(
+    registry.reasoning.get(chatId) ?? "provider-default",
+  );
+  const [modelOpen, setModelOpen] = useState(false);
+  const [selectionError, setSelectionError] = useState<string>();
+  const [attachmentError, setAttachmentError] = useState<string>();
+  const [selecting, setSelecting] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  // The runtime rejects a dropped file before the adapter sees it, so the only
+  // way to tell the user why is the official composer event.
+  useAuiEvent("composer.attachmentAddError", () => {
+    setAttachmentError(UNSUPPORTED_ATTACHMENT_MESSAGE);
+  });
+  useAuiEvent("composer.attachmentAdd", () => {
+    setAttachmentError(undefined);
+  });
+  useEffect(() => {
+    if (!modelOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (!pickerRef.current?.contains(event.target as Node))
+        setModelOpen(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [modelOpen]);
+  const modelOptions = useMemo(
+    () =>
+      settings.providers.flatMap((provider) =>
+        provider.models.map((model) => ({
+          id: `${provider.id}:${model.id}`,
+          name: model.name,
+          description: provider.name,
+          providerId: provider.id,
+          modelId: model.id,
+          disabled: !provider.hasApiKey,
+          keywords: [provider.name, model.id],
+          efforts: getAvailableReasoningEfforts(model.reasoningLevels).map(
+            (effort) => ({
+              id: effort,
+              name: reasoningLabels[effort],
+            }),
+          ),
+        })),
+      ),
+    [settings.providers],
+  );
+  const selectedModel = settings.activeModel
+    ? `${settings.activeModel.providerId}:${settings.activeModel.modelId}`
+    : undefined;
+  const selectedModelOption = modelOptions.find(
+    (model) => model.id === selectedModel,
+  );
+  const persistedRunning = summary?.status === "running";
+  const runBusy = runtimeRunning || persistedRunning;
+  const sendDisabled =
+    runBusy ||
+    Boolean(summary?.saveError) ||
+    Boolean(summary?.archived) ||
+    composerEmpty;
+
+  useEffect(() => {
+    registry.reasoning.set(chatId, reasoning);
+  }, [chatId, reasoning, registry]);
+
+  useEffect(() => {
+    const selected = modelOptions.find((model) => model.id === selectedModel);
+    if (!selected?.efforts) return;
+    if (!selected.efforts.some((effort) => effort.id === reasoning)) {
+      setReasoning("provider-default");
+    }
+  }, [modelOptions, reasoning, selectedModel]);
+
+  return (
+    <div className="sailor-composer-stack">
+      {(selectionError || error || summary?.error || attachmentError) && (
+        <div className="runtime-error" role="alert">
+          {selectionError ??
+            error?.message ??
+            summary?.error ??
+            attachmentError}
+        </div>
+      )}
+      {summary?.saveError && (
+        <div className="runtime-error" role="alert">
+          {summary.saveError}{" "}
+          <button type="button" onClick={onRetrySave}>
+            重试保存
+          </button>
+        </div>
+      )}
+      <ComposerPrimitive.Root className="w-full">
+        <Composer className="max-w-none">
+          <ComposerPrimitive.AttachmentDropzone asChild>
+            <ComposerBar className="border-black/[0.06] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.025),0_8px_24px_rgba(0,0,0,0.04)] dark:border-border/60 dark:bg-popover">
+              <ComposerAttachments />
+              <ComposerPrimitive.Input
+                aria-label="任务描述"
+                autoFocus
+                className="placeholder:text-foreground/35 max-h-48 min-h-11 w-full resize-none bg-transparent px-3 py-2 text-[15px] leading-6 caret-blue-500 outline-none dark:caret-blue-400"
+                disabled={
+                  runBusy ||
+                  Boolean(summary?.saveError) ||
+                  Boolean(summary?.archived)
+                }
+                enterKeyHint="send"
+                placeholder="随心输入"
+                rows={1}
+              />
+              <ComposerToolbar className="gap-2">
+                <ComposerActions className="min-w-0 flex-1">
+                  <ComposerPrimitive.AddAttachment asChild>
+                    <ComposerAttachButton />
+                  </ComposerPrimitive.AddAttachment>
+                  {modelOptions.length > 0 ? (
+                    <div
+                      ref={pickerRef}
+                      className="relative min-w-0"
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          setModelOpen(false);
+                          pickerRef.current
+                            ?.querySelector<HTMLButtonElement>(
+                              "[data-slot=composer-model-trigger]",
+                            )
+                            ?.focus();
+                        }
+                      }}
+                      onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget))
+                          setModelOpen(false);
+                      }}
+                    >
+                      <ComposerModelTrigger
+                        aria-label={`选择模型，当前：${selectedModelOption?.name ?? "未选择"}`}
+                        model={selectedModelOption?.name ?? "选择模型"}
+                        open={modelOpen}
+                        onClick={() => setModelOpen((value) => !value)}
+                      />
+                      <ComposerMenu
+                        open={modelOpen}
+                        inert={!modelOpen}
+                        aria-label="可用模型"
+                        className="max-h-72 max-w-[calc(100vw-5rem)] overflow-y-auto"
+                      >
+                        {modelOptions.map((model) => (
+                          <ComposerModelItem
+                            key={model.id}
+                            entry={{
+                              name: model.name,
+                              meta: model.description,
+                            }}
+                            selected={model.id === selectedModel}
+                            aria-pressed={model.id === selectedModel}
+                            disabled={model.disabled || selecting}
+                            className="disabled:opacity-40 [&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
+                            title={
+                              model.disabled ? "请先配置提供商密钥" : model.name
+                            }
+                            onClick={async () => {
+                              setSelecting(true);
+                              setSelectionError(undefined);
+                              try {
+                                await onSelectModel({
+                                  providerId: model.providerId,
+                                  modelId: model.modelId,
+                                });
+                                setModelOpen(false);
+                              } catch (error) {
+                                setSelectionError(
+                                  error instanceof Error
+                                    ? error.message
+                                    : "切换模型失败，请重试。",
+                                );
+                              } finally {
+                                setSelecting(false);
+                              }
+                            }}
+                          />
+                        ))}
+                      </ComposerMenu>
+                    </div>
+                  ) : (
+                    <Button
+                      className={cn(
+                        ghostButton,
+                        "h-8 rounded-full px-2.5 text-[12.5px]",
+                      )}
+                      size="sm"
+                      type="button"
+                      variant="ghost"
+                      onClick={onOpenSettings}
+                    >
+                      <Server aria-hidden /> 配置模型
+                    </Button>
+                  )}
+                  {selectedModelOption &&
+                    selectedModelOption.efforts.length > 1 && (
+                      <select
+                        aria-label="推理等级"
+                        value={reasoning}
+                        onChange={(event) =>
+                          setReasoning(event.target.value as ReasoningEffort)
+                        }
+                        className="min-w-0 max-w-24 bg-transparent text-xs text-muted-foreground outline-none"
+                      >
+                        {selectedModelOption.efforts.map((effort) => (
+                          <option key={effort.id} value={effort.id}>
+                            {effort.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                </ComposerActions>
+                <SailorComposerContext />
+                {runBusy ? (
+                  <ComposerSend
+                    aria-label="停止生成"
+                    idle={false}
+                    streaming
+                    onClick={() => {
+                      void stopChatRun(
+                        summary?.runId ?? undefined,
+                        window.sailor.agent.abort,
+                        stop,
+                      );
+                    }}
+                  />
+                ) : (
+                  <ComposerPrimitive.Send asChild>
+                    <ComposerSend
+                      aria-label="发送"
+                      disabled={sendDisabled}
+                      idle={composerEmpty}
+                      streaming={false}
+                      onClick={() => {
+                        if (error) clearError();
+                        if (attachmentError) setAttachmentError(undefined);
+                      }}
+                    />
+                  </ComposerPrimitive.Send>
+                )}
+              </ComposerToolbar>
+            </ComposerBar>
+          </ComposerPrimitive.AttachmentDropzone>
+        </Composer>
+      </ComposerPrimitive.Root>
+    </div>
+  );
+}

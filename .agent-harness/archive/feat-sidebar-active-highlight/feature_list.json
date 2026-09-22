@@ -1,0 +1,47 @@
+{
+  "features": [
+    {
+      "id": "feat-sidebar-active-highlight",
+      "name": "增强当前会话选中效果",
+      "description": "提升侧栏当前会话背景对比与字重，区分普通/悬停/选中并保留官方交互。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "以语义颜色增强侧栏选中行并检查浅深色及切换状态",
+          "coverage": "manual-exception",
+          "tdd": false,
+          "coverage_reason": "可逆的局部视觉样式调整，现有列表测试覆盖渲染，实际窗口核验状态对比。",
+          "verify": [
+            "node --test tests/thread-list.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/thread-list.test.ts",
+              "verifiedAt": "2026-09-21T08:36:03.849Z",
+              "exitCode": 0,
+              "stdout": "✔ 官方列表展示本工作区会话、活动项和状态，归档列表默认收起 (884.739583ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1163.504458",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-21T08:36:08.830Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 19 modules transformed.\nrendering chunks...\nout/main/index.js  63.64 kB\n✓ built in 104ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3245 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-Bqggan3A.css    163.64 kB\n../../out/renderer/assets/index-Dek6lhwf.js   3,119.17 kB\n✓ built in 3.40s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/thread-list.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-21T08:36:08.830Z",
+            "exitCode": 0,
+            "stdout": "✔ 官方列表展示本工作区会话、活动项和状态，归档列表默认收起 (884.739583ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1163.504458\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 19 modules transformed.\nrendering chunks...\nout/main/index.js  63.64 kB\n✓ built in 104ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3245 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-Bqggan3A.css    163.64 kB\n../../out/renderer/assets/index-Dek6lhwf.js   3,119.17 kB\n✓ built in 3.40s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-21T08:36:08.830Z"
+    }
+  ]
+}

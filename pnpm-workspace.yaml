@@ -1,0 +1,10 @@
+allowBuilds:
+  '@google/genai': false
+  '@mongodb-js/zstd': false
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  node-liblzma: false
+  protobufjs: false
+patchedDependencies:
+  '@ai-sdk/harness-pi@1.0.119': patches/@ai-sdk__harness-pi@1.0.119.patch

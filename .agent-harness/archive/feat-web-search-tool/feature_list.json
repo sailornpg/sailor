@@ -1,0 +1,200 @@
+{
+  "features": [
+    {
+      "id": "feat-web-search-tool",
+      "name": "可追溯 Web 搜索",
+      "description": "实现跨聊天模型的 web_search，提供真实来源、明确配置与网络错误，避免空成功。",
+      "status": "done",
+      "dependencies": [
+        "feat-workspace-read-tools"
+      ],
+      "trd_spec": "docs/agent-tools-execution-plan.md",
+      "interface_spec": "docs/agent-tools-execution-plan.md",
+      "test_case_spec": "docs/agent-tools-execution-plan.md",
+      "checklist": [
+        {
+          "action": "确定并记录首个搜索服务 API 契约和配置项后，实现 main 搜索适配器与安全凭据存储；默认建议 Tavily，实施前核验官方 API、费用与用户配置选择；未配置返回 NOT_CONFIGURED，不能伪造搜索结果；测试使用本地 HTTP fixture。",
+          "coverage": "integration",
+          "test": "node --test tests/web-search-provider.test.ts",
+          "verify": [
+            "node --test tests/web-search-provider.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/web-search-provider.test.ts",
+            "verifiedAt": "2026-09-20T15:18:54.680Z",
+            "exitCode": 0,
+            "stdout": "✔ defaults to an unconfigured Tavily search provider (3.926417ms)\n✔ encrypts the Tavily key, preserves it on blank updates and never exposes it (3.536584ms)\n✔ posts the documented basic Tavily request with a bearer key (24.021542ms)\n✔ returns NOT_CONFIGURED without making a network request (3.902459ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 135.003458",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/web-search-provider.test.ts",
+              "verifiedAt": "2026-09-20T15:18:54.871Z",
+              "exitCode": 0,
+              "stdout": "✔ defaults to an unconfigured Tavily search provider (4.378834ms)\n✔ encrypts the Tavily key, preserves it on blank updates and never exposes it (3.967875ms)\n✔ posts the documented basic Tavily request with a bearer key (27.132292ms)\n✔ returns NOT_CONFIGURED without making a network request (4.300708ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 151.758292",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-20T15:18:55.722Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/web-search-provider.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-20T15:18:55.722Z",
+            "exitCode": 0,
+            "stdout": "✔ defaults to an unconfigured Tavily search provider (4.378834ms)\n✔ encrypts the Tavily key, preserves it on blank updates and never exposes it (3.967875ms)\n✔ posts the documented basic Tavily request with a bearer key (27.132292ms)\n✔ returns NOT_CONFIGURED without making a network request (4.300708ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 151.758292",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "实现 web_search 的输入、结果 schema 与来源归一化：稳定 sourceId、title/url/snippet/retrievedAt、publishedAt 可选；校验 URL、限制结果数/响应体、超时和取消；区分空结果、认证失败、限流、上游错误与响应无效，提供有限 retryAfterMs。",
+          "coverage": "integration",
+          "test": "node --test tests/web-search.test.ts",
+          "verify": [
+            "node --test tests/web-search.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/web-search.test.ts",
+            "verifiedAt": "2026-09-20T15:41:59.090Z",
+            "exitCode": 0,
+            "stdout": "✔ validates bounded web_search input (153.699667ms)\n✔ normalizes real sources with stable ids and optional publication dates (88.393625ms)\n✔ rejects invalid source URLs and does not report empty results as success (90.468666ms)\n✔ classifies authentication, rate limiting and upstream failures (2.684833ms)\n✔ bounds response bodies and rejects malformed JSON (1.357708ms)\n✔ distinguishes timeout from caller cancellation (12.852584ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 481.830666",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/web-search.test.ts",
+              "verifiedAt": "2026-09-20T15:41:59.598Z",
+              "exitCode": 0,
+              "stdout": "✔ validates bounded web_search input (154.469083ms)\n✔ normalizes real sources with stable ids and optional publication dates (92.470333ms)\n✔ rejects invalid source URLs and does not report empty results as success (86.2805ms)\n✔ classifies authentication, rate limiting and upstream failures (3.005041ms)\n✔ bounds response bodies and rejects malformed JSON (1.387875ms)\n✔ distinguishes timeout from caller cancellation (12.783375ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 480.850083",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-20T15:42:00.114Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/web-search.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-20T15:42:00.114Z",
+            "exitCode": 0,
+            "stdout": "✔ validates bounded web_search input (154.469083ms)\n✔ normalizes real sources with stable ids and optional publication dates (92.470333ms)\n✔ rejects invalid source URLs and does not report empty results as success (86.2805ms)\n✔ classifies authentication, rate limiting and upstream failures (3.005041ms)\n✔ bounds response bodies and rejects malformed JSON (1.387875ms)\n✔ distinguishes timeout from caller cancellation (12.783375ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 480.850083",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "复用官方 WebSearch/Sources/ToolFallback 能力展示查询与来源；将真实 sourceId 映射至引用，保留历史来源；把检索摘要与网页全文区分，外部内容不进入系统权限指令；验证错误/空结果/正常结果及引用不存在时不生成假链接。",
+          "coverage": "integration",
+          "test": "node --test tests/web-search-feedback.test.ts",
+          "verify": [
+            "node --test tests/web-search-feedback.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/web-search-feedback.test.ts",
+            "verifiedAt": "2026-09-20T15:50:16.478Z",
+            "exitCode": 0,
+            "stdout": "✔ projects web search lifecycle and validated real sources (85.953375ms)\n✔ projects empty/error results visibly and rejects fake links (22.101834ms)\n✔ maps validated search sources to persistent native source-url chunks (16.73225ms)\n✔ renders official WebSearch, Sources and ToolFallback composition (541.71925ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 841.964958",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/web-search-feedback.test.ts",
+              "verifiedAt": "2026-09-20T15:50:17.448Z",
+              "exitCode": 0,
+              "stdout": "✔ projects web search lifecycle and validated real sources (123.251667ms)\n✔ projects empty/error results visibly and rejects fake links (29.991916ms)\n✔ maps validated search sources to persistent native source-url chunks (21.681209ms)\n✔ renders official WebSearch, Sources and ToolFallback composition (528.977917ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 930.984125",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-20T15:50:18.082Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/web-search-feedback.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-20T15:50:18.082Z",
+            "exitCode": 0,
+            "stdout": "✔ projects web search lifecycle and validated real sources (123.251667ms)\n✔ projects empty/error results visibly and rejects fake links (29.991916ms)\n✔ maps validated search sources to persistent native source-url chunks (21.681209ms)\n✔ renders official WebSearch, Sources and ToolFallback composition (528.977917ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 930.984125",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "在真实 Electron 中验收 web-search：桌面与窄窗口、运行/成功/错误/停止、后台会话及重启历史；检查错误原因和修复建议可见，清理隔离 fixture，记录截图和实际步骤到 .agent-harness/evidence/web-search-acceptance.md；同步 README、architecture 和权限约定后执行全量回归及 clean-state。",
+          "coverage": "manual-exception",
+          "verify": [
+            "test -s .agent-harness/evidence/web-search-acceptance.md",
+            "rg -n '^Acceptance: PASS$' .agent-harness/evidence/web-search-acceptance.md",
+            "node --test tests/*.test.ts",
+            "pnpm run build",
+            "node .agent-harness/scripts/clean-state-check.mjs --skip-verification"
+          ],
+          "tdd": false,
+          "coverage_reason": "视觉清晰度、折叠层级和窄窗口可读性不能用廉价的前置自动断言替代；状态与执行行为由前面各项确定性测试覆盖。证据文件只能在实际验收通过后写 PASS。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "test -s .agent-harness/evidence/web-search-acceptance.md",
+              "verifiedAt": "2026-09-20T16:53:07.948Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "rg -n '^Acceptance: PASS$' .agent-harness/evidence/web-search-acceptance.md",
+              "verifiedAt": "2026-09-20T16:53:07.960Z",
+              "exitCode": 0,
+              "stdout": "3:Acceptance: PASS",
+              "stderr": ""
+            },
+            {
+              "command": "node --test tests/*.test.ts",
+              "verifiedAt": "2026-09-20T16:53:12.719Z",
+              "exitCode": 0,
+              "stdout": "✔ splits a coarse Chinese provider delta into incremental UI chunks before end (728.644833ms)\n✔ aborting an active stream stops later chunks and emits one end event (280.30225ms)\n✔ does not advertise the retired tool and still streams an answer (524.406125ms)\n✔ reads valid preferences and falls back on invalid persisted values (3.430666ms)\n✔ persists preferences and reports storage failures without throwing (0.183291ms)\n✔ applies the saved appearance before consumers read runtime state (147.962709ms)\n✔ system mode follows OS changes while explicit themes ignore them (133.539542ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (244.354417ms)\n✔ applies one deterministic unified patch and returns hashes, line counts, and diff reference (210.8995ms)\n✔ rejects malformed, multi-file, ambiguous, and context-mismatched patches without writing (35.249583ms)\n✔ rejects stale versions and never applies a patch twice after retry (159.64ms)\n✔ serializes same-path patches so only one competing patch can apply (59.093083ms)\n✔ legacy AI Elements sources and imports are absent (73.612666ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (10.99725ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (1.406708ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1139.878ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (154.648166ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (533.871875ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (23.307459ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (286.501583ms)\n✔ projects an approval or running patch with bounded preview and path (217.202292ms)\n✔ projects an applied result with real effects, hashes, line counts and diff reference (1.751875ms)\n✔ preserves structured failure and recovery actions for history and UI (3.178958ms)\n✔ marks stopped patch output without pretending it was applied (0.154125ms)\n✔ leaves unrelated or malformed tools to the official fallback (0.164875ms)\n✔ renders file changes through the official ToolFallback shell with a bounded diff view (1441.1945ms)\n✔ consolidates multiple reasoning parts into one presentation block (78.532333ms)\n✔ stops the reasoning indicator when answer text has started (37.668125ms)\n✔ filters the provider catalog and excludes configured models (9.104125ms)\n✔ toggles an individual model selection without duplicates (0.17ms)\n✔ selects or clears all visible models while preserving hidden selections (0.113375ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.135667ms)\n✔ uses the provider default model factory for the Responses protocol (0.626375ms)\n✔ uses chat completions for custom OpenAI-compatible providers (0.074958ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (27.584375ms)\n✔ uses an unsaved API key for a new provider (2.167792ms)\n✔ reports provider errors and malformed catalogs in Chinese (2.0105ms)\n✔ requires a key when neither the form nor saved settings provide one (0.916084ms)\n✔ uses the dedicated DeepSeek provider factory for the built-in provider (3.730458ms)\n✔ enables OpenAI Responses reasoning summaries only for that protocol (0.144917ms)\n✔ passes supported reasoning to the model and falls back for unsupported levels (310.524875ms)\n✔ exposes only supported reasoning efforts in stable UI order (0.617292ms)\n✔ creates an agent request carrying the selected reasoning effort (0.070375ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (5.417ms)\n✔ persists only encrypted credentials and never returns a saved API key (15.44675ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (14.933208ms)\n✔ migrates version 1 string models without losing credentials or active selection (10.6\n... output truncated ...",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-20T16:53:16.357Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 27 modules transformed.\nrendering chunks...\nout/main/index.js  121.74 kB\n✓ built in 122ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3091 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-ChJQeM8Y.css    155.87 kB\n../../out/renderer/assets/index-CRpjOwCd.js   2,825.87 kB\n✓ built in 2.48s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            },
+            {
+              "command": "node .agent-harness/scripts/clean-state-check.mjs --skip-verification",
+              "verifiedAt": "2026-09-20T16:53:16.396Z",
+              "exitCode": 0,
+              "stdout": "=== Clean-state passed ===",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "test -s .agent-harness/evidence/web-search-acceptance.md && rg -n '^Acceptance: PASS$' .agent-harness/evidence/web-search-acceptance.md && node --test tests/*.test.ts && pnpm run build && node .agent-harness/scripts/clean-state-check.mjs --skip-verification",
+            "verifiedAt": "2026-09-20T16:53:16.396Z",
+            "exitCode": 0,
+            "stdout": "3:Acceptance: PASS\n✔ splits a coarse Chinese provider delta into incremental UI chunks before end (728.644833ms)\n✔ aborting an active stream stops later chunks and emits one end event (280.30225ms)\n✔ does not advertise the retired tool and still streams an answer (524.406125ms)\n✔ reads valid preferences and falls back on invalid persisted values (3.430666ms)\n✔ persists preferences and reports storage failures without throwing (0.183291ms)\n✔ applies the saved appearance before consumers read runtime state (147.962709ms)\n✔ system mode follows OS changes while explicit themes ignore them (133.539542ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (244.354417ms)\n✔ applies one deterministic unified patch and returns hashes, line counts, and diff reference (210.8995ms)\n✔ rejects malformed, multi-file, ambiguous, and context-mismatched patches without writing (35.249583ms)\n✔ rejects stale versions and never applies a patch twice after retry (159.64ms)\n✔ serializes same-path patches so only one competing patch can apply (59.093083ms)\n✔ legacy AI Elements sources and imports are absent (73.612666ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (10.99725ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (1.406708ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1139.878ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (154.648166ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (533.871875ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (23.307459ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (286.501583ms)\n✔ projects an approval or running patch with bounded preview and path (217.202292ms)\n✔ projects an applied result with real effects, hashes, line counts and diff reference (1.751875ms)\n✔ preserves structured failure and recovery actions for history and UI (3.178958ms)\n✔ marks stopped patch output without pretending it was applied (0.154125ms)\n✔ leaves unrelated or malformed tools to the official fallback (0.164875ms)\n✔ renders file changes through the official ToolFallback shell with a bounded diff view (1441.1945ms)\n✔ consolidates multiple reasoning parts into one presentation block (78.532333ms)\n✔ stops the reasoning indicator when answer text has started (37.668125ms)\n✔ filters the provider catalog and excludes configured models (9.104125ms)\n✔ toggles an individual model selection without duplicates (0.17ms)\n✔ selects or clears all visible models while preserving hidden selections (0.113375ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.135667ms)\n✔ uses the provider default model factory for the Responses protocol (0.626375ms)\n✔ uses chat completions for custom OpenAI-compatible providers (0.074958ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (27.584375ms)\n✔ uses an unsaved API key for a new provider (2.167792ms)\n✔ reports provider errors and malformed catalogs in Chinese (2.0105ms)\n✔ requires a key when neither the form nor saved settings provide one (0.916084ms)\n✔ uses the dedicated DeepSeek provider factory for the built-in provider (3.730458ms)\n✔ enables OpenAI Responses reasoning summaries only for that protocol (0.144917ms)\n✔ passes supported reasoning to the model and falls back for unsupported levels (310.524875ms)\n✔ exposes only supported reasoning efforts in stable UI order (0.617292ms)\n✔ creates an agent request carrying the selected reasoning effort (0.070375ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (5.417ms)\n✔ persists only encrypted credentials and never returns a saved API key (15.44675ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (14.933208ms)\n✔ migrates version 1 string models without losing credentials or act\n... output truncated ...",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-20T16:53:16.396Z"
+    }
+  ]
+}

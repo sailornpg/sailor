@@ -1,0 +1,70 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-20T08:49:09.629Z
+**Feature ID:** feat-remove-update-plan
+**Feature Name:** 移除 updatePlan 并复用官方工具 UI
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** feat-assistant-ui-composer
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+用户要求删除 updatePlan 执行和专用视图；保留旧聊天工具记录兼容，优先使用 assistant-ui 默认 ToolFallback/ToolGroup。独立于未完成的 Composer 验收。
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-20T08:47:29.316Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "checklist": [
+    {
+      "action": "移除工具、schema、提示与专用 UI；验证旧记录恢复续聊及默认工具展示，同步文档。",
+      "coverage": "integration",
+      "tdd": false,
+      "coverage_reason": "用户明确授权的删除；调整原有回归并补充旧会话兼容测试。",
+      "verify": [
+        "node --test tests/*.test.ts",
+        "pnpm run build"
+      ],
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/*.test.ts",
+          "verifiedAt": "2026-09-20T08:47:25.656Z",
+          "exitCode": 0,
+          "stdout": "✔ splits a coarse Chinese provider delta into incremental UI chunks before end (613.983042ms)\n✔ aborting an active stream stops later chunks and emits one end event (333.135375ms)\n✔ does not advertise the retired tool and still streams an answer (629.608542ms)\n✔ reads valid preferences and falls back on invalid persisted values (4.774292ms)\n✔ persists preferences and reports storage failures without throwing (0.53925ms)\n✔ applies the saved appearance before consumers read runtime state (140.213916ms)\n✔ system mode follows OS changes while explicit themes ignore them (174.178583ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (244.308292ms)\n✔ legacy AI Elements sources and imports are absent (126.251167ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (14.263708ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (1.742041ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1431.418333ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (174.466667ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (648.723167ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (20.42425ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (186.411042ms)\n✔ consolidates multiple reasoning parts into one presentation block (219.71575ms)\n✔ stops the reasoning indicator when answer text has started (71.658542ms)\n✔ filters the provider catalog and excludes configured models (3.620958ms)\n✔ toggles an individual model selection without duplicates (0.228375ms)\n✔ selects or clears all visible models while preserving hidden selections (0.120167ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.1385ms)\n✔ uses the provider default model factory for the Responses protocol (0.808667ms)\n✔ uses chat completions for custom OpenAI-compatible providers (0.089334ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (43.882167ms)\n✔ uses an unsaved API key for a new provider (1.798792ms)\n✔ reports provider errors and malformed catalogs in Chinese (1.229ms)\n✔ requires a key when neither the form nor saved settings provide one (0.615542ms)\n✔ uses the dedicated DeepSeek provider factory for the built-in provider (0.665ms)\n✔ enables OpenAI Responses reasoning summaries only for that protocol (0.091334ms)\n✔ passes supported reasoning to the model and falls back for unsupported levels (418.652292ms)\n✔ exposes only supported reasoning efforts in stable UI order (1.360625ms)\n✔ creates an agent request carrying the selected reasoning effort (0.107083ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (6.756417ms)\n✔ persists only encrypted credentials and never returns a saved API key (6.223625ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (7.423125ms)\n✔ migrates version 1 string models without losing credentials or active selection (4.111083ms)\n✔ rejects non-positive model limits (1.290958ms)\n✔ rejects invalid provider IDs and active models outside the provider catalog (0.763583ms)\n✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (487.253041ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (176.892875ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (41.229334ms)\n✔ renderer 实例跨视图保留，快速切换只采用最后一次选择 (44.41225ms)\n✔ 取消后的未完成工具 parts 保留历史且可安全续聊 (144.446ms)\n✔ 恢复中断运行不自动调用模型，运行前异常仍释放会话锁 (143.057875ms)\n✔ 切换视图不等待偏好写盘，偏好失败不会阻止访问其他会话 (45.625041ms)\n✔ 已删除工具的成功历史可恢复且不会重新执行 (157.605583ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (418.341875ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (145.039709ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (100.002334ms)\n✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (277.808333ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (150.285041ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (96.190417ms)\n✔ 损坏和非法外键文件不被覆盖 (87.397709ms)\nℹ tests 54\nℹ suites 0\nℹ pass 54\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2603.576792",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-20T08:47:29.316Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 15 modules transformed.\nrendering chunks...\nout/main/index.js  34.46 kB\n✓ built in 67ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.52 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3079 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-BDZJhOjg.css    148.01 kB\n../../out/renderer/assets/index-B8-Zd05s.js   2,787.57 kB\n✓ built in 2.43s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/*.test.ts && pnpm run build",
+        "verifiedAt": "2026-09-20T08:47:29.316Z",
+        "exitCode": 0,
+        "stdout": "✔ splits a coarse Chinese provider delta into incremental UI chunks before end (613.983042ms)\n✔ aborting an active stream stops later chunks and emits one end event (333.135375ms)\n✔ does not advertise the retired tool and still streams an answer (629.608542ms)\n✔ reads valid preferences and falls back on invalid persisted values (4.774292ms)\n✔ persists preferences and reports storage failures without throwing (0.53925ms)\n✔ applies the saved appearance before consumers read runtime state (140.213916ms)\n✔ system mode follows OS changes while explicit themes ignore them (174.178583ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (244.308292ms)\n✔ legacy AI Elements sources and imports are absent (126.251167ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (14.263708ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (1.742041ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1431.418333ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (174.466667ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (648.723167ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (20.42425ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (186.411042ms)\n✔ consolidates multiple reasoning parts into one presentation block (219.71575ms)\n✔ stops the reasoning indicator when answer text has started (71.658542ms)\n✔ filters the provider catalog and excludes configured models (3.620958ms)\n✔ toggles an individual model selection without duplicates (0.228375ms)\n✔ selects or clears all visible models while preserving hidden selections (0.120167ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.1385ms)\n✔ uses the provider default model factory for the Responses protocol (0.808667ms)\n✔ uses chat completions for custom OpenAI-compatible providers (0.089334ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (43.882167ms)\n✔ uses an unsaved API key for a new provider (1.798792ms)\n✔ reports provider errors and malformed catalogs in Chinese (1.229ms)\n✔ requires a key when neither the form nor saved settings provide one (0.615542ms)\n✔ uses the dedicated DeepSeek provider factory for the built-in provider (0.665ms)\n✔ enables OpenAI Responses reasoning summaries only for that protocol (0.091334ms)\n✔ passes supported reasoning to the model and falls back for unsupported levels (418.652292ms)\n✔ exposes only supported reasoning efforts in stable UI order (1.360625ms)\n✔ creates an agent request carrying the selected reasoning effort (0.107083ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (6.756417ms)\n✔ persists only encrypted credentials and never returns a saved API key (6.223625ms)\n✔ blank credentials preserve the stored key and active model resolution decrypts it (7.423125ms)\n✔ migrates version 1 string models without losing credentials or active selection (4.111083ms)\n✔ rejects non-positive model limits (1.290958ms)\n✔ rejects invalid provider IDs and active models outside the provider catalog (0.763583ms)\n✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (487.253041ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (176.892875ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (41.229334ms)\n✔ renderer 实例跨视图保留，快速切换只采用最后一次选择 (44.41225ms)\n✔ 取消后的未完成工具 parts 保留历史且可安全续聊 (144.446ms)\n✔ 恢复中断运行不自动调用模型，运行前异常仍释放会话锁 (143.057875ms)\n✔ 切换视图不等待偏好写盘，偏好失败不会阻止访问其他会话 (45.625041ms)\n✔ 已删除工具的成功历史可恢复且不会重新执行 (157.605583ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (418.341875ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (145.039709ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (100.002334ms)\n✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (277.808333ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (150.285041ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (96.190417ms)\n✔ 损坏和非法外键文件不被覆盖 (87.397709ms)\nℹ tests 54\nℹ suites 0\nℹ pass 54\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2603.576792\nvite\n... output truncated ...",
+        "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    }
+  ]
+}
+```

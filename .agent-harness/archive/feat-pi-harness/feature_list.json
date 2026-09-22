@@ -1,0 +1,207 @@
+{
+  "features": [
+    {
+      "id": "feat-pi-harness",
+      "name": "Pi Harness 本地编程会话",
+      "description": "以 Pi Harness 替换 ToolLoopAgent，保留自定义 Provider、本地工作区及审批，复用原生会话、压缩与 Skills。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "接入 Pi 依赖并映射现有 Provider 协议、模型能力和推理设置",
+          "coverage": "unit",
+          "test": "node --test tests/pi-provider.test.ts",
+          "verify": [
+            "node --test tests/pi-provider.test.ts",
+            "pnpm typecheck"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-provider.test.ts",
+            "verifiedAt": "2026-09-21T02:39:21.276Z",
+            "exitCode": 0,
+            "stdout": "✔ Pi 映射自定义协议、能力、推理且显式隔离认证环境 (142.897792ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 290.805125",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-provider.test.ts",
+              "verifiedAt": "2026-09-21T02:39:21.588Z",
+              "exitCode": 0,
+              "stdout": "✔ Pi 映射自定义协议、能力、推理且显式隔离认证环境 (142.531167ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 282.954625",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm typecheck",
+              "verifiedAt": "2026-09-21T02:39:23.487Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-provider.test.ts && pnpm typecheck",
+            "verifiedAt": "2026-09-21T02:39:23.487Z",
+            "exitCode": 0,
+            "stdout": "✔ Pi 映射自定义协议、能力、推理且显式隔离认证环境 (142.531167ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 282.954625",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "实现仅供 Harness 内部状态使用的本地存储边界和受限 Skills 加载，工作区操作复用原有审批工具",
+          "coverage": "unit",
+          "test": "node --test tests/pi-storage.test.ts",
+          "verify": [
+            "node --test tests/pi-storage.test.ts",
+            "pnpm typecheck"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-storage.test.ts",
+            "verifiedAt": "2026-09-21T02:45:53.415Z",
+            "exitCode": 0,
+            "stdout": "✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (245.626708ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (102.112625ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 513.763",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-storage.test.ts",
+              "verifiedAt": "2026-09-21T02:45:53.948Z",
+              "exitCode": 0,
+              "stdout": "✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (234.756708ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (117.880916ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 503.51275",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm typecheck",
+              "verifiedAt": "2026-09-21T02:45:55.159Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-storage.test.ts && pnpm typecheck",
+            "verifiedAt": "2026-09-21T02:45:55.159Z",
+            "exitCode": 0,
+            "stdout": "✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (234.756708ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (117.880916ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 503.51275",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "替换 AgentService 运行链路，维护每会话 Pi 状态、审批续跑、取消及历史恢复",
+          "coverage": "integration",
+          "test": "node --test tests/pi-agent.test.ts",
+          "verify": [
+            "node --test tests/pi-agent.test.ts",
+            "pnpm typecheck"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-agent.test.ts",
+            "verifiedAt": "2026-09-21T03:01:08.178Z",
+            "exitCode": 0,
+            "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Sailor 工具 (2038.916083ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (584.286666ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (1014.903542ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (1947.779125ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (554.054959ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (1005.193042ms)\n✔ Pi 本机命令仍需启用开关与逐次审批 (543.271333ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7849.451667",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-agent.test.ts",
+              "verifiedAt": "2026-09-21T03:01:15.927Z",
+              "exitCode": 0,
+              "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Sailor 工具 (1992.189917ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (579.456667ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (977.829583ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (1937.976458ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (542.650792ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (985.575ms)\n✔ Pi 本机命令仍需启用开关与逐次审批 (563.51475ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7735.418833",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm typecheck",
+              "verifiedAt": "2026-09-21T03:01:16.565Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-agent.test.ts && pnpm typecheck",
+            "verifiedAt": "2026-09-21T03:01:16.565Z",
+            "exitCode": 0,
+            "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Sailor 工具 (1992.189917ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (579.456667ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (977.829583ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (1937.976458ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (542.650792ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (985.575ms)\n✔ Pi 本机命令仍需启用开关与逐次审批 (563.51475ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7735.418833",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "完成回归、构建和迁移文档，记录真实 Provider 验证限制",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "文档与构建集成由全量回归及类型检查覆盖，不为文案创建镜像测试",
+          "verify": [
+            "node --test tests/*.test.ts",
+            "pnpm build"
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/*.test.ts",
+              "verifiedAt": "2026-09-21T03:05:04.817Z",
+              "exitCode": 0,
+              "stdout": "✔ splits a coarse Chinese provider delta into incremental UI chunks before end (2688.194ms)\n✔ aborting an active stream stops later chunks and emits one end event (402.884625ms)\n✔ does not advertise the retired tool and still streams an answer (2615.220167ms)\n✔ reads valid preferences and falls back on invalid persisted values (5.921792ms)\n✔ persists preferences and reports storage failures without throwing (0.313209ms)\n✔ applies the saved appearance before consumers read runtime state (206.397583ms)\n✔ system mode follows OS changes while explicit themes ignore them (167.032041ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (337.2195ms)\n✔ applies one deterministic unified patch and returns hashes, line counts, and diff reference (579.668334ms)\n✔ rejects malformed, multi-file, ambiguous, and context-mismatched patches without writing (40.876875ms)\n✔ rejects stale versions and never applies a patch twice after retry (146.4905ms)\n✔ serializes same-path patches so only one competing patch can apply (88.172375ms)\n✔ legacy AI Elements sources and imports are absent (63.319583ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (6.872917ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (1.691792ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1705.320292ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (261.020167ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (975.069875ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (27.354ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (218.488375ms)\n✔ projects an approval or running patch with bounded preview and path (624.905583ms)\n✔ projects an applied result with real effects, hashes, line counts and diff reference (3.659209ms)\n✔ preserves structured failure and recovery actions for history and UI (4.053542ms)\n✔ marks stopped patch output without pretending it was applied (1.346667ms)\n✔ leaves unrelated or malformed tools to the official fallback (0.43475ms)\n✔ renders file changes through the official ToolFallback shell with a bounded diff view (1733.74425ms)\n✔ consolidates multiple reasoning parts into one presentation block (171.831292ms)\n✔ stops the reasoning indicator when answer text has started (79.133125ms)\n✔ filters the provider catalog and excludes configured models (3.934375ms)\n✔ toggles an individual model selection without duplicates (0.155542ms)\n✔ selects or clears all visible models while preserving hidden selections (0.118ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.129ms)\n✔ Pi 保留 Responses 与 DeepSeek/自定义 Chat 协议选择 (304.332584ms)\n✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Sailor 工具 (6036.010375ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (700.088041ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (1071.528167ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (2019.762458ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (567.534167ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (1083.785916ms)\n✔ Pi 本机命令仍需启用开关与逐次审批 (596.353625ms)\n✔ Pi 映射自定义协议、能力、推理且显式隔离认证环境 (350.362875ms)\n✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (786.027792ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (314.759875ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (36.9915ms)\n✔ uses an unsaved API key for a new provider (1.28975ms)\n✔ reports provider errors and malformed catalogs in Chinese (1.999458ms)\n✔ requires a key when neither the form nor saved settings provide one (0.50275ms)\n✔ Pi 映射支持的推理等级，none 关闭推理，未知等级回退 runtime 默认值 (443.289792ms)\n✔ exposes only supported reasoning efforts in stable UI order (10.622292ms)\n✔ creates an agent request carrying the selected reasoning effort (0.328875ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (4.60175ms)\n✔ persists only encrypted credentials and never returns a saved API key (4.577ms)\n✔ blank credentials pre\n... output truncated ...",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm build",
+              "verifiedAt": "2026-09-21T03:05:09.251Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 30 modules transformed.\nrendering chunks...\nout/main/index.js  134.34 kB\n✓ built in 154ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3117 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-ChJQeM8Y.css    155.87 kB\n../../out/renderer/assets/index-CUOhVipH.js   2,901.53 kB\n✓ built in 3.06s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/*.test.ts && pnpm build",
+            "verifiedAt": "2026-09-21T03:05:09.251Z",
+            "exitCode": 0,
+            "stdout": "✔ splits a coarse Chinese provider delta into incremental UI chunks before end (2688.194ms)\n✔ aborting an active stream stops later chunks and emits one end event (402.884625ms)\n✔ does not advertise the retired tool and still streams an answer (2615.220167ms)\n✔ reads valid preferences and falls back on invalid persisted values (5.921792ms)\n✔ persists preferences and reports storage failures without throwing (0.313209ms)\n✔ applies the saved appearance before consumers read runtime state (206.397583ms)\n✔ system mode follows OS changes while explicit themes ignore them (167.032041ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (337.2195ms)\n✔ applies one deterministic unified patch and returns hashes, line counts, and diff reference (579.668334ms)\n✔ rejects malformed, multi-file, ambiguous, and context-mismatched patches without writing (40.876875ms)\n✔ rejects stale versions and never applies a patch twice after retry (146.4905ms)\n✔ serializes same-path patches so only one competing patch can apply (88.172375ms)\n✔ legacy AI Elements sources and imports are absent (63.319583ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (6.872917ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (1.691792ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1705.320292ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (261.020167ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (975.069875ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (27.354ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (218.488375ms)\n✔ projects an approval or running patch with bounded preview and path (624.905583ms)\n✔ projects an applied result with real effects, hashes, line counts and diff reference (3.659209ms)\n✔ preserves structured failure and recovery actions for history and UI (4.053542ms)\n✔ marks stopped patch output without pretending it was applied (1.346667ms)\n✔ leaves unrelated or malformed tools to the official fallback (0.43475ms)\n✔ renders file changes through the official ToolFallback shell with a bounded diff view (1733.74425ms)\n✔ consolidates multiple reasoning parts into one presentation block (171.831292ms)\n✔ stops the reasoning indicator when answer text has started (79.133125ms)\n✔ filters the provider catalog and excludes configured models (3.934375ms)\n✔ toggles an individual model selection without duplicates (0.155542ms)\n✔ selects or clears all visible models while preserving hidden selections (0.118ms)\n✔ appends selected models with default capabilities and skips existing IDs (0.129ms)\n✔ Pi 保留 Responses 与 DeepSeek/自定义 Chat 协议选择 (304.332584ms)\n✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Sailor 工具 (6036.010375ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (700.088041ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (1071.528167ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (2019.762458ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (567.534167ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (1083.785916ms)\n✔ Pi 本机命令仍需启用开关与逐次审批 (596.353625ms)\n✔ Pi 映射自定义协议、能力、推理且显式隔离认证环境 (350.362875ms)\n✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (786.027792ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (314.759875ms)\n✔ fetches, normalizes, deduplicates and sorts an OpenAI-compatible model catalog (36.9915ms)\n✔ uses an unsaved API key for a new provider (1.28975ms)\n✔ reports provider errors and malformed catalogs in Chinese (1.999458ms)\n✔ requires a key when neither the form nor saved settings provide one (0.50275ms)\n✔ Pi 映射支持的推理等级，none 关闭推理，未知等级回退 runtime 默认值 (443.289792ms)\n✔ exposes only supported reasoning efforts in stable UI order (10.622292ms)\n✔ creates an agent request carrying the selected reasoning effort (0.328875ms)\n✔ starts with editable OpenAI and DeepSeek provider presets (4.60175ms)\n✔ persists only encrypted credentials and never returns a saved API key (4.577ms)\n✔ blank credentials pre\n... output truncated ...",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "切换 Pi 原生工具和本地挂载，修复原生审批绑定并保留历史显示",
+          "coverage": "integration",
+          "test": "node --test tests/pi-agent.test.ts tests/pi-storage.test.ts",
+          "verify": [
+            "node --test tests/pi-agent.test.ts tests/pi-storage.test.ts tests/workspace-ipc.test.ts",
+            "pnpm build"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-agent.test.ts tests/pi-storage.test.ts",
+            "verifiedAt": "2026-09-21T04:40:15.784Z",
+            "exitCode": 0,
+            "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (1764.582583ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (474.91925ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (862.31425ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (1778.675959ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (423.664083ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (823.868583ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (432.384125ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (427.771ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (1570.156875ms)\n✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (218.135792ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (92.339958ms)\n✔ 本地挂载读写真实文件，拒绝敏感路径与符号链接；快照不包含项目内容 (105.675292ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8704.398541",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-agent.test.ts tests/pi-storage.test.ts tests/workspace-ipc.test.ts",
+              "verifiedAt": "2026-09-21T04:40:24.501Z",
+              "exitCode": 0,
+              "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (1816.972917ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (456.7885ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (770.138833ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (1748.210625ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (438.585375ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (854.534958ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (419.258042ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (449.46025ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (1578.101708ms)\n✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (233.710292ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (96.200417ms)\n✔ 本地挂载读写真实文件，拒绝敏感路径与符号链接；快照不包含项目内容 (116.398584ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (783.6485ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (120.076292ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (25.836333ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8689.542583",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm build",
+              "verifiedAt": "2026-09-21T04:40:30.165Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  65.24 kB\n✓ built in 89ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3117 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-ChJQeM8Y.css    155.87 kB\n../../out/renderer/assets/index-CXr4w2kj.js   2,901.80 kB\n✓ built in 4.38s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-agent.test.ts tests/pi-storage.test.ts tests/workspace-ipc.test.ts && pnpm build",
+            "verifiedAt": "2026-09-21T04:40:30.165Z",
+            "exitCode": 0,
+            "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (1816.972917ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (456.7885ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (770.138833ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (1748.210625ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (438.585375ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (854.534958ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (419.258042ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (449.46025ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (1578.101708ms)\n✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (233.710292ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (96.200417ms)\n✔ 本地挂载读写真实文件，拒绝敏感路径与符号链接；快照不包含项目内容 (116.398584ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (783.6485ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (120.076292ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (25.836333ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8689.542583\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index.js  65.24 kB\n✓ built in 89ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.00 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3117 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-ChJQeM8Y.css    155.87 kB\n../../out/renderer/assets/index-CXr4w2kj.js   2,901.80 kB\n✓ built in 4.38s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-21T04:40:30.166Z"
+    }
+  ]
+}

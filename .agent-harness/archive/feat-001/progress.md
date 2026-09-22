@@ -1,0 +1,79 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-20T02:15:24.516Z
+**Feature ID:** feat-001
+**Feature Name:** Desktop Architecture Baseline
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** feat-model-picker-dialog
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+确认 Electron、AI SDK、AI Elements 与类型化 IPC 构成的初始桌面架构可以通过标准验证。
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-18T09:56:25.648Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "trd_spec": "docs/architecture.md",
+  "checklist": [
+    {
+      "action": "确认当前桌面架构通过主进程、preload、renderer 类型检查和生产构建",
+      "coverage": "static",
+      "verify": [
+        "pnpm run typecheck",
+        "pnpm run build",
+        "test -f out/preload/index.cjs"
+      ],
+      "tdd": false,
+      "coverage_reason": "该项验证已经实现的跨进程接线和构建配置，不包含适合先写失败单元测试的独立业务逻辑。",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-18T09:56:16.312Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-18T09:56:25.644Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 5 modules transformed.\nrendering chunks...\nout/main/index.js  4.54 kB\n✓ built in 45ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  0.76 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 5718 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                           0.46 kB\n../../out/renderer/assets/index-DvzhHbtB.css                           69.00 kB\n../../out/renderer/assets/channel-CbfLjFhe.js                           0.19 kB\n../../out/renderer/assets/init-ZxktEp_H.js                              0.26 kB\n../../out/renderer/assets/chunk-JWPE2WC7-3oYo6Cs8.js                    0.36 kB\n../../out/renderer/assets/chunk-2Q5K7J3B-KTjhUG9X.js                    0.37 kB\n../../out/renderer/assets/chunk-5VM5RSS4-Oq9C5TYP.js                    0.43 kB\n../../out/renderer/assets/chunk-XXDRQBXY-CMAnNNK9.js                    0.48 kB\n../../out/renderer/assets/codeowners-awy7PWCD.js                        0.59 kB\n../../out/renderer/assets/codeowners-Gyog2tLO.js                        0.59 kB\n../../out/renderer/assets/stateDiagram-v2-MP3YSRHH-CnzVsnX9.js          0.67 kB\n../../out/renderer/assets/highlighted-body-KPVGNVTW-CFmeqfwh.js         0.70 kB\n../../out/renderer/assets/classDiagram-ZZMXUADV-Dz4Qf-JG.js             0.71 kB\n../../out/renderer/assets/classDiagram-v2-VYDZK3BY-Dz4Qf-JG.js          0.71 kB\n../../out/renderer/assets/swimlanesDiagram-VR7AAH4N-DJLvq1hu.js         0.72 kB\n../../out/renderer/assets/tsv-ChRVFvMy.js                               0.77 kB\n../../out/renderer/assets/tsv-D5Ia16T4.js                               0.77 kB\n../../out/renderer/assets/shellsession-CkeTp4M1.js                      0.79 kB\n../../out/renderer/assets/shellsession-DF07J-v0.js                      0.79 kB\n../../out/renderer/assets/infoDiagram-27XIBGKW-Qr_XVIPX.js              0.95 kB\n../../out/renderer/assets/html-derivative-HU9p64q4.js                   0.97 kB\n../../out/renderer/assets/html-derivative-hBF5i0yR.js                   0.97 kB\n../../out/renderer/assets/qmldir-DuMSk0Oz.js                            1.04 kB\n../../out/renderer/assets/qmldir-CkkEh37r.js                            1.04 kB\n../../out/renderer/assets/git-rebase-D-XQSvDj.js                        1.05 kB\n../../out/renderer/assets/git-rebase-CBPs_8pF.js                        1.05 kB\n../../out/renderer/assets/chunk-POPQ4Y6H-iBHzYYaZ.js                    1.06 kB\n../../out/renderer/assets/csv-Ba84L8e5.js                               1.17 kB\n../../out/renderer/assets/csv-D9W9MoyR.js                               1.17 kB\n../../out/renderer/assets/git-commit-PP9xCApN.js                        1.28 kB\n../../out/renderer/assets/git-commit-Dv4XKH0P.js                        1.29 kB\n../../out/renderer/assets/xsl-CnwVr_6q.js                               1.43 kB\n../../out/renderer/assets/xsl-DDzizk_a.js                               1.43 kB\n../../out/renderer/assets/dotenv-Bb4iNxXK.js                            1.46 kB\n../../out/renderer/assets/dotenv-C36DH-Tt.js                            1.46 kB\n../../out/renderer/assets/sparql-DswowMAp.js                            1.53 kB\n../../out/renderer/assets/sparql-B6gmlPDA.js                            1.53 kB\n../../out/renderer/assets/ini-B84Ha1bx.js                               1.56 kB\n../../out/renderer/assets/ini-CE4isUWa.js                               1.56 kB\n../../out/renderer/assets/sizeCapture-INFHLROL-ZKMybqo8.js              1.74 kB\n../../out/renderer/assets/fortran-fixed-form-CpmOyvS5.js                1.76 kB\n../../out/renderer/assets/fortran-fixed-form-CiZ197_F.js                1.76 kB\n../../out/renderer/assets/docker-CUaLOm2I.js                            1.78 kB\n../../out/renderer/assets/docker-CPCU3osI.js                            1.78 kB\n../../out/renderer/assets/hxml-Jle7oG\n... output truncated ...",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        },
+        {
+          "command": "test -f out/preload/index.cjs",
+          "verifiedAt": "2026-09-18T09:56:25.648Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "pnpm run typecheck && pnpm run build && test -f out/preload/index.cjs",
+        "verifiedAt": "2026-09-18T09:56:25.648Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 5 modules transformed.\nrendering chunks...\nout/main/index.js  4.54 kB\n✓ built in 45ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  0.76 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 5718 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                           0.46 kB\n../../out/renderer/assets/index-DvzhHbtB.css                           69.00 kB\n../../out/renderer/assets/channel-CbfLjFhe.js                           0.19 kB\n../../out/renderer/assets/init-ZxktEp_H.js                              0.26 kB\n../../out/renderer/assets/chunk-JWPE2WC7-3oYo6Cs8.js                    0.36 kB\n../../out/renderer/assets/chunk-2Q5K7J3B-KTjhUG9X.js                    0.37 kB\n../../out/renderer/assets/chunk-5VM5RSS4-Oq9C5TYP.js                    0.43 kB\n../../out/renderer/assets/chunk-XXDRQBXY-CMAnNNK9.js                    0.48 kB\n../../out/renderer/assets/codeowners-awy7PWCD.js                        0.59 kB\n../../out/renderer/assets/codeowners-Gyog2tLO.js                        0.59 kB\n../../out/renderer/assets/stateDiagram-v2-MP3YSRHH-CnzVsnX9.js          0.67 kB\n../../out/renderer/assets/highlighted-body-KPVGNVTW-CFmeqfwh.js         0.70 kB\n../../out/renderer/assets/classDiagram-ZZMXUADV-Dz4Qf-JG.js             0.71 kB\n../../out/renderer/assets/classDiagram-v2-VYDZK3BY-Dz4Qf-JG.js          0.71 kB\n../../out/renderer/assets/swimlanesDiagram-VR7AAH4N-DJLvq1hu.js         0.72 kB\n../../out/renderer/assets/tsv-ChRVFvMy.js                               0.77 kB\n../../out/renderer/assets/tsv-D5Ia16T4.js                               0.77 kB\n../../out/renderer/assets/shellsession-CkeTp4M1.js                      0.79 kB\n../../out/renderer/assets/shellsession-DF07J-v0.js                      0.79 kB\n../../out/renderer/assets/infoDiagram-27XIBGKW-Qr_XVIPX.js              0.95 kB\n../../out/renderer/assets/html-derivative-HU9p64q4.js                   0.97 kB\n../../out/renderer/assets/html-derivative-hBF5i0yR.js                   0.97 kB\n../../out/renderer/assets/qmldir-DuMSk0Oz.js                            1.04 kB\n../../out/renderer/assets/qmldir-CkkEh37r.js                            1.04 kB\n../../out/renderer/assets/git-rebase-D-XQSvDj.js                        1.05 kB\n../../out/renderer/assets/git-rebase-CBPs_8pF.js                        1.05 kB\n../../out/renderer/assets/chunk-POPQ4Y6H-iBHzYYaZ.js                    1.06 kB\n../../out/renderer/assets/csv-Ba84L8e5.js                               1.17 kB\n../../out/renderer/assets/csv-D9W9MoyR.js                               1.17 kB\n../../out/renderer/assets/git-commit-PP9xCApN.js                        1.28 kB\n../../out/renderer/assets/git-commit-Dv4XKH0P.js                        1.29 kB\n../../out/renderer/assets/xsl-CnwVr_6q.js                               1.43 kB\n../../out/renderer/assets/xsl-DDzizk_a.js                               1.43 kB\n../../out/renderer/assets/dotenv-Bb4iNxXK.js                            1.46 kB\n../../out/renderer/assets/dotenv-C36DH-Tt.js                            1.46 kB\n../../out/renderer/assets/sparql-DswowMAp.js                            1.53 kB\n../../out/renderer/assets/sparql-B6gmlPDA.js                            1.53 kB\n../../out/renderer/assets/ini-B84Ha1bx.js                               1.56 kB\n../../out/renderer/assets/ini-CE4isUWa.js                               1.56 kB\n../../out/renderer/assets/sizeCapture-INFHLROL-ZKMybqo8.js              1.74 kB\n../../out/renderer/assets/fortran-fixed-form-CpmOyvS5.js                1.76 kB\n../../out/renderer/assets/fortran-fixed-form-CiZ197_F.js                1.76 kB\n../../out/renderer/assets/docker-CUaLOm2I.js                            1.78 kB\n../../out/renderer/assets/docker-CPCU3osI.js                            1.78 kB\n../../out/renderer/assets/hxml-Jle7oG\n... output truncated ...",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    }
+  ]
+}
+```

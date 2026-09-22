@@ -1,0 +1,69 @@
+diff --git a/dist/index.js b/dist/index.js
+index b18c571ffe4b6797ec028757d18b5c8c2f2507dd..a8b20d61e384a017daaabad3e674665faef41249 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1036,25 +1036,37 @@ import {
+   HarnessCapabilityUnsupportedError
+ } from "@ai-sdk/harness";
+ var HARNESS_ID = "pi";
+-function extractUserText(prompt) {
++function extractUserPrompt(prompt) {
+   if (typeof prompt === "string") {
+-    return prompt;
++    return { text: prompt };
+   }
+   const { content } = prompt;
+   if (typeof content === "string") {
+-    return content;
++    return { text: content };
+   }
+   const parts = [];
++  const images = [];
+   for (const part of content) {
+-    if (part.type !== "text") {
++    if (part.type === "text") {
++      parts.push(part.text);
++      continue;
++    }
++    if (part.type === "file" && typeof part.mediaType === "string" && part.mediaType.startsWith("image/")) {
++      const rawSource = typeof part.data === "string" ? part.data : part.data?.type === "url" ? part.data.url : undefined;
++      const source = typeof rawSource === "string" ? rawSource : rawSource instanceof URL ? rawSource.toString() : undefined;
++      const match = typeof source === "string" ? /^data:([^;]+);base64,([A-Za-z0-9+/]+={0,2})$/.exec(source) : undefined;
++      if (!match || match[1] !== part.mediaType) throw new HarnessCapabilityUnsupportedError({ message: "pi: image data must be a base64 data URL.", harnessId: HARNESS_ID });
++      images.push({ type: "image", data: match[2], mimeType: part.mediaType });
++      continue;
++    }
++    {
+       throw new HarnessCapabilityUnsupportedError({
+         message: `pi: only text user-message parts are supported; got '${part.type}'.`,
+         harnessId: HARNESS_ID
+       });
+     }
+-    parts.push(part.text);
+   }
+-  return parts.join("\n\n");
++  return { text: parts.join("\n\n"), ...(images.length ? { images } : {}) };
+ }
+ function serializeToolOutput(output) {
+   if (typeof output === "string") {
+@@ -2771,7 +2781,7 @@ async function createPiSession(input) {
+           }
+         });
+         try {
+-          await session.prompt(turnOpts.text);
++          await session.prompt(turnOpts.text, turnOpts.images);
+           if (terminalError) {
+             if (suspending && isAbortError(terminalError)) return;
+             currentEmit?.({ type: "error", error: new Error(terminalError) });
+@@ -2876,8 +2886,10 @@ async function createPiSession(input) {
+           harnessId: HARNESS_ID2
+         });
+       }
++      const extracted = extractUserPrompt(promptOpts.prompt);
+       return runTurn({
+-        text: extractUserText(promptOpts.prompt),
++        text: extracted.text,
++        ...(extracted.images ? { images: extracted.images } : {}),
+         ...promptOpts.model ? { model: promptOpts.model } : {},
+         skills: promptOpts.skills,
+         tools: promptOpts.tools ?? [],
