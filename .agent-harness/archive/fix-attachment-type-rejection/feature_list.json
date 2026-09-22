@@ -1,0 +1,129 @@
+{
+  "features": [
+    {
+      "id": "fix-attachment-type-rejection",
+      "name": "附件类型收窄与错误语义修正",
+      "description": "非图片附件当前在 main 侧被当成图片校验，抛出误导性的「图片附件格式无效」；收窄 composer 可选附件类型，并让 main 对非图片附件、不支持的图片子类型和非法图片数据分别给出准确错误。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "main 侧附件校验按类型分流：非图片附件、不支持的图片子类型、非法图片数据分别报错，image/jpg 归一化为 image/jpeg",
+          "coverage": "integration",
+          "test": "node --test --test-name-pattern='非图片附件|不支持的图片类型|非法图片数据' tests/pi-agent.test.ts",
+          "verify": [
+            "node --test --test-name-pattern='非图片附件|不支持的图片类型|非法图片数据|切换视觉模型|非视觉模型' tests/pi-agent.test.ts",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test --test-name-pattern='非图片附件|不支持的图片类型|非法图片数据' tests/pi-agent.test.ts",
+            "verifiedAt": "2026-09-22T06:14:59.474Z",
+            "exitCode": 0,
+            "stdout": "✔ 非图片附件返回明确提示且不发模型请求 (637.754041ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (219.348583ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (191.702125ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1203.809583",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test --test-name-pattern='非图片附件|不支持的图片类型|非法图片数据|切换视觉模型|非视觉模型' tests/pi-agent.test.ts",
+              "verifiedAt": "2026-09-22T06:15:07.382Z",
+              "exitCode": 0,
+              "stdout": "npm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\n✔ 同一会话切换视觉模型后图片实际送达 provider (7455.775959ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (49.09475ms)\n✔ 非图片附件返回明确提示且不发模型请求 (40.946792ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (39.199375ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (40.578584ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7818.655875",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T06:15:14.959Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           69.07 kB\n✓ built in 90ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 5ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3268 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-8OnkDiVG.css    167.22 kB\n../../out/renderer/assets/index-Dhs6-lUn.js   6,616.77 kB\n✓ built in 5.80s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test --test-name-pattern='非图片附件|不支持的图片类型|非法图片数据|切换视觉模型|非视觉模型' tests/pi-agent.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T06:15:14.959Z",
+            "exitCode": 0,
+            "stdout": "npm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\nnpm warn Unknown env config \"side-effects-cache\". This will stop working in the next major version of npm.\n✔ 同一会话切换视觉模型后图片实际送达 provider (7455.775959ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (49.09475ms)\n✔ 非图片附件返回明确提示且不发模型请求 (40.946792ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (39.199375ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (40.578584ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7818.655875\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           69.07 kB\n✓ built in 90ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 5ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3268 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-8OnkDiVG.css    167.22 kB\n../../out/renderer/assets/index-Dhs6-lUn.js   6,616.77 kB\n✓ built in 5.80s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "composer 只接受 PNG/JPEG/WebP/GIF 图片附件：新增附件策略模块并接入 runtime attachment adapter，替换默认的全类型 adapter",
+          "coverage": "unit",
+          "test": "node --test tests/attachment-policy.test.ts",
+          "verify": [
+            "node --test tests/attachment-policy.test.ts tests/composer-attachments.test.ts",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/attachment-policy.test.ts",
+            "verifiedAt": "2026-09-22T06:15:15.274Z",
+            "exitCode": 0,
+            "stdout": "✔ 附件策略只接受 main 能校验的四种图片类型 (29.124292ms)\n✔ 附件策略归一化 image/jpg 并区分图片与非图片类型 (0.111583ms)\n✔ 附件拒绝提示说明当前支持的类型 (0.067292ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 219.377084",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/attachment-policy.test.ts tests/composer-attachments.test.ts",
+              "verifiedAt": "2026-09-22T06:15:15.577Z",
+              "exitCode": 0,
+              "stdout": "✔ 附件策略只接受 main 能校验的四种图片类型 (28.79675ms)\n✔ 附件策略归一化 image/jpg 并区分图片与非图片类型 (0.109792ms)\n✔ 附件拒绝提示说明当前支持的类型 (0.137042ms)\n✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (1.894416ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.661709ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (0.397875ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 216.777292",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T06:15:23.158Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           69.07 kB\n✓ built in 86ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3268 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-8OnkDiVG.css    167.22 kB\n../../out/renderer/assets/index-Dhs6-lUn.js   6,616.77 kB\n✓ built in 5.74s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/attachment-policy.test.ts tests/composer-attachments.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T06:15:23.158Z",
+            "exitCode": 0,
+            "stdout": "✔ 附件策略只接受 main 能校验的四种图片类型 (28.79675ms)\n✔ 附件策略归一化 image/jpg 并区分图片与非图片类型 (0.109792ms)\n✔ 附件拒绝提示说明当前支持的类型 (0.137042ms)\n✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (1.894416ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.661709ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (0.397875ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 216.777292\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           69.07 kB\n✓ built in 86ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3268 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-8OnkDiVG.css    167.22 kB\n../../out/renderer/assets/index-Dhs6-lUn.js   6,616.77 kB\n✓ built in 5.74s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "composer 拒绝不支持的附件类型时显示可见提示，而不是静默丢弃",
+          "coverage": "static",
+          "coverage_reason": "订阅官方 composer.attachmentAddError 事件并渲染提示依赖真实 runtime 与视觉呈现，仓库无 DOM 测试环境；以源码接线断言加真实窗口视觉验收覆盖，视觉不可用时明确记录未验收。",
+          "verify": [
+            "node --test tests/composer-attachments.test.ts",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/composer-attachments.test.ts",
+              "verifiedAt": "2026-09-22T06:15:23.347Z",
+              "exitCode": 0,
+              "stdout": "✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (1.863708ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.601125ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (0.35ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 94.363209",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-22T06:15:30.810Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           69.07 kB\n✓ built in 88ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3268 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-8OnkDiVG.css    167.22 kB\n../../out/renderer/assets/index-Dhs6-lUn.js   6,616.77 kB\n✓ built in 5.69s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/composer-attachments.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-22T06:15:30.810Z",
+            "exitCode": 0,
+            "stdout": "✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (1.863708ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.601125ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (0.35ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 94.363209\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 22 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js  16.24 kB\nout/main/index.js           69.07 kB\n✓ built in 88ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  2.97 kB\n✓ built in 6ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3268 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                     1.43 kB\n../../out/renderer/assets/index-8OnkDiVG.css    167.22 kB\n../../out/renderer/assets/index-Dhs6-lUn.js   6,616.77 kB\n✓ built in 5.69s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-22T06:15:30.811Z"
+    }
+  ]
+}

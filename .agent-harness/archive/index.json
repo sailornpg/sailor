@@ -230,6 +230,20 @@
       "status": "done",
       "archived_at": "2026-09-21T08:40:40.016Z",
       "archive_path": ".agent-harness/archive/feat-sidebar-active-highlight"
+    },
+    {
+      "id": "fix-attachment-type-rejection",
+      "title": "附件类型收窄与错误语义修正",
+      "status": "done",
+      "archived_at": "2026-09-22T07:05:24.651Z",
+      "archive_path": ".agent-harness/archive/fix-attachment-type-rejection"
+    },
+    {
+      "id": "feat-read-document-tool",
+      "title": "通用 read_document 文档读取工具",
+      "status": "done",
+      "archived_at": "2026-09-22T07:05:28.512Z",
+      "archive_path": ".agent-harness/archive/feat-read-document-tool"
     }
   ]
 }
