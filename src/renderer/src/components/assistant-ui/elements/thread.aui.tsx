@@ -29,6 +29,7 @@ import { TooltipIconButton } from "@/components/assistant-ui/elements/tooltip-ic
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/assistant-ui/elements/skeleton";
 import { cn } from "@/lib/utils";
+import { ChatEntryContext } from "@/components/chat/thread/ChatEntryContext";
 import { WorkspaceContextMessage } from "@/components/chat/thread/WorkspaceContextMessage";
 import {
   ActionBarMorePrimitive,
@@ -192,9 +193,11 @@ export const Thread: FC<ThreadProps> = ({
 };
 
 const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
-  isEmpty,
+  isEmpty: runtimeEmpty,
   autoFocus,
 }) => {
+  const entry = useContext(ChatEntryContext);
+  const isEmpty = entry ? entry.phase === "welcome" : runtimeEmpty;
   const {
     Welcome = ThreadWelcome,
     Composer: ComposerComponent = Composer,
@@ -229,9 +232,11 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
             isEmpty && "justify-center",
           )}
         >
-          <AuiIf condition={isNewChatView}>
-            <Welcome />
-          </AuiIf>
+          {entry ? entry.phase !== "chat" && (
+            <div ref={entry.welcomeRef} style={entry.welcomeStyle} className={entry.phase === "transition" ? "chat-welcome-exit" : undefined}>
+              <Welcome />
+            </div>
+          ) : <AuiIf condition={isNewChatView}><Welcome /></AuiIf>}
           <AuiIf condition={isHistoryLoadingView}>
             <ThreadHistorySkeleton />
           </AuiIf>
@@ -246,6 +251,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
           </div>
 
           <ThreadPrimitive.ViewportFooter
+            ref={entry?.footerRef}
             className={cn(
               "aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6",
               !isEmpty &&

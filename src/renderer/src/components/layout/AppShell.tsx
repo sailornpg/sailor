@@ -249,10 +249,10 @@ export function AppShell() {
       ) : (
         <main className="workspace-empty">
           <ParticleSailboat />
-          <h1>让想法从工作区开始</h1>
+          <h1>呀嘞呀嘞……那就从这里起航吧</h1>
           <p>选择一个本地目录，在这里开启独立的会话。</p>
           <Button onClick={() => perform(() => createChat())}>
-            选择目录并新建会话
+            选定港湾，起航
           </Button>
           {(loading || switching) && <span role="status">正在加载…</span>}
         </main>

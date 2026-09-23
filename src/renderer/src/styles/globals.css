@@ -634,3 +634,18 @@ kbd { color: var(--text-faint); font-size: 10px; }
 .pane-resizer-shared[data-dragging="true"] .pane-resizer-grip,
 .pane-resizer-shared:focus-visible .pane-resizer-grip,
 .pane-resizer-shared[data-forced-hover="true"] .pane-resizer-grip { opacity: 1; }
+
+/* The chat-local point grid is a user-requested brand transition. */
+.sailor-chat-stage { position: relative; isolation: isolate; flex: 1; min-height: 0; overflow: hidden; background: var(--surface-workspace); }
+.chat-particle-backdrop { position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--muted-foreground); }
+.sailor-chat-stage > .aui-thread-root { position: relative; z-index: 1; background: transparent; }
+.chat-welcome-exit { animation: chat-welcome-exit 150ms ease-out both; }
+@keyframes chat-welcome-exit { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .chat-welcome-exit { animation: none; opacity: 0; }
+}
+.sailor-chat-stage[data-entry-phase="transition"] [data-slot="aui_message-group"] { animation: chat-messages-enter 180ms 200ms ease-out both; }
+@keyframes chat-messages-enter { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .sailor-chat-stage[data-entry-phase="transition"] [data-slot="aui_message-group"] { animation: none; }
+}
