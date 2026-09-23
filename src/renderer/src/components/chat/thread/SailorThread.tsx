@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { ConversationMapAui } from '@/components/assistant-ui/elements/conversation-map.aui'
-import { Sparkles } from 'lucide-react'
+import { ParticleSailboat } from '@/components/home/ParticleSailboat'
 import {
   Thread,
   type ThreadComponents,
@@ -34,7 +34,7 @@ function SailorWelcome() {
   const { project } = useSailorThreadConfig()
   return (
     <div className="sailor-thread-welcome">
-      <Sparkles aria-hidden />
+      <ParticleSailboat />
       <h1>你想构建什么？</h1>
       <p>{project?.name ?? '工作区'}</p>
     </div>

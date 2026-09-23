@@ -22,8 +22,17 @@
     "@assistant-ui/react": "0.15.21",
     "@assistant-ui/react-markdown": "^0.14.16",
     "@base-ui/react": "^1.8.0",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.5",
+    "@codemirror/view": "^6.43.12",
+    "@iconify-json/vscode-icons": "^1.2.79",
+    "@iconify/react": "^6.0.2",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@radix-ui/react-use-controllable-state": "^1.2.6",
+    "@react-three/fiber": "9.8.0",
     "@tailwindcss/vite": "4.3.3",
     "ai": "7.0.107",
     "beautiful-mermaid": "^1.1.3",
@@ -41,6 +50,7 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "3.3.1",
     "tailwindcss": "4.3.3",
+    "three": "0.186.0",
     "tw-shimmer": "^0.4.13",
     "unpdf": "^1.8.1",
     "yaml": "2.9.1",
@@ -52,12 +62,42 @@
     "@types/node": "26.0.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
     "@vitejs/plugin-react": "5.1.1",
     "electron": "44.4.2",
     "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
     "typescript": "7.0.2",
     "vite": "7.3.6"
+  },
+  "build": {
+    "appId": "com.sailor.desktop",
+    "productName": "Sailor",
+    "directories": {
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/icon.png",
+        "to": "resources/icon.png"
+      }
+    ],
+    "mac": {
+      "icon": "resources/icon.icns",
+      "target": ["dmg"]
+    },
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": ["nsis"]
+    },
+    "linux": {
+      "icon": "resources/icon.png",
+      "target": ["AppImage"]
+    }
   },
   "packageManager": "pnpm@11.1.2",
   "pnpm": {

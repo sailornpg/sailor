@@ -1,3 +1,5 @@
+import { WorkspaceContextChips } from './WorkspaceContextChips';
+import { useWorkspaceContexts } from '@/lib/workspaceContextDrafts';
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ComposerPrimitive,
@@ -62,8 +64,9 @@ export function SailorComposer({
   onOpenSettings,
   onRetrySave,
 }: SailorComposerProps) {
-  const { clearError, error, stop } = useSailorChat();
+  const { clearError, error, stop, sendMessage } = useSailorChat();
   const runtimeRunning = useAuiState((state) => state.thread.isRunning);
+  const references = useWorkspaceContexts(chatId);
   const composerEmpty = useAuiState((state) => state.composer.isEmpty);
   const [reasoning, setReasoning] = useState<ReasoningEffort>(
     registry.reasoning.get(chatId) ?? "provider-default",
@@ -123,7 +126,7 @@ export function SailorComposer({
     runBusy ||
     Boolean(summary?.saveError) ||
     Boolean(summary?.archived) ||
-    composerEmpty;
+    (composerEmpty && references.length === 0);
 
   useEffect(() => {
     registry.reasoning.set(chatId, reasoning);
@@ -158,22 +161,27 @@ export function SailorComposer({
       <ComposerPrimitive.Root className="w-full">
         <Composer className="max-w-none">
           <ComposerPrimitive.AttachmentDropzone asChild>
-            <ComposerBar className="border-black/[0.06] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.025),0_8px_24px_rgba(0,0,0,0.04)] dark:border-border/60 dark:bg-popover">
-              <ComposerAttachments />
-              <ComposerPrimitive.Input
-                aria-label="任务描述"
-                autoFocus
-                className="placeholder:text-foreground/35 max-h-48 min-h-11 w-full resize-none bg-transparent px-3 py-2 text-[15px] leading-6 caret-blue-500 outline-none dark:caret-blue-400"
-                disabled={
-                  runBusy ||
-                  Boolean(summary?.saveError) ||
-                  Boolean(summary?.archived)
-                }
-                enterKeyHint="send"
-                placeholder="随心输入"
-                rows={1}
-              />
-              <ComposerToolbar className="gap-2">
+            <div className="sailor-composer-dropzone">
+              <ComposerBar className="border-black/[0.06] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.025),0_8px_24px_rgba(0,0,0,0.04)] dark:border-border/60 dark:bg-popover">
+                <div className="sailor-composer-attachments">
+                  <WorkspaceContextChips chatId={chatId} />
+                  <ComposerAttachments />
+                </div>
+                <ComposerPrimitive.Input
+                  onKeyDown={(event) => { if(event.key==='Enter' && !event.shiftKey && !event.nativeEvent.isComposing && composerEmpty && references.length && !sendDisabled) {event.preventDefault(); void sendMessage({parts:[]});} }}
+                  aria-label="任务描述"
+                  autoFocus
+                  className="placeholder:text-foreground/35 max-h-48 min-h-11 w-full resize-none bg-transparent px-3 py-2 text-[15px] leading-6 caret-blue-500 outline-none dark:caret-blue-400"
+                  disabled={
+                    runBusy ||
+                    Boolean(summary?.saveError) ||
+                    Boolean(summary?.archived)
+                  }
+                  enterKeyHint="send"
+                  placeholder="随心输入"
+                  rows={1}
+                />
+                <ComposerToolbar className="gap-2">
                 <ComposerActions className="min-w-0 flex-1">
                   <ComposerPrimitive.AddAttachment asChild>
                     <ComposerAttachButton />
@@ -292,6 +300,8 @@ export function SailorComposer({
                       );
                     }}
                   />
+                ) : composerEmpty && references.length > 0 ? (
+                  <ComposerSend aria-label="发送" disabled={sendDisabled} idle={false} streaming={false} onClick={()=>{if(error)clearError();void sendMessage({parts:[]})}} />
                 ) : (
                   <ComposerPrimitive.Send asChild>
                     <ComposerSend
@@ -306,8 +316,9 @@ export function SailorComposer({
                     />
                   </ComposerPrimitive.Send>
                 )}
-              </ComposerToolbar>
-            </ComposerBar>
+                </ComposerToolbar>
+              </ComposerBar>
+            </div>
           </ComposerPrimitive.AttachmentDropzone>
         </Composer>
       </ComposerPrimitive.Root>

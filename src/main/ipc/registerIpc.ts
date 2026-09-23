@@ -7,6 +7,7 @@ import { AgentService } from '../agent/AgentService.js'
 import { ProviderModelCatalog } from '../settings/ProviderModelCatalog.js'
 import { safeStorageCipher } from '../settings/SafeStorageCipher.js'
 import { SettingsService } from '../settings/SettingsService.js'
+import { WorkspaceFilesService } from '../workspaces/WorkspaceFilesService.js'
 import {
   IPC,
   type AgentRunRequest,
@@ -71,6 +72,24 @@ export function registerIpc(window: BrowserWindow): () => void {
   ipcMain.handle(IPC.workspaceCreateChat, (_event, id) => workspaces.createChat(id))
   ipcMain.handle(IPC.workspaceGetChat, (_event, id) => workspaces.getChat(id))
   ipcMain.handle(IPC.workspacePreferences, (_event, input) => workspaces.setPreferences(input))
+  const workspaceFiles = new WorkspaceFilesService(projectId => workspaces.resolveProjectRoot(projectId))
+  const workspaceFilesListSchema = z.object({
+    projectId: z.string().min(1).max(200),
+    path: z.string().max(1000).optional(),
+    cursor: z.string().max(32).optional(),
+  })
+  const workspaceFilesReadSchema = z.object({
+    projectId: z.string().min(1).max(200),
+    path: z.string().min(1).max(1000),
+  })
+  ipcMain.handle(IPC.workspaceFilesList, (_event, input) => {
+    const value = workspaceFilesListSchema.parse(input)
+    return workspaceFiles.list(value.projectId, value.path, value.cursor)
+  })
+  ipcMain.handle(IPC.workspaceFilesRead, (_event, input) => {
+    const value = workspaceFilesReadSchema.parse(input)
+    return workspaceFiles.read(value.projectId, value.path)
+  })
   const agent = new AgentService((runId, event) => {
     if (!window.isDestroyed()) window.webContents.send(IPC.agentEvent, { runId, event })
   }, settings, {
@@ -105,7 +124,7 @@ export function registerIpc(window: BrowserWindow): () => void {
 
   return () => {
     agent.abortAll()
-    for (const channel of [IPC.workspaceManageChat, IPC.workspaceRetrySave, IPC.workspaceSnapshot, IPC.workspacePick, IPC.workspaceCreateChat, IPC.workspaceGetChat, IPC.workspacePreferences]) ipcMain.removeHandler(channel)
+    for (const channel of [IPC.workspaceManageChat, IPC.workspaceRetrySave, IPC.workspaceSnapshot, IPC.workspacePick, IPC.workspaceCreateChat, IPC.workspaceGetChat, IPC.workspacePreferences, IPC.workspaceFilesList, IPC.workspaceFilesRead]) ipcMain.removeHandler(channel)
     ipcMain.removeHandler(IPC.appVersion)
     ipcMain.removeHandler(IPC.agentStart)
     ipcMain.removeHandler(IPC.agentAbort)

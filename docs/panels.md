@@ -4,17 +4,19 @@ Codex 风格的右侧面板系统：一个 dock 承载多个面板 tab，面板�
 
 ## 目标行为
 
-1. **面板选择菜单**：列出所有已注册面板（图标 + 标题 + 快捷键提示）；不可用面板保留条目并给出真实原因。
-2. **tab 宿主**：面板以 tab 驻留在 dock 内，可多开、切换、关闭，`+` 打开选择菜单。
-3. **布局模式**：隐藏 / 停靠（后续可扩展分屏、全宽）。
+1. **功能列表常驻**：dock 顶部列出所有已注册面板（图标 + 标题 + 快捷键提示）；点选打开并激活，不可用面板保留条目并给出真实原因。
+2. **tab 宿主**：面板以 tab 驻留在 dock 内，可多开、切换、关闭。
+3. **布局模式**：隐藏 / 停靠（后续可扩展分屏、全宽）；左右两栏可拖拽调宽，左栏可收起。
 4. **上下文重绑定**：面板声明 `scope`，切换会话或工作区时按 scope 重新解析可用性与数据源。
 
 ## 分层
 
 ```text
-组件层   PanelDock ─ PanelTabStrip ─ PanelPickerMenu ─ PanelHost ─ components/panels/<id>/...
+组件层   PanelDock ─ PanelMenu / PanelTabStrip ─ PanelHost ─ components/panels/<id>/...
               ↑ 只读 state，只派发 action
+外壳层   PaneResizer（左右两栏分隔条）+ ProjectSidebar 完整态/图标条
 状态层   panelRegistry（静态描述符） + panelLayout（纯 reducer + 版本化持久化）
+         + uiLayout（左栏宽度与收起，纯 reducer + 版本化持久化）
               ↑ 纯函数，node --test 直接覆盖
 能力层   每个面板自己的窄 IPC；主进程校验复用 WorkspaceToolScope 一类既有基元
 ```
@@ -61,12 +63,19 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 不变式：
 
 - 打开已打开的 single 实例 = 激活，不新增 tab。
-- 关闭当前激活 tab 后，激活相邻 tab；关闭最后一个 tab 时 dock 不可见但保留 active 记忆，便于再次打开。
+- 关闭当前激活 tab 后，激活相邻 tab；关闭最后一个 tab 时 dock 保持可见并回到功能列表空态，同时保留 active 记忆（可见性是用户的选择，不由 tab 数量推导）。
 - 激活实例失效（持久化数据被外部改写、面板下线）时回退到第一个 tab，dock 不渲染空白。
 - tab 数量有上限；宽度越界被 clamp。
 - 持久化数据是外部输入：版本号不匹配、结构非法、面板 id 已不存在时整体降级到默认布局，不抛错。
 
-持久化沿用 `appearancePreferences.ts` 的模式（版本化 key、读时校验、写失败不抛错），key 为 `sailor.panels.v1`。P0 布局只存 renderer localStorage，不进 `workspaces.json`，因此不改变持久化格式与 IPC 契约。
+持久化沿用 `appearancePreferences.ts` 的模式（版本化 key、读时校验、写失败不抛错），key 为 `sailor.panels.v1`。左栏宽度与收起状态是外壳几何，属于 `lib/layout/uiLayout.ts`（key `sailor.ui-layout.v2`），两者都只存 renderer localStorage，不进 `workspaces.json`，因此不改变持久化格式与 IPC 契约。
+
+## 外壳几何（左栏 / 中栏 / 右栏）
+
+- 三栏宽度由 `.app-shell` 的 CSS 变量驱动：`--sidebar-width`（左栏，200–420px）与 `--panel-width`（右栏，280–720px），中栏 `minmax(0, 1fr)` 自适应。
+- 左栏可收起为 52px 图标条（⌘/Ctrl+B），状态持久化在 `uiLayout`；右栏可见性由面板布局的 `toggleVisible` 决定，且与"是否打开面板"解耦：打开右栏只显示功能列表，绝不替用户选中面板。
+- `PaneResizer` 是两条分隔条的唯一实现：绝对定位在栏内边缘、`role="separator"` + `aria-valuenow`、方向键 ±16px（`Shift` ±64px）、拖拽用 pointer capture（不可用时降级为普通事件）。
+- 窗口变窄时右栏由媒体查询收窄为 `min(var(--panel-width), 34vw / 42vw)`，避免中栏被挤到不可用。
 
 ## 面板的边界与成本
 
@@ -78,25 +87,27 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 | 浏览器 browser | 现有 `WebPreview` 渲染结果 | 完整浏览器需 `webviewTag` 或 `WebContentsView` | `webviewTag` 会削弱当前 `sandbox: true` 边界 |
 | 侧边聊天 side-chat | `WorkspaceChats` 每 chatId 稳定实例，主进程已支持并发 run | 无 | 同一 chat 不得同时挂两个 surface |
 
-## P0 范围（feat-panel-dock-skeleton）
+## 当前形态（feat-panel-dock-skeleton + 三栏布局）
 
 - 注册表、布局 reducer、版本化持久化、快捷键表、可用性解析。
-- `PanelDock` / `PanelTabStrip` / `PanelPickerMenu` / `PanelHost`，替换硬编码的 `InspectorPanel`。
+- `PanelDock` / `PanelMenu` / `PanelTabStrip` / `PanelHost`，替换硬编码的 `InspectorPanel`。
+- 功能入口只有两条、互不重复：有 tab 时由 tab 条右侧的 `+` 下拉（`PanelPickerMenu` / `PanelAddButton`，注册表驱动）新增；没有 tab 时整份功能列表垂直居中作为 dock 内容。两者都可点选打开并激活，不可用项保留条目与真实原因。
 - 注册五个面板：审查、文件、终端、浏览器（承载现有只读预览）、侧边聊天；除浏览器外均为带真实原因的占位。
 - 退役 `sailor:web-preview` 全局事件，改为类型化面板打开动作。
-- `ChatWorkspace` 顶栏的面板开关升级为「选择菜单 + 可见性开关」。
+- `ChatWorkspace` 顶栏只保留一个面板可见性开关（`PanelToolbar`），不再与选择菜单重复。
 
 不做（后续 feature）：git diff、只读终端输出、只读文件树、第二 chat surface、分屏、拖拽排序、per-chat 布局持久化。
 
 ## 新增一个面板的步骤
 
 1. 在 `components/panels/<id>/` 实现组件，props 只依赖 `PanelProps`。
-2. 在注册表追加描述符：id、标题、图标、快捷键、scope、multiplicity、`availability`、`load`。
+2. 在注册表追加描述符：id、标题、图标、快捷键、scope、multiplicity、`availability`、`load`（功能列表自动出现该项）。
 3. 若需要新的主进程能力：先补窄 IPC 契约与校验，再在 `availability` 中按真实能力返回可用性。
 4. 补测试：纯逻辑进 `tests/panel-*.test.ts`；组件接线用 Vite `ssrLoadModule` + `renderToStaticMarkup` 断言；视觉变化走 offscreen Electron 截图。
 
 ## 验证
 
 - `node --test tests/panel-layout.test.ts tests/panel-shortcuts.test.ts tests/panel-dock.test.ts tests/panel-registry.test.ts`
+- 外壳几何：`node --test tests/ui-layout.test.ts tests/pane-resizer.test.ts tests/sidebar-rail.test.ts`
 - `pnpm run typecheck && pnpm run build`
-- offscreen Electron 截图：`.agent-harness/evidence/panel-dock-preview/`
+- offscreen Electron 截图：`.agent-harness/evidence/panel-dock-preview/`（dock 骨架）与 `.agent-harness/evidence/shell-layout-preview/`（三栏拖拽、左栏收起、功能列表，含交互断言）

@@ -60,7 +60,7 @@ test('单实例面板按 panel+scope 去重，多实例面板按 instanceId 区�
   assert.equal(state.activeInstanceId, 'side-chat#1')
 })
 
-test('关闭激活 tab 后激活相邻项，关闭最后一个 tab 后面板隐藏', async () => {
+test('关闭激活 tab 后激活相邻项，关闭最后一个 tab 后保留功能列表可见性', async () => {
   const { createDefaultPanelLayout, panelLayoutReducer } = await loadLayout()
   const review = { instanceId: 'review', panelId: 'review', scopeId: '' }
   const files = { instanceId: 'files', panelId: 'files', scopeId: '' }
@@ -79,9 +79,26 @@ test('关闭激活 tab 后激活相邻项，关闭最后一个 tab 后面板隐�
 
   state = panelLayoutReducer(state, { type: 'close', instanceId: review.instanceId })
   assert.equal(state.activeInstanceId, null)
-  assert.equal(state.visible, false)
   assert.deepEqual(state.open, [])
+  assert.equal(state.visible, true, 'dock 顶部常驻功能列表，关掉最后一个 tab 后仍应可见')
   assert.equal(state.lastActive?.panelId, 'files', '关闭 tab 不应丢失“上次使用的面板”记忆')
+})
+
+test('可见性与是否打开面板解耦：空布局也能被显式打开', async () => {
+  const { createDefaultPanelLayout, panelLayoutReducer } = await loadLayout()
+
+  const shown = panelLayoutReducer(createDefaultPanelLayout(), { type: 'setVisible', visible: true })
+  assert.equal(shown.visible, true, '没有打开任何面板时，点击开关也应能打开右栏功能列表')
+  assert.deepEqual(shown.open, [], '打开右栏不应替用户选中任何面板')
+
+  const review = { instanceId: 'review', panelId: 'review', scopeId: '' }
+  const opened = panelLayoutReducer(shown, { type: 'open', instance: review })
+  assert.equal(opened.visible, true)
+  assert.deepEqual(opened.open.map(item => item.panelId), ['review'])
+
+  const hidden = panelLayoutReducer(opened, { type: 'setVisible', visible: false })
+  assert.equal(hidden.visible, false)
+  assert.deepEqual(hidden.open.map(item => item.panelId), ['review'], '隐藏右栏不应关闭已打开的 tab')
 })
 
 test('激活不存在的实例、空布局显示、tab 上限与宽度越界都被约束', async () => {
@@ -90,7 +107,7 @@ test('激活不存在的实例、空布局显示、tab 上限与宽度越界都�
   let state = createDefaultPanelLayout()
   const untouched = panelLayoutReducer(state, { type: 'activate', instanceId: 'missing' })
   assert.deepEqual(untouched, state)
-  assert.equal(panelLayoutReducer(state, { type: 'setVisible', visible: true }).visible, false, '没有打开任何面板时不可见')
+  assert.equal(panelLayoutReducer(state, { type: 'setVisible', visible: true }).visible, true, '空布局也能切换可见性')
 
   for (let index = 0; index < PANEL_TAB_LIMIT + 2; index += 1) {
     state = panelLayoutReducer(state, { type: 'open', instance: { instanceId: `panel-${index}`, panelId: `panel-${index}`, scopeId: '' } })
@@ -150,7 +167,8 @@ test('读取时修复越界宽度、失效激活项与未知面板', async () =>
   assert.equal(repaired.activeInstanceId, 'review', '失效的激活项应回退到第一个 tab')
 
   const parsed = parsePanelLayout(JSON.stringify({ version: 1, visible: true, width: 384, open: [], activeInstanceId: null, lastActive: null }))
-  assert.equal(parsed.visible, false, '没有 tab 时不应保持可见')
+  assert.equal(parsed.visible, true, '空布局的可见性应原样恢复')
+  assert.deepEqual(parsed.open, [])
 
   const state = {
     version: 1,

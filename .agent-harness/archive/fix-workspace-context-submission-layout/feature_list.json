@@ -1,0 +1,138 @@
+{
+  "features": [
+    {
+      "id": "fix-workspace-context-submission-layout",
+      "name": "修复引用清空时机与消息附件行",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "引用在提交时清空，已发送引用与图片同排且不进入文本气泡",
+          "coverage": "integration",
+          "tdd": false,
+          "status": "done",
+          "verify": [
+            "node --test tests/workspace-context-presentation.test.ts tests/workspace-context.test.ts tests/composer-attachments.test.ts",
+            "pnpm run typecheck"
+          ],
+          "coverage_reason": "真实 assistant-ui SSR 验证引用与图片位置，延迟 Promise 验证提交时清空，覆盖异步时序和 runtime data 类型。",
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/workspace-context-presentation.test.ts tests/workspace-context.test.ts tests/composer-attachments.test.ts",
+              "verifiedAt": "2026-09-23T06:25:33.924Z",
+              "exitCode": 0,
+              "stdout": "✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (2.57875ms)\n✔ 选区引用后关闭浮动引用按钮并清除选区状态 (1.17025ms)\n✔ composer 只接受 main 能处理的图片附件类型 (2.165417ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (1.028708ms)\n✔ 已发送引用与图片同在气泡外附件行，正文只渲染提问 (911.559875ms)\n✔ 提交时立即清空引用，不等待生成结束且不清空新草稿 (21.999875ms)\n✔ 选区保持精确字符和行号，文件快照不能冒充截断全文 (84.429833ms)\n✔ 引用限制数量、字节与项目边界，不允许敏感/越界路径 (17.388667ms)\n✔ 待发送引用按会话隔离、内容去重，移除不影响其他会话 (22.190708ms)\n✔ 转换保留历史快照，生成模型文本并对跨项目引用拒绝 (850.290292ms)\n✔ 引用随会话落盘并恢复，切换项目不能伪造引用所属项目 (65.147041ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1252.234209",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-23T06:25:34.621Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/workspace-context-presentation.test.ts tests/workspace-context.test.ts tests/composer-attachments.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-23T06:25:34.621Z",
+            "exitCode": 0,
+            "stdout": "✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (2.57875ms)\n✔ 选区引用后关闭浮动引用按钮并清除选区状态 (1.17025ms)\n✔ composer 只接受 main 能处理的图片附件类型 (2.165417ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (1.028708ms)\n✔ 已发送引用与图片同在气泡外附件行，正文只渲染提问 (911.559875ms)\n✔ 提交时立即清空引用，不等待生成结束且不清空新草稿 (21.999875ms)\n✔ 选区保持精确字符和行号，文件快照不能冒充截断全文 (84.429833ms)\n✔ 引用限制数量、字节与项目边界，不允许敏感/越界路径 (17.388667ms)\n✔ 待发送引用按会话隔离、内容去重，移除不影响其他会话 (22.190708ms)\n✔ 转换保留历史快照，生成模型文本并对跨项目引用拒绝 (850.290292ms)\n✔ 引用随会话落盘并恢复，切换项目不能伪造引用所属项目 (65.147041ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1252.234209",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "按用户要求将 sailor-composer-attachments 放入 ComposerBar 内、输入文字上方",
+          "coverage": "static",
+          "coverage_reason": "局部 JSX 容器移动；运行已有附件检查和构建，未新增镜像实现测试。",
+          "tdd": false,
+          "status": "done",
+          "verify": [
+            "node --test tests/composer-attachments.test.ts",
+            "pnpm run build"
+          ],
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/composer-attachments.test.ts",
+              "verifiedAt": "2026-09-23T06:27:52.344Z",
+              "exitCode": 0,
+              "stdout": "✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (2.721833ms)\n✔ 选区引用后关闭浮动引用按钮并清除选区状态 (1.253667ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.713917ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (0.384042ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 61.462291",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-23T06:28:02.805Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 153ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-sGS51mTN.css                 183.88 kB\n../../out/renderer/assets/SideChatPanel-Bwtusk7G.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-zZhDnh9x.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Q4LU9Kf3.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CKLA2bW2.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-5uebogGS.js      1.40 kB\n../../out/renderer/assets/FilesPanel-Bu1cbIfN.js           4,723.73 kB\n../../out/renderer/assets/index-0t_M2DnH.js                6,706.59 kB\n✓ built in 8.99s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/composer-attachments.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-23T06:28:02.805Z",
+            "exitCode": 0,
+            "stdout": "✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (2.721833ms)\n✔ 选区引用后关闭浮动引用按钮并清除选区状态 (1.253667ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.713917ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (0.384042ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 61.462291\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 153ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-sGS51mTN.css                 183.88 kB\n../../out/renderer/assets/SideChatPanel-Bwtusk7G.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-zZhDnh9x.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Q4LU9Kf3.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CKLA2bW2.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-5uebogGS.js      1.40 kB\n../../out/renderer/assets/FilesPanel-Bu1cbIfN.js           4,723.73 kB\n../../out/renderer/assets/index-0t_M2DnH.js                6,706.59 kB\n✓ built in 8.99s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "composer 内引用标签和图片附件底部对齐",
+          "coverage": "static",
+          "coverage_reason": "局部 CSS 对齐调整，同时覆盖引用标签原有 align-self: flex-start；构建检查样式编译。",
+          "tdd": false,
+          "status": "done",
+          "verify": [
+            "pnpm run build"
+          ],
+          "verifyEvidence": {
+            "command": "pnpm run build",
+            "verifiedAt": "2026-09-23T06:32:34.483Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 170ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DOJDPHb2.css                 183.90 kB\n../../out/renderer/assets/SideChatPanel-B8ZgqA6m.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-D9raFxeG.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-16o3RfPt.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-DIyJEeJd.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Bpwk7fg2.js      1.40 kB\n../../out/renderer/assets/FilesPanel-Dkla92wK.js           4,723.73 kB\n../../out/renderer/assets/index-DM4KY-6Q.js                6,706.59 kB\n✓ built in 9.08s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          },
+          "evidence": {
+            "command": "pnpm run build",
+            "verifiedAt": "2026-09-23T06:32:34.483Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 170ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DOJDPHb2.css                 183.90 kB\n../../out/renderer/assets/SideChatPanel-B8ZgqA6m.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-D9raFxeG.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-16o3RfPt.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-DIyJEeJd.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Bpwk7fg2.js      1.40 kB\n../../out/renderer/assets/FilesPanel-Dkla92wK.js           4,723.73 kB\n../../out/renderer/assets/index-DM4KY-6Q.js                6,706.59 kB\n✓ built in 9.08s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "已发送图片和引用上下排列靠右，文字气泡按内容宽度收缩",
+          "coverage": "static",
+          "coverage_reason": "局部布局 utilities 调整，复用真实消息渲染测试检查引用与正文隔离。",
+          "tdd": false,
+          "status": "done",
+          "verify": [
+            "node --test tests/workspace-context-presentation.test.ts",
+            "pnpm run build"
+          ],
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/workspace-context-presentation.test.ts",
+              "verifiedAt": "2026-09-23T06:34:51.953Z",
+              "exitCode": 0,
+              "stdout": "✔ 已发送引用与图片位于气泡外附件区，正文只渲染提问 (1386.975041ms)\n✔ 提交时立即清空引用，不等待生成结束且不清空新草稿 (27.685791ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1817.914084",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-23T06:35:04.573Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 158ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 12ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DOJDPHb2.css                 183.90 kB\n../../out/renderer/assets/SideChatPanel-D3IGfVuE.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-B_-v1cDd.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Bd0VSEdm.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CbCNCEgi.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DamN3S75.js      1.40 kB\n../../out/renderer/assets/FilesPanel-CmMbj6nn.js           4,723.73 kB\n../../out/renderer/assets/index-Dc3P1otQ.js                6,706.61 kB\n✓ built in 10.75s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/workspace-context-presentation.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-23T06:35:04.573Z",
+            "exitCode": 0,
+            "stdout": "✔ 已发送引用与图片位于气泡外附件区，正文只渲染提问 (1386.975041ms)\n✔ 提交时立即清空引用，不等待生成结束且不清空新草稿 (27.685791ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1817.914084\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 158ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 12ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DOJDPHb2.css                 183.90 kB\n../../out/renderer/assets/SideChatPanel-D3IGfVuE.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-B_-v1cDd.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Bd0VSEdm.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CbCNCEgi.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DamN3S75.js      1.40 kB\n../../out/renderer/assets/FilesPanel-CmMbj6nn.js           4,723.73 kB\n../../out/renderer/assets/index-Dc3P1otQ.js                6,706.61 kB\n✓ built in 10.75s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-23T06:35:04.573Z"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "features": [
+    {
+      "id": "feat-unified-scrollbars",
+      "name": "统一应用滚动条样式",
+      "description": "采用 shadcn ScrollArea 和统一原生滚动条主题，保留聊天自动滚动与编辑器内部滚动机制。",
+      "status": "done",
+      "trd_spec": "docs/scrollbars.md",
+      "checklist": [
+        {
+          "action": "添加官方 shadcn ScrollArea source component，复用现有 radix-ui，定义共用滚动条主题与原生滚动样式。",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "官方组件接线与主题样式，前置逻辑测试不能判定视觉一致性。",
+          "verify": [
+            "pnpm run typecheck"
+          ],
+          "status": "done",
+          "verifyEvidence": {
+            "command": "pnpm run typecheck",
+            "verifiedAt": "2026-09-23T07:34:16.367Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          },
+          "evidence": {
+            "command": "pnpm run typecheck",
+            "verifiedAt": "2026-09-23T07:34:16.367Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "普通文件树及设置内容接入 ScrollArea；聊天、CodeMirror、菜单和代码块保留原有滚动容器并应用统一外观，保留隐藏滚动条的特例。",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "保留已有滚动机制，组件接线以构建和现有渲染测试校验。",
+          "verify": [
+            "node --test tests/files-panel.test.ts tests/file-split-pane.test.ts tests/assistant-ui-message-rendering.test.ts",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/files-panel.test.ts tests/file-split-pane.test.ts tests/assistant-ui-message-rendering.test.ts",
+              "verifiedAt": "2026-09-23T07:35:52.600Z",
+              "exitCode": 0,
+              "stdout": "✔ official tool UI renders structured results and errors without a custom plan view (1510.117792ms)\n✔ 生成中指示器改用官方 GenerationLoader 矩阵并由本地时钟驱动 (1.3555ms)\n✔ GenerationLoader 按 tick 点亮三个单元格并随 tick 移动 (276.585666ms)\n✔ 文件树比例限制在 20% 到 50% (951.09075ms)\n✔ 文件树展示嵌套目录、选中态和离线 SVG 图标 (954.954ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2295.36525",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-23T07:36:04.458Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 285ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 11ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3330 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DF6b2ab2.css                 185.20 kB\n../../out/renderer/assets/SideChatPanel-Bw9ZHZ1h.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CLqKCDqK.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-BPjo6C01.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-_R5IIokJ.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CxiuuFZV.js      1.40 kB\n../../out/renderer/assets/FilesPanel-D6NoHVcB.js           4,725.90 kB\n../../out/renderer/assets/index-CpEAP8E0.js                6,740.67 kB\n✓ built in 10.06s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/files-panel.test.ts tests/file-split-pane.test.ts tests/assistant-ui-message-rendering.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-23T07:36:04.458Z",
+            "exitCode": 0,
+            "stdout": "✔ official tool UI renders structured results and errors without a custom plan view (1510.117792ms)\n✔ 生成中指示器改用官方 GenerationLoader 矩阵并由本地时钟驱动 (1.3555ms)\n✔ GenerationLoader 按 tick 点亮三个单元格并随 tick 移动 (276.585666ms)\n✔ 文件树比例限制在 20% 到 50% (951.09075ms)\n✔ 文件树展示嵌套目录、选中态和离线 SVG 图标 (954.954ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2295.36525\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 285ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 11ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3330 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-DF6b2ab2.css                 185.20 kB\n../../out/renderer/assets/SideChatPanel-Bw9ZHZ1h.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-CLqKCDqK.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-BPjo6C01.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-_R5IIokJ.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CxiuuFZV.js      1.40 kB\n../../out/renderer/assets/FilesPanel-D6NoHVcB.js           4,725.90 kB\n../../out/renderer/assets/index-CpEAP8E0.js                6,740.67 kB\n✓ built in 10.06s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "记录滚动区域映射与验收结果，检查深浅主题、横纵滚动及聊天/编辑器兼容性；视觉工具不可用时记录未验收限制。",
+          "coverage": "manual-exception",
+          "tdd": false,
+          "coverage_reason": "真实布局与鼠标滚动需要渲染验收；自动化检查不能替代视觉，限制必须明确记录。",
+          "verify": [
+            "pnpm run typecheck"
+          ],
+          "status": "done",
+          "verifyEvidence": {
+            "command": "pnpm run typecheck",
+            "verifiedAt": "2026-09-23T07:38:48.439Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          },
+          "evidence": {
+            "command": "pnpm run typecheck",
+            "verifiedAt": "2026-09-23T07:38:48.439Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-23T07:38:48.440Z"
+    }
+  ]
+}

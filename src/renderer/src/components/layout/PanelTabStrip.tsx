@@ -52,6 +52,7 @@ export function PanelTabStrip({ tabs, activeInstanceId, onActivate, onClose, pic
     onClose(instanceId)
   }
 
+    // The top band doubles as the window drag region, so it needs no separate empty strip above it.
   return <div aria-label="面板" className="panel-tabstrip window-drag" onKeyDown={handleKeyDown} role="tablist">
     <div className="panel-tabstrip-tabs no-drag">
       {tabs.map(tab => {
@@ -62,7 +63,7 @@ export function PanelTabStrip({ tabs, activeInstanceId, onActivate, onClose, pic
           <button
             aria-controls={panelViewId(instanceId)}
             aria-selected={selected}
-            className="panel-tab-trigger"
+            className="panel-tab-trigger no-drag"
             id={panelTabId(instanceId)}
             onClick={() => onActivate(instanceId)}
             onKeyDown={event => {

@@ -1,3 +1,4 @@
+import { projectWorkspaceMessages } from './workspaceContext.js';
 import { createHash, randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
@@ -219,7 +220,7 @@ export class PiRunner implements AgentRunner {
     }
     // harness-pi only accepts text prompts. Pi's native input extension carries
     // validated images into its user message and journal without a text encoding.
-    const modelMessages = request.messages;
+    const modelMessages = projectWorkspaceMessages(request.messages);
     const skills = context ? await loadPiSkills(context.scope) : [];
     const webSearch = await connectWebSearchMcp();
     const messages = await convertToModelMessages(modelMessages, {
@@ -291,7 +292,7 @@ export class PiRunner implements AgentRunner {
       let prompt = messages;
       if (!state.resume && request.messages.length > 1) {
         // A one-time textual import preserves old chat context without replaying tools.
-        const history = request.messages.slice(0, -1).map((message) => ({
+        const history = modelMessages.slice(0, -1).map((message) => ({
           role: message.role,
           text: message.parts
             .filter((part) => part.type === "text")

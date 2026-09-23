@@ -107,6 +107,43 @@ export interface SettingsSnapshot {
   activeModel: ModelSelection | null
 }
 
+export interface WorkspaceFilesListInput {
+  projectId: string
+  path?: string
+  cursor?: string
+}
+
+export interface WorkspaceFilesReadInput {
+  projectId: string
+  path: string
+}
+
+export interface WorkspaceFileTreeEntry {
+  name: string
+  relativePath: string
+  kind: 'file' | 'directory'
+  size?: number
+  modifiedAt?: number
+  previewable?: boolean
+}
+
+export interface WorkspaceFileTreePage {
+  entries: WorkspaceFileTreeEntry[]
+  nextCursor?: string
+}
+
+export interface WorkspaceFilePreview {
+  relativePath: string
+  language: string | null
+  content: string
+  lineCount: number
+  byteLength: number
+  sha256: string
+  truncated: boolean
+  previewable: boolean
+  reason?: string
+}
+
 export interface ResolvedModel extends ModelSelection {
   providerName: string
   baseUrl: string
@@ -142,6 +179,10 @@ export interface SailorApi {
     createChat(projectId: string): Promise<WorkspaceChat>
     getChat(chatId: string): Promise<WorkspaceChat>
     setPreferences(input: Partial<WorkspacePreferences>): Promise<void>
+    files: {
+      list(input: WorkspaceFilesListInput): Promise<WorkspaceFileTreePage>
+      read(input: WorkspaceFilesReadInput): Promise<WorkspaceFilePreview>
+    }
   }
   settings: {
     getSnapshot(): Promise<SettingsSnapshot>
@@ -161,6 +202,8 @@ export const IPC = {
   workspaceCreateChat: 'workspace:create-chat',
   workspaceGetChat: 'workspace:get-chat',
   workspacePreferences: 'workspace:preferences',
+  workspaceFilesList: 'workspace-files:list',
+  workspaceFilesRead: 'workspace-files:read',
   appVersion: 'app:version',
   agentStart: 'agent:start',
   agentAbort: 'agent:abort',

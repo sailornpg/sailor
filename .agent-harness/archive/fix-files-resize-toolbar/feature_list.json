@@ -1,0 +1,46 @@
+{
+  "features": [
+    {
+      "id": "fix-files-resize-toolbar",
+      "name": "修复文件上下分栏拖拽并上移文件路径",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "修正上下拖拽方向、按实际面板像素换算比例，并以当前路径替换工具栏文件标题",
+          "coverage": "integration",
+          "coverage_reason": "方向回归先失败再修复；复用分栏、分隔条与文件树测试，构建检查布局。",
+          "tdd": false,
+          "status": "done",
+          "verify": [
+            "node --test tests/resizable-divider.test.ts tests/file-split-pane.test.ts tests/files-panel.test.ts",
+            "pnpm run build"
+          ],
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/resizable-divider.test.ts tests/file-split-pane.test.ts tests/files-panel.test.ts",
+              "verifiedAt": "2026-09-23T06:48:03.727Z",
+              "exitCode": 0,
+              "stdout": "✔ 文件树比例限制在 20% 到 50% (463.49ms)\n✔ 文件树展示嵌套目录、选中态和离线 SVG 图标 (639.435083ms)\n✔ resizable divider maps pointer deltas and keyboard steps by orientation (106.620916ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 840.196167",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-23T06:48:14.853Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 150ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-9GklXQAp.css                 184.06 kB\n../../out/renderer/assets/SideChatPanel-qDYdVi7h.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-op0Zy4vh.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DCfc2UUX.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CmgNaS25.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BVIHKQx3.js      1.40 kB\n../../out/renderer/assets/FilesPanel-BBINnYsO.js           4,724.06 kB\n../../out/renderer/assets/index-CjH6nZPo.js                6,706.58 kB\n✓ built in 9.25s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/resizable-divider.test.ts tests/file-split-pane.test.ts tests/files-panel.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-23T06:48:14.853Z",
+            "exitCode": 0,
+            "stdout": "✔ 文件树比例限制在 20% 到 50% (463.49ms)\n✔ 文件树展示嵌套目录、选中态和离线 SVG 图标 (639.435083ms)\n✔ resizable divider maps pointer deltas and keyboard steps by orientation (106.620916ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 840.196167\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 150ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3328 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-9GklXQAp.css                 184.06 kB\n../../out/renderer/assets/SideChatPanel-qDYdVi7h.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-op0Zy4vh.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DCfc2UUX.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CmgNaS25.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BVIHKQx3.js      1.40 kB\n../../out/renderer/assets/FilesPanel-BBINnYsO.js           4,724.06 kB\n../../out/renderer/assets/index-CjH6nZPo.js                6,706.58 kB\n✓ built in 9.25s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-23T06:48:14.853Z"
+    }
+  ]
+}

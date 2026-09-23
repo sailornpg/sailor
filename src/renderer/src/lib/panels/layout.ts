@@ -76,14 +76,16 @@ export function panelLayoutReducer(state: PanelLayoutState, action: PanelLayoutA
       const open = state.open.filter(item => item.instanceId !== action.instanceId)
       if (state.activeInstanceId !== action.instanceId) return { ...state, open }
       const next = open[index] ?? open[index - 1] ?? null
-      return { ...state, open, activeInstanceId: next?.instanceId ?? null, visible: open.length > 0 }
+      // Visibility is the user's choice: closing the last tab leaves the dock's function list visible.
+      return { ...state, open, activeInstanceId: next?.instanceId ?? null }
     }
     case 'activate': {
       const instance = state.open.find(item => item.instanceId === action.instanceId)
       return instance ? activate(state, instance) : state
     }
     case 'setVisible':
-      return { ...state, visible: action.visible && state.open.length > 0 }
+      // The dock owns a permanent function list, so it can be visible with nothing open.
+      return { ...state, visible: action.visible }
     case 'setWidth':
       return Number.isFinite(action.width) ? { ...state, width: clampPanelWidth(action.width) } : state
   }
@@ -121,7 +123,7 @@ export function parsePanelLayout(raw: string | null): PanelLayoutState {
   const width = typeof candidate.width === 'number' ? clampPanelWidth(candidate.width) : PANEL_WIDTH_DEFAULT
   return {
     version: PANEL_LAYOUT_VERSION,
-    visible: candidate.visible && open.length > 0,
+    visible: candidate.visible,
     width,
     open,
     activeInstanceId: active?.instanceId ?? null,
@@ -161,7 +163,7 @@ export function retainKnownPanels(state: PanelLayoutState, isKnown: (panelId: st
     ...state,
     open,
     activeInstanceId: active?.instanceId ?? null,
-    visible: state.visible && open.length > 0,
+    visible: state.visible,
     lastActive: state.lastActive && isKnown(state.lastActive.panelId) ? state.lastActive : active,
   }
 }
@@ -188,7 +190,7 @@ export function rebindPanelScopes(state: PanelLayoutState, scopeIdFor: (panelId:
     ...state,
     open,
     activeInstanceId: active?.instanceId ?? null,
-    visible: state.visible && open.length > 0,
+    visible: state.visible,
     lastActive: lastActive ?? active,
   }
 }

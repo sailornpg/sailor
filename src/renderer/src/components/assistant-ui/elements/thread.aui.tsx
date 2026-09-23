@@ -29,6 +29,7 @@ import { TooltipIconButton } from "@/components/assistant-ui/elements/tooltip-ic
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/assistant-ui/elements/skeleton";
 import { cn } from "@/lib/utils";
+import { WorkspaceContextMessage } from "@/components/chat/thread/WorkspaceContextMessage";
 import {
   ActionBarMorePrimitive,
   ActionBarPrimitive,
@@ -204,7 +205,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root bg-background @container flex h-full flex-col"
       style={{
-        ["--thread-max-width" as string]: "44rem",
+        ["--thread-max-width" as string]: "54rem",
         ["--composer-bg" as string]:
           "color-mix(in oklab, var(--color-muted) 30%, transparent)",
         ["--composer-radius" as string]: "1rem",
@@ -771,6 +772,40 @@ const UserImagePart: ImageMessagePartComponent = (part) => (
   </div>
 );
 
+const isWorkspaceContext = (part: { type?: string; name?: string }) =>
+  part.type === "data" && part.name === "workspace-context";
+
+const contextGrouping = (
+  parts: readonly { type?: string; name?: string }[],
+) => [
+  {
+    groupKey: "workspace-context",
+    indices: parts.flatMap((part, index) =>
+      isWorkspaceContext(part) ? [index] : [],
+    ),
+  },
+];
+
+const userMessageGrouping = (
+  parts: readonly { type?: string; name?: string }[],
+) => [
+  {
+    groupKey: "content",
+    indices: parts.flatMap((part, index) =>
+      isWorkspaceContext(part) ? [] : [index],
+    ),
+  },
+];
+
+const UserMessagePartGroup: FC<PropsWithChildren> = ({ children }) => (
+  <div className="aui-user-message-content min-w-0 w-fit max-w-full justify-self-end bg-muted text-foreground rounded-(--composer-radius) px-4 py-2 wrap-break-word empty:hidden">
+    {children}
+  </div>
+);
+const ContextPartGroup: FC<PropsWithChildren> = ({ children }) => (
+  <>{children}</>
+);
+
 const UserMessage: FC = () => {
   return (
     <MessagePrimitive.Root
@@ -778,15 +813,26 @@ const UserMessage: FC = () => {
       className="fade-in slide-in-from-bottom-1 animate-in grid auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] content-start gap-y-2 px-2 duration-150 [contain-intrinsic-size:auto_200px] [content-visibility:auto] [&:where(>*)]:col-start-2"
       data-role="user"
     >
-      <UserMessageAttachments />
-
-      <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-        <div className="aui-user-message-content peer bg-muted text-foreground rounded-(--composer-radius) px-4 py-2 wrap-break-word empty:hidden">
-          <MessagePrimitive.Parts
-            components={{ File: UserFilePart, Image: UserImagePart }}
-          />
-        </div>
+      <div className="aui-user-message-attachment-row col-span-full flex min-w-0 flex-col items-end gap-2 empty:hidden">
+        <UserMessageAttachments />
+        <MessagePrimitive.Unstable_PartsGrouped
+          groupingFunction={contextGrouping}
+          components={{
+            data: { by_name: { "workspace-context": WorkspaceContextMessage } },
+            Group: ContextPartGroup,
+          }}
+        />
       </div>
+
+      <MessagePrimitive.Unstable_PartsGrouped
+        groupingFunction={userMessageGrouping}
+        components={{
+          File: UserFilePart,
+          Image: UserImagePart,
+          data: { by_name: { "workspace-context": WorkspaceContextMessage } },
+          Group: UserMessagePartGroup,
+        }}
+      />
 
       <BranchPicker
         data-slot="aui_user-branch-picker"

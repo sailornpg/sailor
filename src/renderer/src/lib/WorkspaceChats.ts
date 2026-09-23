@@ -1,3 +1,4 @@
+import { workspaceContextDrafts } from './workspaceContextDrafts'
 import { lastAssistantMessageIsCompleteWithApprovalResponses, type UIMessage } from 'ai'
 import { Chat } from '@ai-sdk/react'
 import type { SailorApi, ReasoningEffort } from '@shared/contracts'
@@ -27,6 +28,7 @@ export class WorkspaceChats {
     return entry
   }
   forget(id: string) {
+    workspaceContextDrafts.forget(id)
     this.entries.delete(id)
     this.reasoning.delete(id)
     if (this.activeId === id) { this.activeId = null; ++this.selection }

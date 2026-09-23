@@ -2,6 +2,8 @@
 
 一个使用 Electron、React、Vercel AI SDK 和 assistant-ui 构建的 Codex 风格桌面编程工作区。
 
+应用品牌使用 Sailor 粒子小船标记；侧栏展示静态点阵版本，新会话欢迎区展示同一船形的动态版本。Electron 窗口、macOS Dock 及 macOS/Windows/Linux 安装包使用与侧栏一致的灰色粒子小船白底图标。
+
 ## 本地运行
 
 ```bash
@@ -61,3 +63,7 @@ SAILOR_DEVTOOLS=1 pnpm dev   # 开启 Harness telemetry 后启动应用
 记录写入项目根目录的 `.devtools/`，只用于本地调试，默认关闭。请求输入可能包含图片内容；不要在共享环境或生产环境开启。
 
 进程边界和当前实现范围见 [docs/architecture.md](docs/architecture.md)。
+
+## 首页粒子小船
+
+无活动会话的首页和新会话空白欢迎区通过按需加载的 R3F 9.8.0 / Three.js 0.186.0 展示粒子小船。665 颗粒子按等距行列排列，边缘沿直线收齐；鼠标靠近时局部撑开，移开后平滑复位。船帆内部波纹从左边缘进入并持续从左向右传播，三条边固定；页面隐藏时暂停渲染，像素比上限为 1.5。深浅主题跟随现有设置；减少动态效果或 WebGL 不可用时使用静态粒子船形，目录选择和会话创建流程保持原样。

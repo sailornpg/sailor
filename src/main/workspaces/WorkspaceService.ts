@@ -1,3 +1,4 @@
+import { projectWorkspaceMessages } from '../agent/pi/workspaceContext.js'
 import { stat } from 'node:fs/promises'
 import { type UIMessage } from 'ai'
 import { validateChatMessages } from './validateChatMessages.js'
@@ -148,6 +149,7 @@ export class WorkspaceService {
     } catch { throw new Error('工作区目录不存在或无法访问；仍可查看历史会话。') }
     try {
       const messages = await validateChatMessages(parsed.data.messages)
+      projectWorkspaceMessages(messages, chat.projectId)
       return { ...parsed.data, messages }
     } catch (error) { throw new Error('会话消息格式无效。', { cause: error }) }
   }
@@ -157,5 +159,12 @@ export class WorkspaceService {
     if (!project) throw new Error('工作区不存在。')
     const scope = await WorkspaceToolScope.create(project.rootPath, signal)
     return { chatId: chat.id, runId, rootPath: scope.rootPath, scope, signal }
+  }
+
+  async resolveProjectRoot(projectId: unknown): Promise<string> {
+    const id = idSchema.parse(projectId)
+    const project = (await this.snapshot()).projects.find(item => item.id === id)
+    if (!project) throw new Error('工作区不存在。')
+    return project.rootPath
   }
 }

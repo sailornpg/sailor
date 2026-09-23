@@ -8,6 +8,8 @@ import {
   type ProviderInput,
   type SailorApi,
   type WriteApprovalResponse,
+  type WorkspaceFilesListInput,
+  type WorkspaceFilesReadInput,
 } from '@shared/contracts.js'
 
 const api: SailorApi = {
@@ -43,6 +45,10 @@ const api: SailorApi = {
     createChat: (id) => ipcRenderer.invoke(IPC.workspaceCreateChat, id),
     getChat: (id) => ipcRenderer.invoke(IPC.workspaceGetChat, id),
     setPreferences: (input) => ipcRenderer.invoke(IPC.workspacePreferences, input),
+    files: {
+      list: (input: WorkspaceFilesListInput) => ipcRenderer.invoke(IPC.workspaceFilesList, input),
+      read: (input: WorkspaceFilesReadInput) => ipcRenderer.invoke(IPC.workspaceFilesRead, input),
+    },
   },
   settings: {
     getSnapshot: () => ipcRenderer.invoke(IPC.settingsProviders),

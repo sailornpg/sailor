@@ -1,0 +1,46 @@
+{
+  "features": [
+    {
+      "id": "feat-file-preview-empty-states",
+      "name": "文件预览居中空态与错误提示",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "统一预览区未选择、空文件、不支持、加载中和读取失败状态，使用居中图标标题说明并支持失败重试",
+          "coverage": "static",
+          "coverage_reason": "局部状态展示调整，复用文件面板测试与构建检查；原生窗口视觉待验收。",
+          "tdd": false,
+          "status": "done",
+          "verify": [
+            "node --test tests/files-panel.test.ts tests/workspace-files.test.ts",
+            "pnpm run build"
+          ],
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/files-panel.test.ts tests/workspace-files.test.ts",
+              "verifiedAt": "2026-09-23T07:09:02.212Z",
+              "exitCode": 0,
+              "stdout": "✔ 文件树展示嵌套目录、选中态和离线 SVG 图标 (729.909875ms)\n✔ 文件服务按项目读取分页树，并返回受限文本预览与 hash (458.641833ms)\n✔ 文件服务拒绝越界、敏感路径和二进制文件 (376.278375ms)\n✔ 保留普通隐藏文件，拒绝内部符号链接，严格验证游标并安全截断 UTF-8 (306.723083ms)\n✔ 分页不重复，行数限制和无效 UTF-8 明确返回 (296.4685ms)\n✔ 换行规范化与 CodeMirror 偏移一致；系统 I/O 错误不泄露主机路径 (282.992084ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2033.882333",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-23T07:09:12.384Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 149ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3329 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-CGbgjmXA.css                 184.17 kB\n../../out/renderer/assets/SideChatPanel-C30eAzxw.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-BPrySutb.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Dtm_hugj.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-DnpTg1CG.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-4N9L8RSb.js      1.40 kB\n../../out/renderer/assets/FilesPanel-BXmx4mSt.js           4,726.41 kB\n../../out/renderer/assets/index-kN2fhESd.js                6,706.62 kB\n✓ built in 8.67s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/files-panel.test.ts tests/workspace-files.test.ts && pnpm run build",
+            "verifiedAt": "2026-09-23T07:09:12.384Z",
+            "exitCode": 0,
+            "stdout": "✔ 文件树展示嵌套目录、选中态和离线 SVG 图标 (729.909875ms)\n✔ 文件服务按项目读取分页树，并返回受限文本预览与 hash (458.641833ms)\n✔ 文件服务拒绝越界、敏感路径和二进制文件 (376.278375ms)\n✔ 保留普通隐藏文件，拒绝内部符号链接，严格验证游标并安全截断 UTF-8 (306.723083ms)\n✔ 分页不重复，行数限制和无效 UTF-8 明确返回 (296.4685ms)\n✔ 换行规范化与 CodeMirror 偏移一致；系统 I/O 错误不泄露主机路径 (282.992084ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2033.882333\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 149ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3329 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-CGbgjmXA.css                 184.17 kB\n../../out/renderer/assets/SideChatPanel-C30eAzxw.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-BPrySutb.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-Dtm_hugj.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-DnpTg1CG.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-4N9L8RSb.js      1.40 kB\n../../out/renderer/assets/FilesPanel-BXmx4mSt.js           4,726.41 kB\n../../out/renderer/assets/index-kN2fhESd.js                6,706.62 kB\n✓ built in 8.67s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-23T07:09:12.385Z"
+    }
+  ]
+}

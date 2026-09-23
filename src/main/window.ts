@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { BrowserWindow, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, nativeTheme, shell } from 'electron'
 
 export function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -9,6 +9,7 @@ export function createMainWindow(): BrowserWindow {
     minHeight: 640,
     show: false,
     titleBarStyle: 'hiddenInset',
+    icon: join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'resources/icon.png'),
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#0d0d0d' : '#ffffff',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),

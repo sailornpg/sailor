@@ -1,3 +1,5 @@
+import { WorkspaceContextRenderer } from '../thread/WorkspaceContextMessage'
+import { sendWithWorkspaceContexts } from './sendWithWorkspaceContexts'
 import { createContext, useContext, type ReactNode } from 'react'
 import { useChat, type Chat, type UseChatHelpers } from '@ai-sdk/react'
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk'
@@ -14,7 +16,9 @@ interface SailorChatProviderProps {
 
 export function SailorChatProvider({ chat, children }: SailorChatProviderProps) {
   const chatState = useChat({ chat })
-  const runtime = useAISDKRuntime(chatState, {
+  const sendMessage = sendWithWorkspaceContexts(chat.id, chatState.sendMessage)
+  const adapted = { ...chatState, sendMessage }
+  const runtime = useAISDKRuntime(adapted, {
     adapters: { attachments: sailorAttachmentAdapter },
     onRespondToToolApproval: async (response, { toolCallId, toolName, respondViaAISDK }) => {
       if (typeof response.approved !== 'boolean') throw new Error('写入审批必须明确允许或拒绝。')
@@ -31,8 +35,9 @@ export function SailorChatProvider({ chat, children }: SailorChatProviderProps) 
   })
 
   return (
-    <SailorChatContext.Provider value={chatState}>
+    <SailorChatContext.Provider value={adapted}>
       <AssistantRuntimeProvider runtime={runtime}>
+        <WorkspaceContextRenderer />
         {children}
       </AssistantRuntimeProvider>
     </SailorChatContext.Provider>

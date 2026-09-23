@@ -26,11 +26,11 @@ export interface PanelLayoutApi {
   close: (instanceId: string) => void
   activate: (instanceId: string) => void
   setWidth: (width: number) => void
-  /** Hides a visible dock, otherwise brings the last used panel back. */
+  /** Hides a visible dock, otherwise shows it again — without ever selecting a panel for the user. */
   toggleVisible: () => void
 }
 
-export function usePanelLayout(registry: PanelRegistry, context: PanelContext, fallbackPanelId: string): PanelLayoutApi {
+export function usePanelLayout(registry: PanelRegistry, context: PanelContext): PanelLayoutApi {
   const [layout, setLayout] = useState<PanelLayoutState>(() => retainKnownPanels(readPanelLayout(layoutStorage()), registry.isKnown))
   const { chatId, projectId } = context
 
@@ -73,13 +73,8 @@ export function usePanelLayout(registry: PanelRegistry, context: PanelContext, f
       setLayout(current => panelLayoutReducer(current, { type: 'setVisible', visible: false }))
       return
     }
-    const last = layout.lastActive
-    if (last && layout.open.some(item => item.instanceId === last.instanceId)) {
-      setLayout(current => panelLayoutReducer(current, { type: 'activate', instanceId: last.instanceId }))
-      return
-    }
-    if (!last || !open(last.panelId)) open(fallbackPanelId)
-  }, [layout, open, fallbackPanelId])
+    setLayout(current => panelLayoutReducer(current, { type: 'setVisible', visible: true }))
+  }, [layout.visible])
 
   return { layout, open, close, activate, setWidth, toggleVisible }
 }

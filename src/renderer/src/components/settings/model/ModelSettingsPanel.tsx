@@ -1,4 +1,5 @@
 import { field } from '@/components/assistant-ui/elements/surfaces'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/assistant-ui/elements/collapsible'
 import type { FormEventHandler } from 'react'
 import type { ModelConfig, ProviderProtocol, ProviderSummary } from '@shared/contracts'
@@ -74,6 +75,7 @@ export function ModelSettingsPanel({
 }: ModelSettingsPanelProps) {
   return (
     <div className="model-settings">
+      <ScrollArea className="flex-1 min-h-0">
       <div className="settings-content">
         <div className="settings-heading">
           <div>
@@ -230,6 +232,7 @@ export function ModelSettingsPanel({
 
         </form>
       </div>
+      </ScrollArea>
       <div className="provider-form-actions">
         {error && <div role="alert" className="settings-error">{error}</div>}
         <span>密钥加密保存在本机</span>

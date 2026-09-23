@@ -1,47 +1,25 @@
-# Session Progress Log
+# Agent Progress
 
-## Current State
+## 当前 Active Feature
 
-**Last Updated:** 2026-09-22T09:04:05.051Z
-**Session ID:** [optional]
-**Active Feature:** [none]
+**feat-app-sailboat-brand-logo** — 全局小船品牌 Logo
 
-## Status
+状态：`in-progress`
 
-### 已完成
+## Checklist 执行进度
 
-- [ ] No active feature selected
+| # | Action | Verify | Status |
+|---|--------|--------|--------|
+| 1 | 静态品牌标记与侧栏品牌区 | typecheck + build | done |
+| 2 | Electron 平台图标注册 | typecheck + build + asset checks | done |
+| 3 | 白底居中粒子小船应用图标 | typecheck + build + asset checks | done |
+| 4 | RGB 深灰三多边形与白色圆角应用图标 | typecheck + build + asset checks | done |
+| 5 | 按参考图留出船帆与船身间隙并居中 | typecheck + build + asset checks | done |
+| 6 | 移除误留在帆间的中轴矩形 | typecheck + build + asset checks | done |
+| 7 | 放大小船并缩小帆间距 | typecheck + build + asset checks | done |
+| 8 | 按参考三多边形比例重新校准整体 | typecheck + build + asset checks | in-progress |
 
-### 进行中
+## 执行记录
 
-- [ ] Waiting for the next unarchived feature
-  - Details: Select the next unarchived feature from `.agent-harness/feature_list.json`
-  - Blockers: none
-
-### 下一步
-
-1. Select the next unarchived feature from `.agent-harness/feature_list.json`
-2. Update this file when the next active feature starts
-
-## Blockers / Risks
-
-- [ ] None currently
-
-## Decisions Made
-
-- **Active feature archived**: Reset the root progress panel after archiving the current feature
-  - Context: Historical detail now lives under `.agent-harness/archive/index.json`
-  - Alternatives considered: Keep all historical detail in the root progress file
-
-## Files Modified This Session
-
-- `.agent-harness/progress.md` - reset after archiving the active feature
-- `.agent-harness/archive/index.json` - archive index updated
-
-## Evidence of Completion
-
-- [ ] Archive command executed successfully
-
-## Notes for Next Session
-
-Start the next active feature and replace this placeholder state with real progress notes.
+- 重新按同一个坐标缩放系数匹配参考图中两片帆与船身的宽高比例，并让整体包围盒落在圆角底板中心。
+- 验证：运行类型检查、生产构建和图标资源检查；视觉由用户确认。

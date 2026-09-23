@@ -10,6 +10,12 @@ test('composer 在附件拖放区域使用支持缩略图和预览的官方附�
     '官方附件列表必须实际挂载在 composer 拖放区域内')
 })
 
+test('选区引用后关闭浮动引用按钮并清除选区状态', async () => {
+  const source = await readFile('src/renderer/src/components/panels/FileTextPreview.tsx', 'utf8')
+  assert.match(source, /onAddSelection\(bubble\.selection\)[\s\S]*setBubble\(null\)[\s\S]*callback\.current\?\.\(null\)/,
+    '点击引用选区后不能继续保留浮动按钮或外部选区状态')
+})
+
 test('composer 只接受 main 能处理的图片附件类型', async () => {
   const provider = await readFile('src/renderer/src/components/chat/runtime/SailorChatProvider.tsx', 'utf8')
   assert.match(provider, /adapters\s*:\s*\{\s*attachments\s*:\s*sailorAttachmentAdapter\s*\}/,

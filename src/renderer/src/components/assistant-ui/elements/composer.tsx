@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ContextBreakdown, type ContextSegment } from "./context-breakdown";
 import {
   field,
   floating,
@@ -28,7 +29,6 @@ import {
   paper,
   ShimmerLabel,
 } from "./surfaces";
-import { ContextBreakdown, type ContextSegment } from "./context-breakdown";
 import { clamp, pct } from "../utils/range";
 
 export interface ComposerAttachment {
@@ -436,14 +436,13 @@ export function ComposerModelTrigger({
       aria-expanded={open}
       data-slot="composer-model-trigger"
       className={cn(
-        ghostButton,
-        "h-8 min-w-0 max-w-72 justify-start gap-1.5 px-2.5 text-[12.5px] disabled:pointer-events-none disabled:opacity-30 data-[state=open]:bg-foreground/[0.06] data-[state=open]:text-foreground/90",
+        "text-foreground/55 hover:bg-foreground/[0.06] hover:text-foreground/90 dark:hover:bg-foreground/[0.09] flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] transition-colors",
         className,
       )}
       {...props}
     >
-      <span className="truncate">{model}</span>
-      <ChevronDownIcon aria-hidden className={cn("size-3 shrink-0 opacity-60 transition-transform motion-reduce:transition-none", open && "rotate-180")} />
+      {model}
+      <ChevronDownIcon className="size-3 opacity-60" />
     </button>
   );
 }
@@ -480,14 +479,12 @@ export function ComposerContext({
 }: Omit<ComponentProps<"div">, "children" | "segments" | "limit" | "used"> & {
   segments?: readonly ContextSegment[];
   limit?: number;
-  /** 最近一次调用的输入 tokens：分类缺失时圆环仍要反映真实占用。 */
   used?: number;
 }) {
   const unavailable = used === undefined || !limit || limit <= 0;
   const fraction = unavailable ? 0 : used / limit;
   const warn = fraction > 0.85;
   const circumference = 2 * Math.PI * 6;
-  // 官方 element 自己算 used / limit 与 Headroom，这里不再重复统计分类。
   const card = segments && limit && limit > 0 && segments.length > 0
     ? { segments, limit }
     : undefined;
@@ -508,16 +505,7 @@ export function ComposerContext({
           "group-focus-within/ctx:pointer-events-auto group-focus-within/ctx:scale-100 group-focus-within/ctx:opacity-100",
         )}
       >
-        {card ? (
-          // 弹层已经提供卡片底，所以压平官方 element 自带的 paper 表面，避免双层边框。
-          <ContextBreakdown
-            segments={card.segments}
-            limit={card.limit}
-            className="max-w-none border-0 bg-transparent p-0"
-          />
-        ) : (
-          <p className="text-muted-foreground text-xs leading-5">暂无用量</p>
-        )}
+        {card ? <ContextBreakdown segments={card.segments} limit={card.limit} className="max-w-none border-0 bg-transparent p-0" /> : <p className="text-muted-foreground text-xs leading-5">暂无用量</p>}
       </div>
       <button
         type="button"

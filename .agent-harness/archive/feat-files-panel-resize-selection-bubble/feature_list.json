@@ -1,0 +1,126 @@
+{
+  "features": [
+    {
+      "id": "feat-files-panel-resize-selection-bubble",
+      "name": "文件面板交互细化",
+      "description": "统一文件面板与侧栏的 resize 交互样式，使用选区浮动气泡添加引用，并将会话引用改为 assistant-ui 风格紧凑胶囊。",
+      "status": "done",
+      "dependencies": [
+        "feat-file-system-panel-context-quoting"
+      ],
+      "trd_spec": "docs/file-system-panel.md",
+      "checklist": [
+        {
+          "action": "抽取可复用的 ResizableDivider，统一左右/右侧 aside 与文件树预览分隔条的拖拽、键盘、取消和可访问语义。",
+          "coverage": "unit",
+          "test": "node --test tests/resizable-divider.test.ts",
+          "verify": [
+            "node --test tests/resizable-divider.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/resizable-divider.test.ts",
+            "verifiedAt": "2026-09-23T04:13:46.931Z",
+            "exitCode": 0,
+            "stdout": "✔ resizable divider maps pointer deltas and keyboard steps by orientation (48.148292ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 217.082167",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/resizable-divider.test.ts",
+              "verifiedAt": "2026-09-23T04:13:47.170Z",
+              "exitCode": 0,
+              "stdout": "✔ resizable divider maps pointer deltas and keyboard steps by orientation (47.223959ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 213.637917",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-23T04:13:47.726Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/resizable-divider.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-23T04:13:47.726Z",
+            "exitCode": 0,
+            "stdout": "✔ resizable divider maps pointer deltas and keyboard steps by orientation (47.223959ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 213.637917",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "移除预览头部添加文件/添加选区按钮，为 CodeMirror 选区增加边界内浮动引用气泡并接入当前会话引用。",
+          "coverage": "manual-exception",
+          "coverage_reason": "浮动气泡的真实定位、选区保持和窄窗口遮挡需要 Electron 渲染验收，纯单元测试无法覆盖。",
+          "verify": [
+            "pnpm run typecheck",
+            "rg \"添加到会话|FileTextPreview\" src/renderer/src/components/panels"
+          ],
+          "tdd": false,
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-23T04:13:55.582Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "rg \"添加到会话|FileTextPreview\" src/renderer/src/components/panels",
+              "verifiedAt": "2026-09-23T04:13:55.590Z",
+              "exitCode": 0,
+              "stdout": "src/renderer/src/components/panels/FileTextPreview.tsx:export function FileTextPreview({\nsrc/renderer/src/components/panels/FilesPanel.tsx:import { FileTextPreview, type FileSelection } from './FileTextPreview'\nsrc/renderer/src/components/panels/FilesPanel.tsx:                  <FileTextPreview",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run typecheck && rg \"添加到会话|FileTextPreview\" src/renderer/src/components/panels",
+            "verifiedAt": "2026-09-23T04:13:55.590Z",
+            "exitCode": 0,
+            "stdout": "src/renderer/src/components/panels/FileTextPreview.tsx:export function FileTextPreview({\nsrc/renderer/src/components/panels/FilesPanel.tsx:import { FileTextPreview, type FileSelection } from './FileTextPreview'\nsrc/renderer/src/components/panels/FilesPanel.tsx:                  <FileTextPreview",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "将 WorkspaceContextChips 改为 composer 内紧凑 summary 胶囊，支持 popover 查看/移除单项与一键清空，并遵循 assistant-ui surface tokens。",
+          "coverage": "manual-exception",
+          "coverage_reason": "视觉密度、主题和 composer 内布局需要真实渲染检查，静态断言不能替代。",
+          "verify": [
+            "pnpm run typecheck",
+            "rg \"workspace-context-summary|workspace-context-popover\" src/renderer/src/components/chat/composer src/renderer/src/styles/globals.css"
+          ],
+          "tdd": false,
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-23T04:13:56.166Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "rg \"workspace-context-summary|workspace-context-popover\" src/renderer/src/components/chat/composer src/renderer/src/styles/globals.css",
+              "verifiedAt": "2026-09-23T04:13:56.174Z",
+              "exitCode": 0,
+              "stdout": "src/renderer/src/styles/globals.css:.workspace-context-summary { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start; min-height: 32px; margin: 8px 12px 2px; padding: 5px 7px 5px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--muted-foreground); font-size: 12px; cursor: pointer; }\nsrc/renderer/src/styles/globals.css:.workspace-context-summary:hover, .workspace-context-summary:focus-visible { background: var(--muted); color: var(--foreground); outline: 2px solid var(--ring); outline-offset: 1px; }\nsrc/renderer/src/styles/globals.css:.workspace-context-popover { width: min(360px, calc(100vw - 24px)); padding: 10px; border-radius: 10px; }\nsrc/renderer/src/styles/globals.css:.workspace-context-popover-title { padding: 2px 4px 8px; color: var(--foreground); font-size: 12px; font-weight: 600; }\nsrc/renderer/src/styles/globals.css:.workspace-context-popover-list { display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow: auto; }\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:        <div className=\"workspace-context-summary\" role=\"button\" tabIndex={0} aria-label=\"查看已选文本片段\">\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:      <PopoverContent className=\"workspace-context-popover\" align=\"start\" side=\"top\">\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:        <div className=\"workspace-context-popover-title\">已选文本片段</div>\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:        <div className=\"workspace-context-popover-list\">",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run typecheck && rg \"workspace-context-summary|workspace-context-popover\" src/renderer/src/components/chat/composer src/renderer/src/styles/globals.css",
+            "verifiedAt": "2026-09-23T04:13:56.174Z",
+            "exitCode": 0,
+            "stdout": "src/renderer/src/styles/globals.css:.workspace-context-summary { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start; min-height: 32px; margin: 8px 12px 2px; padding: 5px 7px 5px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--muted-foreground); font-size: 12px; cursor: pointer; }\nsrc/renderer/src/styles/globals.css:.workspace-context-summary:hover, .workspace-context-summary:focus-visible { background: var(--muted); color: var(--foreground); outline: 2px solid var(--ring); outline-offset: 1px; }\nsrc/renderer/src/styles/globals.css:.workspace-context-popover { width: min(360px, calc(100vw - 24px)); padding: 10px; border-radius: 10px; }\nsrc/renderer/src/styles/globals.css:.workspace-context-popover-title { padding: 2px 4px 8px; color: var(--foreground); font-size: 12px; font-weight: 600; }\nsrc/renderer/src/styles/globals.css:.workspace-context-popover-list { display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow: auto; }\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:        <div className=\"workspace-context-summary\" role=\"button\" tabIndex={0} aria-label=\"查看已选文本片段\">\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:      <PopoverContent className=\"workspace-context-popover\" align=\"start\" side=\"top\">\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:        <div className=\"workspace-context-popover-title\">已选文本片段</div>\nsrc/renderer/src/components/chat/composer/WorkspaceContextChips.tsx:        <div className=\"workspace-context-popover-list\">",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-23T04:13:56.174Z"
+    }
+  ]
+}

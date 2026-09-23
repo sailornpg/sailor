@@ -1,0 +1,36 @@
+{
+  "features": [
+    {
+      "id": "fix-file-preview-gutter-overlap",
+      "name": "修复文件预览行号与正文重叠",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "为固定行号栏使用不透明主题背景，遮挡横向滚动时经过下方的正文",
+          "coverage": "static",
+          "coverage_reason": "CodeMirror sticky 行号栏被项目设为透明；恢复不透明主题背景，构建检查，原生滚动视觉待验收。",
+          "tdd": false,
+          "status": "done",
+          "verify": [
+            "pnpm run build"
+          ],
+          "verifyEvidence": {
+            "command": "pnpm run build",
+            "verifiedAt": "2026-09-23T07:11:45.700Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 167ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3329 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-CGbgjmXA.css                 184.17 kB\n../../out/renderer/assets/SideChatPanel-55Zsr6Bc.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-DqNRaaHe.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DDRt-HCi.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-DEMRv0oB.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BYLyyA7P.js      1.40 kB\n../../out/renderer/assets/FilesPanel-Donq518x.js           4,726.50 kB\n../../out/renderer/assets/index-Cp5GXgUM.js                6,706.62 kB\n✓ built in 9.38s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          },
+          "evidence": {
+            "command": "pnpm run build",
+            "verifiedAt": "2026-09-23T07:11:45.700Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.17 kB\n✓ built in 167ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3329 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                  1.43 kB\n../../out/renderer/assets/index-CGbgjmXA.css                 184.17 kB\n../../out/renderer/assets/SideChatPanel-55Zsr6Bc.js            0.58 kB\n../../out/renderer/assets/ReviewPanel-DqNRaaHe.js              0.62 kB\n../../out/renderer/assets/TerminalPanel-DDRt-HCi.js            0.65 kB\n../../out/renderer/assets/PanelPlaceholder-DEMRv0oB.js         0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BYLyyA7P.js      1.40 kB\n../../out/renderer/assets/FilesPanel-Donq518x.js           4,726.50 kB\n../../out/renderer/assets/index-Cp5GXgUM.js                6,706.62 kB\n✓ built in 9.38s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-23T07:11:45.701Z"
+    }
+  ]
+}
