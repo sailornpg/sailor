@@ -335,6 +335,13 @@
       "status": "done",
       "archived_at": "2026-09-23T07:47:12.144Z",
       "archive_path": ".agent-harness/archive/feat-unified-scrollbars"
+    },
+    {
+      "id": "feat-app-sailboat-brand-logo",
+      "title": "全局小船品牌 Logo",
+      "status": "done",
+      "archived_at": "2026-09-23T09:44:56.914Z",
+      "archive_path": ".agent-harness/archive/feat-app-sailboat-brand-logo"
     }
   ]
 }
