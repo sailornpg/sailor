@@ -27,8 +27,8 @@
 - Agent runtime：AI SDK `HarnessAgent` + `@ai-sdk/harness-pi`；本地工作区使用 Pi 默认工具，just-bash ReadWriteFs 挂载项目；原生写入、编辑和 bash 逐次审批。
 - Package manifest：`package.json`（sailor）。
 - 会话导航浮层：官方 Conversation Map 使用 `@base-ui/react` PreviewCard。
-- 关键依赖：`react@19.3.0`、`vite@7.3.6`、`typescript@7.0.2`、`tailwindcss@4.3.3`。
-- 可用 scripts：`dev`、`build`、`preview`、`typecheck`。
+- 关键依赖：`react@19.3.0`、`vite@7.3.6`、`typescript@7.0.2`、`tailwindcss@4.3.3`、`node-pty@1.1.0`、`@xterm/xterm@6.0.0`、`@xterm/addon-fit@0.11.0`。
+- 可用 scripts：`dev`、`build`、`preview`、`typecheck`、`postinstall`（补 node-pty `spawn-helper` 执行位）。
 - Verification entrypoint 会运行：`pnpm run typecheck`、`pnpm run build`。
 
 协作约定：

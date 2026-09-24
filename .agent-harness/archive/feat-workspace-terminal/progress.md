@@ -1,0 +1,320 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-24T02:44:34.371Z
+**Feature ID:** feat-workspace-terminal
+**Feature Name:** 右侧工作区交互终端 MVP
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** fix-terminal-autostart
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+实现用户手动操作的本机终端：每工作区一个 shell，初始目录为主进程解析的项目根目录，切换聊天、面板或工作区后保活，支持输入、尺寸调整、有限历史、退出与重建。首版以当前 macOS 环境验收；不包含 AI 操控、多终端、分屏、跨应用重启恢复、输出自动入模或日志落盘。终端具有当前用户权限，项目目录不是 OS 沙盒；保持现有 Pi just-bash 和审批边界。
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-23T13:09:56.350Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "trd_spec": [
+    "docs/panels.md",
+    "docs/architecture.md"
+  ],
+  "checklist": [
+    {
+      "action": "先定稿终端方案：明确用户输入与 AI 权限隔离、project scope、关闭面板仅隐藏、显式终止、应用退出清理、失败状态、缓存与资源上限及 macOS 验收边界。说明 node-pty、@xterm/xterm、@xterm/addon-fit 的必要性；依据会话授权和 CLAUDE.md 确认新增依赖、窄 IPC 与本机执行边界后再安装。核验 Electron 原生 ABI、pnpm 构建许可和打包配置，更新 docs/panels.md、docs/architecture.md、README.md 及 CLAUDE.md 的相关约定，不改动无关历史描述。",
+      "coverage": "static",
+      "verify": [
+        "pnpm run typecheck",
+        "pnpm run build",
+        "node -e \"const fs=require('node:fs');const p=fs.readFileSync('package.json','utf8');for(const d of ['node-pty','@xterm/xterm','@xterm/addon-fit'])if(!p.includes(d))throw new Error('package.json 缺少声明依赖：'+d)\"",
+        "node -e \"const fs=require('node:fs');for(const f of ['docs/panels.md','docs/architecture.md','README.md','CLAUDE.md'])if(!fs.readFileSync(f,'utf8').includes('终端'))throw new Error(f+' 未包含终端约定')\""
+      ],
+      "tdd": false,
+      "coverage_reason": "方案决策、依赖及原生打包接线无法由廉价的前置行为断言验证；以构建和文档核验检查接线，真实 PTY 与打包运行在最终验收项覆盖。",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-23T12:00:10.967Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-23T12:00:20.897Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.48 kB\n✓ built in 146ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3371 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-1Gyw1dGn.css                   186.64 kB\n../../out/renderer/assets/SideChatPanel-CfJLwRv-.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-DQ_QzAa-.js                0.62 kB\n../../out/renderer/assets/TerminalPanel-COlEBocK.js              0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CXfl0uJh.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-bedvUdF6.js        1.40 kB\n../../out/renderer/assets/ParticleSailboatScene-CRBC_2W5.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-ByZ23ZyH.js          7.21 kB\n../../out/renderer/assets/react-three-fiber.esm-1GubjDUa.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-CBypOeWd.js             4,725.90 kB\n../../out/renderer/assets/index-CtOYe3qW.js                  6,759.01 kB\n✓ built in 7.83s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        },
+        {
+          "command": "node -e \"const fs=require('node:fs');const p=fs.readFileSync('package.json','utf8');for(const d of ['node-pty','@xterm/xterm','@xterm/addon-fit'])if(!p.includes(d))throw new Error('package.json 缺少声明依赖：'+d)\"",
+          "verifiedAt": "2026-09-23T12:00:20.999Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": "node -e \"const fs=require('node:fs');for(const f of ['docs/panels.md','docs/architecture.md','README.md','CLAUDE.md'])if(!fs.readFileSync(f,'utf8').includes('终端'))throw new Error(f+' 未包含终端约定')\"",
+          "verifiedAt": "2026-09-23T12:00:21.087Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "pnpm run typecheck && pnpm run build && node -e \"const fs=require('node:fs');const p=fs.readFileSync('package.json','utf8');for(const d of ['node-pty','@xterm/xterm','@xterm/addon-fit'])if(!p.includes(d))throw new Error('package.json 缺少声明依赖：'+d)\" && node -e \"const fs=require('node:fs');for(const f of ['docs/panels.md','docs/architecture.md','README.md','CLAUDE.md'])if(!fs.readFileSync(f,'utf8').includes('终端'))throw new Error(f+' 未包含终端约定')\"",
+        "verifiedAt": "2026-09-23T12:00:21.087Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 31 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           105.48 kB\n✓ built in 146ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  3.24 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3371 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-1Gyw1dGn.css                   186.64 kB\n../../out/renderer/assets/SideChatPanel-CfJLwRv-.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-DQ_QzAa-.js                0.62 kB\n../../out/renderer/assets/TerminalPanel-COlEBocK.js              0.65 kB\n../../out/renderer/assets/PanelPlaceholder-CXfl0uJh.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-bedvUdF6.js        1.40 kB\n../../out/renderer/assets/ParticleSailboatScene-CRBC_2W5.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-ByZ23ZyH.js          7.21 kB\n../../out/renderer/assets/react-three-fiber.esm-1GubjDUa.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-CBypOeWd.js             4,725.90 kB\n../../out/renderer/assets/index-CtOYe3qW.js                  6,759.01 kB\n✓ built in 7.83s",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    },
+    {
+      "action": "先编写 tests/terminal-service.test.ts，再实现 main 所有的工作区单终端服务：默认系统 shell、可信项目根目录、并发创建去重、工作区隔离、运行/退出/失败状态、显式终止与重建；隐藏和切换不销毁进程，退出应用清理所属 shell 及普通子进程。用可控 PTY 适配器测试目录失效、spawn 失败、重复关闭、迟到事件、旧会话失效和资源释放；明确脱离进程组的 daemon 不在清理保证内。",
+      "coverage": "unit",
+      "test": "node --test tests/terminal-service.test.ts",
+      "verify": [
+        "node --test tests/terminal-service.test.ts",
+        "pnpm run typecheck"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/terminal-service.test.ts",
+        "verifiedAt": "2026-09-23T12:03:58.639Z",
+        "exitCode": 0,
+        "stdout": "✔ 默认 shell 来自 $SHELL 并用 login shell 启动，环境变量剔除 Electron/Node 注入 (62.213ms)\n✔ 每个工作区只在可信根目录启动一个 shell，并拒绝 renderer 指定执行路径 (0.861333ms)\n✔ 并发创建同一工作区会去重，重复打开不重建进程 (0.24425ms)\n✔ 不同工作区的会话互相隔离，输入与尺寸只发给所属会话 (0.270583ms)\n✔ 跨工作区或未知 sessionId 的写操作被拒绝 (0.911584ms)\n✔ 工作区目录无法解析时拒绝创建，且不启动进程 (0.171084ms)\n✔ PTY 启动失败进入 failed 状态并可重试 (0.144667ms)\n✔ shell 退出后状态为 exited，写操作被拒绝，迟到事件不会回退状态 (32.129417ms)\n✔ 显式终止先向进程组发 SIGHUP，宽限后升级为 SIGKILL，且重复终止幂等 (15.523167ms)\n✔ shell 在 SIGHUP 后自行退出时不再发送 SIGKILL (5.110125ms)\n✔ 终止后可重建新会话，旧 sessionId 失效 (22.023042ms)\n✔ 输入字节与尺寸有上限，越界值被拒绝或收敛到边界 (0.394625ms)\n✔ 输出按会话派发并可携带单调序号，取消订阅后不再收到事件 (31.535208ms)\n✔ 超过存活会话上限时回收最久未使用的工作区会话 (17.979791ms)\n✔ 应用退出清理所有会话并释放 PTY 监听 (7.855166ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 568.642667",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/terminal-service.test.ts",
+          "verifiedAt": "2026-09-23T12:03:59.527Z",
+          "exitCode": 0,
+          "stdout": "✔ 默认 shell 来自 $SHELL 并用 login shell 启动，环境变量剔除 Electron/Node 注入 (65.091458ms)\n✔ 每个工作区只在可信根目录启动一个 shell，并拒绝 renderer 指定执行路径 (0.686083ms)\n✔ 并发创建同一工作区会去重，重复打开不重建进程 (0.364791ms)\n✔ 不同工作区的会话互相隔离，输入与尺寸只发给所属会话 (0.434625ms)\n✔ 跨工作区或未知 sessionId 的写操作被拒绝 (0.55575ms)\n✔ 工作区目录无法解析时拒绝创建，且不启动进程 (0.319291ms)\n✔ PTY 启动失败进入 failed 状态并可重试 (0.208417ms)\n✔ shell 退出后状态为 exited，写操作被拒绝，迟到事件不会回退状态 (29.905958ms)\n✔ 显式终止先向进程组发 SIGHUP，宽限后升级为 SIGKILL，且重复终止幂等 (15.265083ms)\n✔ shell 在 SIGHUP 后自行退出时不再发送 SIGKILL (6.597ms)\n✔ 终止后可重建新会话，旧 sessionId 失效 (21.067291ms)\n✔ 输入字节与尺寸有上限，越界值被拒绝或收敛到边界 (0.584625ms)\n✔ 输出按会话派发并可携带单调序号，取消订阅后不再收到事件 (30.599167ms)\n✔ 超过存活会话上限时回收最久未使用的工作区会话 (86.57775ms)\n✔ 应用退出清理所有会话并释放 PTY 监听 (74.45125ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 791.467083",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-23T12:04:00.864Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/terminal-service.test.ts && pnpm run typecheck",
+        "verifiedAt": "2026-09-23T12:04:00.864Z",
+        "exitCode": 0,
+        "stdout": "✔ 默认 shell 来自 $SHELL 并用 login shell 启动，环境变量剔除 Electron/Node 注入 (65.091458ms)\n✔ 每个工作区只在可信根目录启动一个 shell，并拒绝 renderer 指定执行路径 (0.686083ms)\n✔ 并发创建同一工作区会去重，重复打开不重建进程 (0.364791ms)\n✔ 不同工作区的会话互相隔离，输入与尺寸只发给所属会话 (0.434625ms)\n✔ 跨工作区或未知 sessionId 的写操作被拒绝 (0.55575ms)\n✔ 工作区目录无法解析时拒绝创建，且不启动进程 (0.319291ms)\n✔ PTY 启动失败进入 failed 状态并可重试 (0.208417ms)\n✔ shell 退出后状态为 exited，写操作被拒绝，迟到事件不会回退状态 (29.905958ms)\n✔ 显式终止先向进程组发 SIGHUP，宽限后升级为 SIGKILL，且重复终止幂等 (15.265083ms)\n✔ shell 在 SIGHUP 后自行退出时不再发送 SIGKILL (6.597ms)\n✔ 终止后可重建新会话，旧 sessionId 失效 (21.067291ms)\n✔ 输入字节与尺寸有上限，越界值被拒绝或收敛到边界 (0.584625ms)\n✔ 输出按会话派发并可携带单调序号，取消订阅后不再收到事件 (30.599167ms)\n✔ 超过存活会话上限时回收最久未使用的工作区会话 (86.57775ms)\n✔ 应用退出清理所有会话并释放 PTY 监听 (74.45125ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 791.467083",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+      }
+    },
+    {
+      "action": "先编写 tests/terminal-ipc.test.ts，再接入类型化创建/输入/resize/订阅/终止接口；main 校验 sender、projectId、sessionId 归属、输入字节与行列范围，拒绝过期会话及 renderer 指定执行路径。保持 renderer sandbox 与无 Node 权限，取消订阅释放监听，不注入应用模型凭据，不向 Agent 注册终端能力；覆盖非法请求、跨工作区访问、订阅清理和事件路由。",
+      "coverage": "integration",
+      "test": "node --test tests/terminal-ipc.test.ts",
+      "verify": [
+        "node --test tests/terminal-ipc.test.ts",
+        "pnpm run typecheck"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/terminal-ipc.test.ts",
+        "verifiedAt": "2026-09-23T12:13:16.869Z",
+        "exitCode": 0,
+        "stdout": "✔ 拒绝非受信 sender 的终端请求，且不启动进程 (142.898291ms)\n✔ 非法参数与 renderer 指定的执行路径被拒绝 (1.266542ms)\n✔ 通过 IPC 创建、写入、调整尺寸并终止终端 (6.497042ms)\n✔ 输入与尺寸在 IPC 边界按契约上限被拒绝 (1.208792ms)\n✔ 会话事件只路由给对应订阅者 (0.470958ms)\n✔ 拒绝跨工作区附着，也不为过期会话建立订阅 (5.237083ms)\n✔ 取消订阅后不再收到事件，且不能取消他人的订阅 (0.726833ms)\n✔ sender 被销毁后自动清理订阅且不抛错 (0.310333ms)\n✔ dispose 释放服务监听与全部订阅 (0.310667ms)\n✔ preload 只暴露窄终端接口，没有通用执行或文件系统能力 (7.311834ms)\n✔ 窗口保持 renderer sandbox，agent 侧不接入终端能力 (13.540584ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 582.561917",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/terminal-ipc.test.ts",
+          "verifiedAt": "2026-09-23T12:13:17.511Z",
+          "exitCode": 0,
+          "stdout": "✔ 拒绝非受信 sender 的终端请求，且不启动进程 (93.152417ms)\n✔ 非法参数与 renderer 指定的执行路径被拒绝 (1.6795ms)\n✔ 通过 IPC 创建、写入、调整尺寸并终止终端 (18.858417ms)\n✔ 输入与尺寸在 IPC 边界按契约上限被拒绝 (1.116291ms)\n✔ 会话事件只路由给对应订阅者 (0.458166ms)\n✔ 拒绝跨工作区附着，也不为过期会话建立订阅 (5.092583ms)\n✔ 取消订阅后不再收到事件，且不能取消他人的订阅 (0.549834ms)\n✔ sender 被销毁后自动清理订阅且不抛错 (0.268292ms)\n✔ dispose 释放服务监听与全部订阅 (0.300875ms)\n✔ preload 只暴露窄终端接口，没有通用执行或文件系统能力 (11.016417ms)\n✔ 窗口保持 renderer sandbox，agent 侧不接入终端能力 (5.681583ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 541.566625",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-23T12:13:18.769Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/terminal-ipc.test.ts && pnpm run typecheck",
+        "verifiedAt": "2026-09-23T12:13:18.769Z",
+        "exitCode": 0,
+        "stdout": "✔ 拒绝非受信 sender 的终端请求，且不启动进程 (93.152417ms)\n✔ 非法参数与 renderer 指定的执行路径被拒绝 (1.6795ms)\n✔ 通过 IPC 创建、写入、调整尺寸并终止终端 (18.858417ms)\n✔ 输入与尺寸在 IPC 边界按契约上限被拒绝 (1.116291ms)\n✔ 会话事件只路由给对应订阅者 (0.458166ms)\n✔ 拒绝跨工作区附着，也不为过期会话建立订阅 (5.092583ms)\n✔ 取消订阅后不再收到事件，且不能取消他人的订阅 (0.549834ms)\n✔ sender 被销毁后自动清理订阅且不抛错 (0.268292ms)\n✔ dispose 释放服务监听与全部订阅 (0.300875ms)\n✔ preload 只暴露窄终端接口，没有通用执行或文件系统能力 (11.016417ms)\n✔ 窗口保持 renderer sandbox，agent 侧不接入终端能力 (5.681583ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 541.566625",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+      }
+    },
+    {
+      "action": "先编写 tests/terminal-output.test.ts，再实现有上限的输出缓存、批量事件、背压和订阅恢复；以序号或等价契约避免历史快照与实时流之间重复、丢失或乱序。隐藏终端仍限制内存，输出不逐块写 React state、不落盘、不自动发送模型；覆盖大量输出、慢消费者、截断提示、重新订阅、分段 Unicode/ANSI 数据及退出后的尾部输出。",
+      "coverage": "unit",
+      "test": "node --test tests/terminal-output.test.ts",
+      "verify": [
+        "node --test tests/terminal-output.test.ts",
+        "pnpm run typecheck"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/terminal-output.test.ts",
+        "verifiedAt": "2026-09-23T12:23:03.719Z",
+        "exitCode": 0,
+        "stdout": "✔ 输出按刷新窗口批量合并，达到上限时立即刷新 (52.564792ms)\n✔ 关闭或退出前可以强制刷新尾部输出 (0.305542ms)\n✔ 缓存按字节上限淘汰最旧数据，并在快照中报告截断 (0.225959ms)\n✔ 大量输出下缓存与待刷新数据都保持在上限内 (0.864708ms)\n✔ 分段的 Unicode 与 ANSI 序列在拼接后与原始字节完全一致 (0.18925ms)\n✔ 慢消费者超出预算时丢弃最旧数据并只报告一次截断 (0.165333ms)\n✔ 单个超出预算的数据块被整体丢弃并报告 (0.095459ms)\n✔ 重新订阅从 sinceSeq 续传，不重复也不丢失保留窗口内的数据 (0.102917ms)\n✔ 附着时返回保留窗口内的快照，之后的实时事件从 nextSeq 继续 (108.186708ms)\n✔ 重新附着只补发未收到的部分，并与实时流拼接成完整输出 (6.336ms)\n✔ 退出前的尾部输出先于退出状态送达 (0.88175ms)\n✔ 慢消费者的订阅队列按上限丢弃并下发明确的截断提示 (5.892791ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 526.294583",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/terminal-output.test.ts",
+          "verifiedAt": "2026-09-23T12:23:04.342Z",
+          "exitCode": 0,
+          "stdout": "✔ 输出按刷新窗口批量合并，达到上限时立即刷新 (51.666875ms)\n✔ 关闭或退出前可以强制刷新尾部输出 (0.278167ms)\n✔ 缓存按字节上限淘汰最旧数据，并在快照中报告截断 (0.233709ms)\n✔ 大量输出下缓存与待刷新数据都保持在上限内 (0.923ms)\n✔ 分段的 Unicode 与 ANSI 序列在拼接后与原始字节完全一致 (0.213208ms)\n✔ 慢消费者超出预算时丢弃最旧数据并只报告一次截断 (0.184917ms)\n✔ 单个超出预算的数据块被整体丢弃并报告 (0.091292ms)\n✔ 重新订阅从 sinceSeq 续传，不重复也不丢失保留窗口内的数据 (0.149791ms)\n✔ 附着时返回保留窗口内的快照，之后的实时事件从 nextSeq 继续 (96.260667ms)\n✔ 重新附着只补发未收到的部分，并与实时流拼接成完整输出 (5.709584ms)\n✔ 退出前的尾部输出先于退出状态送达 (0.974708ms)\n✔ 慢消费者的订阅队列按上限丢弃并下发明确的截断提示 (6.116ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 526.565041",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-23T12:23:05.497Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/terminal-output.test.ts && pnpm run typecheck",
+        "verifiedAt": "2026-09-23T12:23:05.497Z",
+        "exitCode": 0,
+        "stdout": "✔ 输出按刷新窗口批量合并，达到上限时立即刷新 (51.666875ms)\n✔ 关闭或退出前可以强制刷新尾部输出 (0.278167ms)\n✔ 缓存按字节上限淘汰最旧数据，并在快照中报告截断 (0.233709ms)\n✔ 大量输出下缓存与待刷新数据都保持在上限内 (0.923ms)\n✔ 分段的 Unicode 与 ANSI 序列在拼接后与原始字节完全一致 (0.213208ms)\n✔ 慢消费者超出预算时丢弃最旧数据并只报告一次截断 (0.184917ms)\n✔ 单个超出预算的数据块被整体丢弃并报告 (0.091292ms)\n✔ 重新订阅从 sinceSeq 续传，不重复也不丢失保留窗口内的数据 (0.149791ms)\n✔ 附着时返回保留窗口内的快照，之后的实时事件从 nextSeq 继续 (96.260667ms)\n✔ 重新附着只补发未收到的部分，并与实时流拼接成完整输出 (5.709584ms)\n✔ 退出前的尾部输出先于退出状态送达 (0.974708ms)\n✔ 慢消费者的订阅队列按上限丢弃并下发明确的截断提示 (6.116ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 526.565041",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+      }
+    },
+    {
+      "action": "先编写 tests/terminal-panel.test.ts，再替换 TerminalPanel 占位并将描述符改为 project scope，处理旧 chat scope 布局记录兼容；接入 xterm 输入、fit/resize、输出恢复、启动/运行/退出/错误、终止与重建。复用主题和官方设计语言，处理焦点、快捷键、复制粘贴、自动滚动及监听释放；禁止终端输出静默写剪贴板，仅允许经过校验的外链操作。测试切换聊天/工作区、关闭后重开、旧订阅解绑和尺寸传递；视觉与输入法在最终项实测。",
+      "coverage": "integration",
+      "test": "node --test tests/terminal-panel.test.ts",
+      "verify": [
+        "node --test tests/terminal-panel.test.ts tests/panel-layout.test.ts tests/panel-registry.test.ts tests/panel-dock.test.ts",
+        "pnpm run typecheck"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/terminal-panel.test.ts",
+        "verifiedAt": "2026-09-23T12:30:35.552Z",
+        "exitCode": 0,
+        "stdout": "✔ 终端描述符绑定 project scope，并保留真实不可用原因 (261.259875ms)\n✔ 旧的 chat scope 布局记录在上下文解析时改写为 project scope (4.753542ms)\n✔ 会话启动时先订阅、再创建、再附着，并回放快照 (1.211875ms)\n✔ 实时输出按序号去重、在缺口处标记截断，且只接受自己的订阅 (0.266334ms)\n✔ 截断提示与快照截断都会反映到面板状态 (0.399333ms)\n✔ 状态事件驱动阶段变化，退出后不再接受输入 (0.3485ms)\n✔ 显式终止调用主进程，关闭面板只解绑订阅 (0.242125ms)\n✔ 重新启动会重置终端、解绑旧订阅并附着新会话 (0.219417ms)\n✔ 尺寸变化只在运行中且数值变化时传递 (0.221542ms)\n✔ 启动失败进入 failed 状态并给出可读原因 (0.228625ms)\n✔ 面板按状态渲染真实信息，不再显示占位文案 (8.576416ms)\n✔ 面板在没有工作区时说明原因，且不静默写剪贴板或打开外链 (3.703208ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 580.146167",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/terminal-panel.test.ts tests/panel-layout.test.ts tests/panel-registry.test.ts tests/panel-dock.test.ts",
+          "verifiedAt": "2026-09-23T12:30:38.881Z",
+          "exitCode": 0,
+          "stdout": "✔ dock 打开面板后渲染 tablist、激活态与 tabpanel 接线，不再重复功能列表 (817.434917ms)\n✔ 可见但没有打开面板时给出功能列表与空态，而不是空白 dock (394.425917ms)\n✔ 不可用面板在功能列表里保留行并展示真实原因 (498.743833ms)\n✔ 隐藏状态与空布局不渲染 dock 外壳 (358.743917ms)\n✔ 浏览器面板渲染真实预览，缺数据时给出真实空态 (297.423416ms)\n✔ 占位面板显示真实不可用原因，而不是伪造内容 (326.588ms)\n✔ 失效的激活项回退到第一个 tab，而不是渲染空白 dock (313.46125ms)\n✔ 外壳把三栏几何、拖拽分隔条与单一面板开关接线到布局状态 (2.792292ms)\n✔ 打开面板会去重、激活并保持 tab 顺序 (3.34425ms)\n✔ 单实例面板按 panel+scope 去重，多实例面板按 instanceId 区分 (0.224625ms)\n✔ 关闭激活 tab 后激活相邻项，关闭最后一个 tab 后保留功能列表可见性 (0.154167ms)\n✔ 可见性与是否打开面板解耦：空布局也能被显式打开 (0.1055ms)\n✔ 激活不存在的实例、空布局显示、tab 上限与宽度越界都被约束 (0.179125ms)\n✔ 持久化往返保留布局，非法输入整体降级且不抛错 (0.423ms)\n✔ 读取时修复越界宽度、失效激活项与未知面板 (0.337542ms)\n✔ 切换上下文时会话/工作区面板重新绑定 scope (0.282917ms)\n✔ 面板注册表描述符完整、无冲突，懒加载模块都能解析 (1067.408416ms)\n✔ 类型化面板打开请求拒绝非法结构 (447.203542ms)\n✔ 面板打开不再经全局 DOM 事件广播 (3.372208ms)\n✔ 终端描述符绑定 project scope，并保留真实不可用原因 (600.959709ms)\n✔ 旧的 chat scope 布局记录在上下文解析时改写为 project scope (13.106917ms)\n✔ 会话启动时先订阅、再创建、再附着，并回放快照 (1.216291ms)\n✔ 实时输出按序号去重、在缺口处标记截断，且只接受自己的订阅 (0.337334ms)\n✔ 截断提示与快照截断都会反映到面板状态 (0.20525ms)\n✔ 状态事件驱动阶段变化，退出后不再接受输入 (0.518458ms)\n✔ 显式终止调用主进程，关闭面板只解绑订阅 (0.385083ms)\n✔ 重新启动会重置终端、解绑旧订阅并附着新会话 (0.282ms)\n✔ 尺寸变化只在运行中且数值变化时传递 (0.774167ms)\n✔ 启动失败进入 failed 状态并给出可读原因 (2.718583ms)\n✔ 面板按状态渲染真实信息，不再显示占位文案 (16.804167ms)\n✔ 面板在没有工作区时说明原因，且不静默写剪贴板或打开外链 (24.9545ms)\nℹ tests 31\nℹ suites 0\nℹ pass 31\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3223.755417",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-23T12:30:40.168Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/terminal-panel.test.ts tests/panel-layout.test.ts tests/panel-registry.test.ts tests/panel-dock.test.ts && pnpm run typecheck",
+        "verifiedAt": "2026-09-23T12:30:40.168Z",
+        "exitCode": 0,
+        "stdout": "✔ dock 打开面板后渲染 tablist、激活态与 tabpanel 接线，不再重复功能列表 (817.434917ms)\n✔ 可见但没有打开面板时给出功能列表与空态，而不是空白 dock (394.425917ms)\n✔ 不可用面板在功能列表里保留行并展示真实原因 (498.743833ms)\n✔ 隐藏状态与空布局不渲染 dock 外壳 (358.743917ms)\n✔ 浏览器面板渲染真实预览，缺数据时给出真实空态 (297.423416ms)\n✔ 占位面板显示真实不可用原因，而不是伪造内容 (326.588ms)\n✔ 失效的激活项回退到第一个 tab，而不是渲染空白 dock (313.46125ms)\n✔ 外壳把三栏几何、拖拽分隔条与单一面板开关接线到布局状态 (2.792292ms)\n✔ 打开面板会去重、激活并保持 tab 顺序 (3.34425ms)\n✔ 单实例面板按 panel+scope 去重，多实例面板按 instanceId 区分 (0.224625ms)\n✔ 关闭激活 tab 后激活相邻项，关闭最后一个 tab 后保留功能列表可见性 (0.154167ms)\n✔ 可见性与是否打开面板解耦：空布局也能被显式打开 (0.1055ms)\n✔ 激活不存在的实例、空布局显示、tab 上限与宽度越界都被约束 (0.179125ms)\n✔ 持久化往返保留布局，非法输入整体降级且不抛错 (0.423ms)\n✔ 读取时修复越界宽度、失效激活项与未知面板 (0.337542ms)\n✔ 切换上下文时会话/工作区面板重新绑定 scope (0.282917ms)\n✔ 面板注册表描述符完整、无冲突，懒加载模块都能解析 (1067.408416ms)\n✔ 类型化面板打开请求拒绝非法结构 (447.203542ms)\n✔ 面板打开不再经全局 DOM 事件广播 (3.372208ms)\n✔ 终端描述符绑定 project scope，并保留真实不可用原因 (600.959709ms)\n✔ 旧的 chat scope 布局记录在上下文解析时改写为 project scope (13.106917ms)\n✔ 会话启动时先订阅、再创建、再附着，并回放快照 (1.216291ms)\n✔ 实时输出按序号去重、在缺口处标记截断，且只接受自己的订阅 (0.337334ms)\n✔ 截断提示与快照截断都会反映到面板状态 (0.20525ms)\n✔ 状态事件驱动阶段变化，退出后不再接受输入 (0.518458ms)\n✔ 显式终止调用主进程，关闭面板只解绑订阅 (0.385083ms)\n✔ 重新启动会重置终端、解绑旧订阅并附着新会话 (0.282ms)\n✔ 尺寸变化只在运行中且数值变化时传递 (0.774167ms)\n✔ 启动失败进入 failed 状态并给出可读原因 (2.718583ms)\n✔ 面板按状态渲染真实信息，不再显示占位文案 (16.804167ms)\n✔ 面板在没有工作区时说明原因，且不静默写剪贴板或打开外链 (24.9545ms)\nℹ tests 31\nℹ suites 0\nℹ pass 31\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3223.755417",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+      }
+    },
+    {
+      "action": "新增并运行 tests/terminal-electron-smoke.mjs，在真实 Electron 中验证 shell 启动、交互输入、Ctrl+C、尺寸变化、隐藏及工作区切换保活、输出洪峰和退出后的普通子进程清理；当前 macOS 上打包并启动产物核验 node-pty。实际检查深浅主题、窄窗、中文输入法、复制/多行粘贴、键盘焦点、长行及滚动，记录截图、打包产物、执行结果和平台限制到 .agent-harness/evidence/workspace-terminal.md。自动化通过不能替代人工观察，未完成的必验项不得标 done；最后通过 verifier 记录 evidence，并运行 clean-state。",
+      "coverage": "manual-exception",
+      "verify": [
+        "node tests/terminal-electron-smoke.mjs",
+        "PATH=\"/usr/local/bin:$PATH\" pnpm exec electron-builder --mac --dir",
+        "test -s .agent-harness/evidence/workspace-terminal.md",
+        "pnpm run typecheck",
+        "pnpm run build",
+        "node .agent-harness/scripts/clean-state-check.mjs --skip-verification"
+      ],
+      "tdd": false,
+      "coverage_reason": "输入法、视觉效果和原生打包产物依赖真实桌面环境，无法在实现前用廉价确定性断言完整表达；自动 smoke 覆盖运行链路，其余必须实际操作并提供证据，证据文件存在不等于验收通过。",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "node tests/terminal-electron-smoke.mjs",
+          "verifiedAt": "2026-09-23T13:09:10.157Z",
+          "exitCode": 0,
+          "stdout": "PASS 真实 Electron 中的 PTY 生命周期与清理 — all checks passed\nPASS 打包 macOS 产物存在 — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app\nPASS 打包产物包含 node-pty prebuild — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/prebuilds/darwin-arm64\nPASS 打包后的 spawn-helper 可执行 — mode 755\nPASS 打包产物解压了 node-pty（asarUnpack） — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty\nPASS 打包应用可加载并运行 node-pty — packaged-pty-ok\nPASS 面板开关可点击 — clicked\nPASS 渲染进程到 PTY 的端到端输入输出\nPASS 取得 shell pid — 31025\nPASS 多字节文本经 PTY 往返\nPASS 剪贴板粘贴后执行 — one\\nline-two\\n\"\nline-one\nline-two\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm % ec\nho pasted-ok\npasted-ok\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm %  \nPASS 多行粘贴进入终端输入 — \"deMacBook-Pro sailor-terminal-demo-SynpWm % ec\\nho pasted-ok\\npasted-ok\\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm % ec\\nho multi-line-one\\necho multi-line-two \"\nPASS 可在终端中选中整行\nPASS 选中内容可复制到剪贴板 — \"visual-42\"\nPASS Ctrl+C 中断前台任务\nPASS 宽窗口下 PTY 尺寸与渲染行数一致 — {\"rows\":45,\"cols\":51} vs lines 45\nPASS 大量输出后视图自动滚动到底部 — \"8\\n299\\n300\\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm %  \"\nPASS 重载后回放历史输出\nPASS 渲染进程重载后 shell 保活 — 31025 -> 31025\nPASS 关闭面板 tab 后 xterm 卸载\nPASS 关闭面板不销毁进程 — 31025 -> 31025\nPASS 缩窄面板后终端重新布局 — surface 383 -> 279\nPASS PTY 尺寸跟随面板尺寸 — {\"rows\":45,\"cols\":51} -> {\"rows\":45,\"cols\":36} (dom lines 45)\nPASS 窄视口下没有横向溢出 — overflow 0px\nPASS 窄视口下终端仍有尺寸 — {\"width\":260,\"height\":611,\"lines\":33,\"surface\":279}\n\n25/25 checks passed\nreport: /Users/hs/Documents/learning/sailor/.agent-harness/evidence/workspace-terminal-report.json",
+          "stderr": ""
+        },
+        {
+          "command": "PATH=\"/usr/local/bin:$PATH\" pnpm exec electron-builder --mac --dir",
+          "verifiedAt": "2026-09-23T13:09:45.887Z",
+          "exitCode": 0,
+          "stdout": "• electron-builder  version=26.15.3 os=23.6.0\n  • loaded configuration  file=package.json (\"build\" field)\n  • author is missed in the package.json  appPackageFile=/Users/hs/Documents/learning/sailor/package.json\n  • detected workspace root for project using packageManager field  pm=pnpm config=pnpm@11.1.2 resolved=/Users/hs/Documents/learning/sailor projectDir=/Users/hs/Documents/learning/sailor\n  • skipped dependencies rebuild  reason=npmRebuild is set to false\n  • packaging       platform=darwin arch=arm64 electron=44.4.2 appOutDir=dist/mac-arm64\n  • downloaded      label=electron progress=100%\n  • downloaded electron zip extracted successfully  output=/Users/hs/Documents/learning/sailor/dist/mac-arm64\n  • searching for node modules  pm=pnpm searchDir=/Users/hs/Documents/learning/sailor\n  • duplicate dependency references  dependencies=[\"@codemirror/language@6.12.4\",\"@codemirror/state@6.7.5\",\"@codemirror/view@6.43.12\",\"@modelcontextprotocol/sdk@1.30.0\",\"@radix-ui/react-use-controllable-state@1.2.6\",\"ai@7.0.107\",\"just-bash@2.14.5\",\"radix-ui@1.6.7\",\"react-dom@19.3.0\",\"zustand@5.0.15\",\"raw-body@3.0.2\",\"@radix-ui/react-use-layout-effect@1.1.4\",\"@ai-sdk/provider@4.0.17\",\"@ai-sdk/provider-utils@5.0.45\",\"@radix-ui/react-collapsible@1.1.20\",\"@radix-ui/react-collection@1.1.15\",\"@radix-ui/react-compose-refs@1.1.5\",\"@radix-ui/react-context@1.2.2\",\"@radix-ui/react-dialog@1.1.23\",\"@radix-ui/react-direction@1.1.4\",\"@radix-ui/react-dismissable-layer@1.1.19\",\"@radix-ui/react-focus-guards@1.1.6\",\"@radix-ui/react-focus-scope@1.1.16\",\"@radix-ui/react-label@2.1.15\",\"@radix-ui/react-menu@2.1.24\",\"@radix-ui/react-popper@1.3.7\",\"@radix-ui/react-portal@1.1.17\",\"@radix-ui/react-presence@1.1.10\",\"@radix-ui/react-primitive@2.1.10\",\"@radix-ui/react-roving-focus@1.1.19\",\"@radix-ui/react-slot@1.3.3\",\"@radix-ui/react-use-callback-ref@1.1.4\",\"@radix-ui/react-use-is-hydrated@0.1.3\",\"@radix-ui/react-use-size@1.1.4\",\"@radix-ui/react-visually-hidden@1.2.11\",\"@radix-ui/react-id@1.1.4\",\"@floating-ui/react-dom@2.1.9\",\"use-sync-external-store@1.7.0\",\"@ai-sdk/provider-utils@5.0.44\",\"@types/mdast@4.0.4\",\"remark-parse@11.0.0\",\"unified@11.0.5\",\"@assistant-ui/store@0.3.14\",\"@assistant-ui/tap@0.9.18\",\"assistant-cloud@0.2.2\",\"assistant-stream@0.3.44\",\"http-errors@2.0.1\",\"iconv-lite@0.7.3\",\"debug@4.4.3\",\"mime-types@3.0.2\",\"on-finished@2.4.1\",\"qs@6.16.0\",\"type-is@2.1.0\",\"brace-expansion@5.0.12\",\"token-types@6.1.2\",\"@radix-ui/react-use-previous@1.1.4\",\"@lezer/css@1.3.7\",\"mdast-util-from-markdown@2.0.3\",\"devlop@1.1.0\",\"vfile@6.0.3\",\"mdast-util-to-markdown@2.1.2\",\"micromark-util-combine-extensions@2.0.1\",\"unist-util-visit@5.1.0\",\"@earendil-works/pi-ai@0.84.4\",\"@earendil-works/pi-protocol@0.84.4\",\"https-proxy-agent@7.0.6\",\"react-style-singleton@2.2.3\",\"string_decoder@1.1.1\",\"micromark-util-decode-numeric-character-reference@2.0.2\",\"micromark-util-normalize-identifier@2.0.1\",\"vfile-message@4.0.3\",\"micromark-util-classify-character@2.0.1\",\"micromark-util-chunked@2.0.1\",\"micromark-util-character@2.1.1\",\"micromark-util-sanitize-uri@2.0.1\",\"micromark-core-commonmark@2.0.3\",\"micromark-factory-space@2.0.1\",\"micromark-util-resolve-all@2.0.1\",\"@jridgewell/trace-mapping@0.3.31\",\"unist-util-is@6.0.1\",\"unist-util-position@5.0.0\",\"@smithy/node-http-handler@4.7.3\",\"@aws-sdk/types@3.974.5\",\"@smithy/core@3.34.1\",\"@smithy/fetch-http-handler@5.8.0\",\"@smithy/node-http-handler@4.12.1\",\"@smithy/types@4.18.0\",\"micromark-util-subtokenize@2.1.0\",\"@types/estree-jsx@1.0.5\",\"@aws-crypto/sha256-js@5.2.0\",\"@smithy/signature-v4@5.7.3\",\"@aws-sdk/nested-clients@3.997.45\",\"@aws-sdk/credential-provider-process@3.972.71\",\"@aws-sdk/credential-provider-sso@3.973.15\",\"@aws-sdk/credential-provider-web-identity@3.972.77\",\"@smithy/credential-provider-imds@4.5.2\",\"call-bound@1.0.4\",\"get-intrinsic@1.3.0\",\"@smithy/util-utf8@2.3.0\",\"readable-stream@3.6.2\"]\n  • platform-specific optional dependencies not bundled — add them to your project's optionalDependencies if your app requires them (pnpm 10+ does not auto-install tra\n... output truncated ...",
+          "stderr": ""
+        },
+        {
+          "command": "test -s .agent-harness/evidence/workspace-terminal.md",
+          "verifiedAt": "2026-09-23T13:09:45.890Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-23T13:09:47.031Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-23T13:09:56.234Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 37 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           130.10 kB\n✓ built in 140ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.25 kB\n✓ built in 7ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3376 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-lgnc1eI7.css                   193.09 kB\n../../out/renderer/assets/SideChatPanel-DUuE2kVV.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-BJJQtIZ4.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-DjP8sJd_.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-C5btS3Ww.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/ParticleSailboatScene-DMyJJXd-.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-B5Q0ETAW.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-GSZhHein.js             12.87 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-Dcr4JDJv.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-vGGToZRd.js             4,725.90 kB\n../../out/renderer/assets/index-UGpPcWFJ.js                  6,759.13 kB\n✓ built in 7.27s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        },
+        {
+          "command": "node .agent-harness/scripts/clean-state-check.mjs --skip-verification",
+          "verifiedAt": "2026-09-23T13:09:56.350Z",
+          "exitCode": 0,
+          "stdout": "=== Clean-state passed ===",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "node tests/terminal-electron-smoke.mjs && PATH=\"/usr/local/bin:$PATH\" pnpm exec electron-builder --mac --dir && test -s .agent-harness/evidence/workspace-terminal.md && pnpm run typecheck && pnpm run build && node .agent-harness/scripts/clean-state-check.mjs --skip-verification",
+        "verifiedAt": "2026-09-23T13:09:56.350Z",
+        "exitCode": 0,
+        "stdout": "PASS 真实 Electron 中的 PTY 生命周期与清理 — all checks passed\nPASS 打包 macOS 产物存在 — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app\nPASS 打包产物包含 node-pty prebuild — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/prebuilds/darwin-arm64\nPASS 打包后的 spawn-helper 可执行 — mode 755\nPASS 打包产物解压了 node-pty（asarUnpack） — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty\nPASS 打包应用可加载并运行 node-pty — packaged-pty-ok\nPASS 面板开关可点击 — clicked\nPASS 渲染进程到 PTY 的端到端输入输出\nPASS 取得 shell pid — 31025\nPASS 多字节文本经 PTY 往返\nPASS 剪贴板粘贴后执行 — one\\nline-two\\n\"\nline-one\nline-two\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm % ec\nho pasted-ok\npasted-ok\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm %  \nPASS 多行粘贴进入终端输入 — \"deMacBook-Pro sailor-terminal-demo-SynpWm % ec\\nho pasted-ok\\npasted-ok\\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm % ec\\nho multi-line-one\\necho multi-line-two \"\nPASS 可在终端中选中整行\nPASS 选中内容可复制到剪贴板 — \"visual-42\"\nPASS Ctrl+C 中断前台任务\nPASS 宽窗口下 PTY 尺寸与渲染行数一致 — {\"rows\":45,\"cols\":51} vs lines 45\nPASS 大量输出后视图自动滚动到底部 — \"8\\n299\\n300\\nhs@hsdeMacBook-Pro sailor-terminal-demo-SynpWm %  \"\nPASS 重载后回放历史输出\nPASS 渲染进程重载后 shell 保活 — 31025 -> 31025\nPASS 关闭面板 tab 后 xterm 卸载\nPASS 关闭面板不销毁进程 — 31025 -> 31025\nPASS 缩窄面板后终端重新布局 — surface 383 -> 279\nPASS PTY 尺寸跟随面板尺寸 — {\"rows\":45,\"cols\":51} -> {\"rows\":45,\"cols\":36} (dom lines 45)\nPASS 窄视口下没有横向溢出 — overflow 0px\nPASS 窄视口下终端仍有尺寸 — {\"width\":260,\"height\":611,\"lines\":33,\"surface\":279}\n\n25/25 checks passed\nreport: /Users/hs/Documents/learning/sailor/.agent-harness/evidence/workspace-terminal-report.json\n• electron-builder  version=26.15.3 os=23.6.0\n  • loaded configuration  file=package.json (\"build\" field)\n  • author is missed in the package.json  appPackageFile=/Users/hs/Documents/learning/sailor/package.json\n  • detected workspace root for project using packageManager field  pm=pnpm config=pnpm@11.1.2 resolved=/Users/hs/Documents/learning/sailor projectDir=/Users/hs/Documents/learning/sailor\n  • skipped dependencies rebuild  reason=npmRebuild is set to false\n  • packaging       platform=darwin arch=arm64 electron=44.4.2 appOutDir=dist/mac-arm64\n  • downloaded      label=electron progress=100%\n  • downloaded electron zip extracted successfully  output=/Users/hs/Documents/learning/sailor/dist/mac-arm64\n  • searching for node modules  pm=pnpm searchDir=/Users/hs/Documents/learning/sailor\n  • duplicate dependency references  dependencies=[\"@codemirror/language@6.12.4\",\"@codemirror/state@6.7.5\",\"@codemirror/view@6.43.12\",\"@modelcontextprotocol/sdk@1.30.0\",\"@radix-ui/react-use-controllable-state@1.2.6\",\"ai@7.0.107\",\"just-bash@2.14.5\",\"radix-ui@1.6.7\",\"react-dom@19.3.0\",\"zustand@5.0.15\",\"raw-body@3.0.2\",\"@radix-ui/react-use-layout-effect@1.1.4\",\"@ai-sdk/provider@4.0.17\",\"@ai-sdk/provider-utils@5.0.45\",\"@radix-ui/react-collapsible@1.1.20\",\"@radix-ui/react-collection@1.1.15\",\"@radix-ui/react-compose-refs@1.1.5\",\"@radix-ui/react-context@1.2.2\",\"@radix-ui/react-dialog@1.1.23\",\"@radix-ui/react-direction@1.1.4\",\"@radix-ui/react-dismissable-layer@1.1.19\",\"@radix-ui/react-focus-guards@1.1.6\",\"@radix-ui/react-focus-scope@1.1.16\",\"@radix-ui/react-label@2.1.15\",\"@radix-ui/react-menu@2.1.24\",\"@radix-ui/react-popper@1.3.7\",\"@radix-ui/react-portal@1.1.17\",\"@radix-ui/react-presence@1.1.10\",\"@radix-ui/react-primitive@2.1.10\",\"@radix-ui/react-roving-focus@1.1.19\",\"@radix-ui/react-slot@1.3.3\",\"@radix-ui/react-use-callback-ref@1.1.4\",\"@radix-ui/react-use-is-hydrated@0.1.3\",\"@radix-ui/react-use-size@1.1.4\",\"@radix-ui/react-visually-hidden@1.2.11\",\"@radix-ui/react-id@1.1.4\",\"@floating-ui/react-dom@2.1.9\",\"use-sync-external-store@1.7.0\",\"@ai-sdk/provider-utils@5.0.44\",\"@types/mdast@4.0.4\",\"remark-parse@11.0.0\",\"unified@11.0.5\",\"@assistant-ui/store@0.3.14\",\"@assistant-ui/tap@0.9.18\",\"assistant-cloud@0.2.2\",\"assistant-stream@0.3.44\",\"http-errors@2.0.1\",\"iconv-lite@0.7.3\",\"debug@4.4.3\",\"mime-types@3.0.2\",\"on-finished@\n... output truncated ...",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    }
+  ]
+}
+```

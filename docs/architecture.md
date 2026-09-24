@@ -41,6 +41,7 @@ Renderer (React 19 + assistant-ui)
 - conversion of current user/approval input to Harness turns; Pi owns native model history and compression;
 - a typed AI SDK tool registry with Zod contracts, driven by Pi through `HarnessAgent`;
 - chat-scoped workspace tools with canonical path, symlink and sensitive-file checks; writes use explicit approval, expected hashes, atomic publication, and same-path serialization;
+- a per-project interactive PTY (`node-pty`) owned by the user and exposed only through a typed attach/detach terminal IPC; the agent runtime never receives terminal access, terminal output, or a terminal tool;
 - single-file deterministic patches return before/after hashes, line counts, bounded diff references, and structured recovery actions; persisted tool history is display-only and never replays a write;
 - streaming AI SDK `UIMessageChunk` events back over IPC;
 
@@ -91,7 +92,7 @@ src/
 
 ## Current scope
 
-The current architecture includes directory-scoped persistent chats with independent background runs, OpenAI/DeepSeek/custom provider settings, remote model catalog retrieval, per-model capability metadata, encrypted model credentials, selectable models, renderer-only system/light/dark appearance preferences with accent presets, streamed text and provider-returned reasoning summaries, Pi workspace tools, a structured auditable process view, source citations, generic tool-state fallback rendering, cancellation, and a Codex-style three-column shell. All visible application copy is Chinese while protocol and model identifiers keep their official names.
+The current architecture includes directory-scoped persistent chats with independent background runs, OpenAI/DeepSeek/custom provider settings, remote model catalog retrieval, per-model capability metadata, encrypted model credentials, selectable models, renderer-only system/light/dark appearance preferences with accent presets, streamed text and provider-returned reasoning summaries, Pi workspace tools, a structured auditable process view, source citations, generic tool-state fallback rendering, cancellation, a Codex-style three-column shell, and a user-driven interactive terminal panel scoped to the active workspace. All visible application copy is Chinese while protocol and model identifiers keep their official names.
 
 The settings dialog only exposes Models and Appearance. It composes shared Dialog, Button, Input and Select controls with official surface helpers and Collapsible, using flat rows, section rules, 8px controls and 12px dialogs. Model settings have a scrollable body and a fixed save footer. Appearance changes remain immediate and renderer-only.
 
@@ -132,6 +133,20 @@ The Files panel adds project-scoped read-only IPC (`workspace-files:list` / `wor
 Workspace file references use the validated `data-workspace-context` UI data part. Drafts are isolated by chatId; an entire file or selection stores relative path, line range, text snapshot, and hash. `WorkspaceService` validates project ownership and `PiRunner` projects the snapshot into an explicitly untrusted, data-only model text block without rereading the mutable file. History renders the original data part, so later file changes do not rewrite prior conversations.
 
 Validation uses `tests/workspace-store.test.ts`, `tests/workspace-ipc.test.ts`, `tests/workspace-chat-lifecycle.test.ts` and the existing agent tests. Real Electron visual/interaction evidence is in `.agent-harness/evidence/workspace-sidebar-acceptance.md`.
+
+## Interactive terminal (user-driven)
+
+The 终端 panel is the first capability that runs a **real host process**. `TerminalService` in main owns the project's PTY sessions (one per panel tab): `create` resolves the canonical project root through the workspace store, spawns the user's login shell (`$SHELL`, falling back to `/bin/zsh`, with `-l`) through a `node-pty` adapter at that root, assigns a per-project `ordinal`, and tracks `starting` / `running` / `exited` / `failed` state. `list`/`find` expose only the requesting project's sessions; session ids are issued by main and bound to their project, so a renderer cannot address another workspace's session or name its own executable, argv, cwd or environment. Each project may hold four live sessions (an exited session keeps its tab but does not count against that limit), and the global live-PTY cap recycles the least recently used session.
+
+Sessions survive chat switches, panel tab closes, dock hiding and workspace switches: closing the panel detaches the renderer only. Only an explicit close (the session tab's ✕, which terminates that shell and drops its record), the shell exiting, the app quitting, or a live-session cap (4 per project, 8 globally) ends a process. On quit main signals the session's process group with `SIGHUP`, then `SIGKILL` after a grace period; processes that detach into their own session are explicitly outside that guarantee.
+
+Output never reaches the model and is never written to disk. Each session keeps one bounded 256 KiB ring buffer with monotonic sequence numbers; attach returns a replay snapshot plus `nextSeq`/`truncated`, live events carry the same sequence, and the renderer dedupes and orders on it. Main batches PTY data (~16 ms or 64 KiB) and bounds each subscriber's pending budget (256 KiB), dropping oldest data with an explicit truncation notice instead of growing without limit. Subscriptions are explicit `attach`/`detach` pairs routed by `subscriptionId`, released on detach, window teardown or renderer unmount.
+
+This is a user command channel with the current user's privileges; the project directory is a working directory, not a sandbox. Pi's just-bash mount and per-call approval path are unchanged, no terminal tool is registered, and the renderer keeps `sandbox: true` with no Node access. Environment is inherited from main with Electron/Node injection removed and `TERM=xterm-256color`; provider credentials are never placed in the environment or argv. Terminal output is untrusted: it is not copied to the clipboard, not linkified, and not auto-sent anywhere.
+
+Packaging: `node-pty@1.1.0` ships Node-API prebuilds, so no Electron ABI rebuild is required (`npmRebuild: false`), the package is listed under `asarUnpack` because node-pty executes `spawn-helper` from `app.asar.unpacked`, and `scripts/ensure-node-pty-helper.mjs` restores the executable bit that the published tarball omits (`pnpm-workspace.yaml` records `node-pty: false` in `allowBuilds`).
+
+Verification: `tests/terminal-service.test.ts`, `tests/terminal-ipc.test.ts`, `tests/terminal-output.test.ts` and `tests/terminal-panel.test.ts` cover lifecycle, ownership/validation, bounded output and renderer wiring against a controllable PTY adapter. `tests/terminal-electron-smoke.mjs` exercises a real PTY in Electron and the packaged macOS app; observations and limits are recorded in `.agent-harness/evidence/workspace-terminal.md`. Windows/Linux and non-arm64 packaging are not claimed.
 
 ## Tool UI and retired tools
 

@@ -20,9 +20,9 @@ export const panelDescriptors: readonly PanelDescriptor[] = [
     title: '终端',
     icon: Terminal,
     shortcut: { key: '`', ctrl: true },
-    scope: 'chat',
+    scope: 'project',
     multiplicity: 'single',
-    availability: context => (context.chatId ? { available: true } : noActiveChat('执行记录')),
+    availability: context => (context.projectId ? { available: true } : { available: false, reason: '先关联一个工作区，再使用终端。' }),
     load: () => import('@/components/panels/TerminalPanel'),
   },
   {

@@ -356,6 +356,27 @@
       "status": "done",
       "archived_at": "2026-09-23T11:20:36.515Z",
       "archive_path": ".agent-harness/archive/feat-chat-particle-grid-transition"
+    },
+    {
+      "id": "feat-workspace-terminal",
+      "title": "右侧工作区交互终端 MVP",
+      "status": "done",
+      "archived_at": "2026-09-24T02:44:34.371Z",
+      "archive_path": ".agent-harness/archive/feat-workspace-terminal"
+    },
+    {
+      "id": "feat-terminal-session-tabs",
+      "title": "终端多会话 tab",
+      "status": "done",
+      "archived_at": "2026-09-24T02:44:34.469Z",
+      "archive_path": ".agent-harness/archive/feat-terminal-session-tabs"
+    },
+    {
+      "id": "fix-terminal-autostart",
+      "title": "打开终端面板即自动启动首个终端",
+      "status": "done",
+      "archived_at": "2026-09-24T02:44:34.669Z",
+      "archive_path": ".agent-harness/archive/fix-terminal-autostart"
     }
   ]
 }

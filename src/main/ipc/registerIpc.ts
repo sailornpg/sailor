@@ -8,6 +8,9 @@ import { ProviderModelCatalog } from '../settings/ProviderModelCatalog.js'
 import { safeStorageCipher } from '../settings/SafeStorageCipher.js'
 import { SettingsService } from '../settings/SettingsService.js'
 import { WorkspaceFilesService } from '../workspaces/WorkspaceFilesService.js'
+import { TerminalService } from '../terminal/TerminalService.js'
+import { TerminalIpcHandler, type TerminalSender } from '../terminal/TerminalIpcHandler.js'
+import { createNodePtyAdapter } from '../terminal/NodePtyAdapter.js'
 import {
   IPC,
   type AgentRunRequest,
@@ -99,6 +102,23 @@ export function registerIpc(window: BrowserWindow): () => void {
   })
   const modelCatalog = new ProviderModelCatalog(settings)
 
+  const terminals = new TerminalService({
+    resolveProjectRoot: projectId => workspaces.resolveProjectRoot(projectId),
+    adapter: createNodePtyAdapter(),
+  })
+  const terminalSender = (contents: Electron.WebContents): TerminalSender => ({
+    id: contents.id,
+    isDestroyed: () => contents.isDestroyed(),
+    send: payload => {
+      if (!contents.isDestroyed()) contents.send(IPC.terminalEvent, payload)
+    },
+  })
+  const terminalIpc = new TerminalIpcHandler({
+    service: terminals,
+    // Only the window created here may drive a host shell.
+    isTrustedSender: sender => !window.isDestroyed() && sender.id === window.webContents.id,
+  })
+
   ipcMain.handle(IPC.appVersion, () => app.getVersion())
   ipcMain.handle(IPC.agentStart, async (_event, request: AgentRunRequest) => {
     const valid = z.object({ runId: z.string().min(1), chatId: z.string().min(1), messages: z.array(z.unknown()), reasoning: z.enum(['provider-default', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh']) }).parse(request) as AgentRunRequest
@@ -121,9 +141,18 @@ export function registerIpc(window: BrowserWindow): () => void {
     settings.setActiveModel(modelSelectionSchema.parse(selection)))
   ipcMain.handle(IPC.settingsFetchModels, (_event, input: FetchProviderModelsInput) =>
     modelCatalog.fetchModels(fetchProviderModelsSchema.parse(input)))
+  ipcMain.handle(IPC.terminalCreate, (event, input: unknown) => terminalIpc.create(terminalSender(event.sender), input))
+  ipcMain.handle(IPC.terminalList, (event, input: unknown) => terminalIpc.list(terminalSender(event.sender), input))
+  ipcMain.handle(IPC.terminalAttach, (event, input: unknown) => terminalIpc.attach(terminalSender(event.sender), input))
+  ipcMain.handle(IPC.terminalDetach, (event, subscriptionId: unknown) => terminalIpc.detach(terminalSender(event.sender), subscriptionId))
+  ipcMain.handle(IPC.terminalWrite, (event, input: unknown) => terminalIpc.write(terminalSender(event.sender), input))
+  ipcMain.handle(IPC.terminalResize, (event, input: unknown) => terminalIpc.resize(terminalSender(event.sender), input))
+  ipcMain.handle(IPC.terminalTerminate, (event, input: unknown) => terminalIpc.terminate(terminalSender(event.sender), input))
 
   return () => {
     agent.abortAll()
+    terminalIpc.dispose()
+    void terminals.disposeAll()
     for (const channel of [IPC.workspaceManageChat, IPC.workspaceRetrySave, IPC.workspaceSnapshot, IPC.workspacePick, IPC.workspaceCreateChat, IPC.workspaceGetChat, IPC.workspacePreferences, IPC.workspaceFilesList, IPC.workspaceFilesRead]) ipcMain.removeHandler(channel)
     ipcMain.removeHandler(IPC.appVersion)
     ipcMain.removeHandler(IPC.agentStart)
@@ -135,5 +164,12 @@ export function registerIpc(window: BrowserWindow): () => void {
     ipcMain.removeHandler(IPC.settingsDeleteProvider)
     ipcMain.removeHandler(IPC.settingsSetActiveModel)
     ipcMain.removeHandler(IPC.settingsFetchModels)
+    ipcMain.removeHandler(IPC.terminalCreate)
+    ipcMain.removeHandler(IPC.terminalList)
+    ipcMain.removeHandler(IPC.terminalAttach)
+    ipcMain.removeHandler(IPC.terminalDetach)
+    ipcMain.removeHandler(IPC.terminalWrite)
+    ipcMain.removeHandler(IPC.terminalResize)
+    ipcMain.removeHandler(IPC.terminalTerminate)
   }
 }

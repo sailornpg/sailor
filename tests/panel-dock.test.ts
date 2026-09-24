@@ -192,16 +192,11 @@ test('占位面板显示真实不可用原因，而不是伪造内容', async ()
   const vite = await createServer({ logLevel: 'silent', server: { middlewareMode: true }, resolve: { alias } })
   try {
     const { default: ReviewPanel } = await vite.ssrLoadModule('/src/renderer/src/components/panels/ReviewPanel.tsx')
-    const { default: TerminalPanel } = await vite.ssrLoadModule('/src/renderer/src/components/panels/TerminalPanel.tsx')
     const props = { instanceId: 'review', panelId: 'review', scopeId: '', context: { chatId: 'chat-1', projectId: null }, data: {} }
 
     const review = renderToStaticMarkup(React.createElement(ReviewPanel, props))
     assert.match(review, /Git diff/)
     assert.doesNotMatch(review, /\+\d+ -\d+/, '未接入的审查面板不能显示推测的增删行数')
-
-    const terminal = renderToStaticMarkup(React.createElement(TerminalPanel, { ...props, panelId: 'terminal' }))
-    assert.match(terminal, /PTY/)
-    assert.match(terminal, /任意命令通道/)
   } finally {
     await vite.close()
   }

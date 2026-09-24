@@ -11,6 +11,15 @@ import {
   type WorkspaceFilesListInput,
   type WorkspaceFilesReadInput,
 } from '@shared/contracts.js'
+import type {
+  TerminalAttachInput,
+  TerminalIpcEvent,
+  TerminalListInput,
+  TerminalOpenInput,
+  TerminalResizeInput,
+  TerminalSessionInput,
+  TerminalWriteInput,
+} from '@shared/terminal.js'
 
 const api: SailorApi = {
   app: {
@@ -59,6 +68,20 @@ const api: SailorApi = {
       ipcRenderer.invoke(IPC.settingsSetActiveModel, selection),
     fetchModels: (input: FetchProviderModelsInput) =>
       ipcRenderer.invoke(IPC.settingsFetchModels, input),
+  },
+  terminal: {
+    create: (input: TerminalOpenInput) => ipcRenderer.invoke(IPC.terminalCreate, input),
+    list: (input: TerminalListInput) => ipcRenderer.invoke(IPC.terminalList, input),
+    attach: (input: TerminalAttachInput) => ipcRenderer.invoke(IPC.terminalAttach, input),
+    detach: (subscriptionId: string) => ipcRenderer.invoke(IPC.terminalDetach, subscriptionId),
+    write: (input: TerminalWriteInput) => ipcRenderer.invoke(IPC.terminalWrite, input),
+    resize: (input: TerminalResizeInput) => ipcRenderer.invoke(IPC.terminalResize, input),
+    terminate: (input: TerminalSessionInput) => ipcRenderer.invoke(IPC.terminalTerminate, input),
+    subscribe: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalIpcEvent) => listener(payload)
+      ipcRenderer.on(IPC.terminalEvent, handler)
+      return () => ipcRenderer.removeListener(IPC.terminalEvent, handler)
+    },
   },
 }
 

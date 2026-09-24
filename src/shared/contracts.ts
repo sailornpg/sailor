@@ -1,4 +1,5 @@
 import type { WorkspaceChat, WorkspacePreferences, WorkspaceSnapshot, ChatManagement } from './workspaces.js'
+import type { TerminalApi } from './terminal.js'
 import type { UIMessage, UIMessageChunk } from 'ai'
 
 export type ChatId = string
@@ -191,6 +192,8 @@ export interface SailorApi {
     setActiveModel(selection: ModelSelection): Promise<SettingsSnapshot>
     fetchModels(input: FetchProviderModelsInput): Promise<string[]>
   }
+  /** User-driven host terminal; the agent runtime never receives this surface. */
+  terminal: TerminalApi
 }
 
 export const IPC = {
@@ -215,4 +218,12 @@ export const IPC = {
   settingsDeleteProvider: 'settings:delete-provider',
   settingsSetActiveModel: 'settings:set-active-model',
   settingsFetchModels: 'settings:fetch-models',
+  terminalCreate: 'terminal:create',
+  terminalList: 'terminal:list',
+  terminalAttach: 'terminal:attach',
+  terminalDetach: 'terminal:detach',
+  terminalWrite: 'terminal:write',
+  terminalResize: 'terminal:resize',
+  terminalTerminate: 'terminal:terminate',
+  terminalEvent: 'terminal:event',
 } as const

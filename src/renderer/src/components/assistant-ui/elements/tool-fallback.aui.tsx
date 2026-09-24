@@ -91,7 +91,11 @@ function ToolFallbackRoot({
 
 type ToolStatus = ToolCallMessagePartStatus["type"];
 
-const statusIconMap: Record<ToolStatus, React.ElementType> = {
+// `React.ElementType` without explicit props collapses to `never` under the installed
+// React 19 / TypeScript 7 combination, so the icon contract is spelled out here.
+type StatusIconProps = { className?: string; "data-slot"?: string };
+
+const statusIconMap: Record<ToolStatus, React.ComponentType<StatusIconProps>> = {
   running: LoaderIcon,
   complete: CheckIcon,
   incomplete: XCircleIcon,

@@ -34,7 +34,7 @@ test('面板注册表描述符完整、无冲突，懒加载模块都能解析',
 
     const contextual = { chatId: 'chat-1', projectId: 'project-1' }
     assert.equal(registry.find('review', contextual)?.scopeId, 'chat-1')
-    assert.equal(registry.find('terminal', contextual)?.scopeId, 'chat-1')
+    assert.equal(registry.find('terminal', contextual)?.scopeId, 'project-1')
     assert.equal(registry.find('files', contextual)?.scopeId, 'project-1')
     assert.equal(registry.find('browser', contextual)?.scopeId, '')
     assert.equal(registry.find('missing', contextual), undefined)

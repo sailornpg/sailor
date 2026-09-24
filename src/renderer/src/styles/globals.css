@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-shimmer";
+@import "@xterm/xterm/css/xterm.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -302,8 +303,8 @@ kbd { color: var(--text-faint); font-size: 10px; }
 .panel-tab-close { display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 5px; background: transparent; color: var(--text-faint); cursor: pointer; }
 .panel-tab-close:hover { background: var(--surface-sidebar); color: var(--foreground); }
 .panel-dock button:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
-.panel-host { min-height: 0; background: var(--surface-workspace); }
-.panel-host-view { height: 100%; min-height: 0; }
+.panel-host { min-height: 0; min-width: 0; background: var(--surface-workspace); }
+.panel-host-view { height: 100%; min-height: 0; min-width: 0; }
 .panel-host-view:not([data-active="true"]) { display: none; }
 .panel-loading { display: flex; flex-direction: column; gap: 8px; padding: 16px; }
 .panel-placeholder { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 32px 24px; color: var(--text-tertiary); text-align: center; }
@@ -649,3 +650,40 @@ kbd { color: var(--text-faint); font-size: 10px; }
 @media (prefers-reduced-motion: reduce) {
   .sailor-chat-stage[data-entry-phase="transition"] [data-slot="aui_message-group"] { animation: none; }
 }
+
+/* Host terminal: the surface follows the app theme, ANSI colors stay xterm defaults. */
+.panel-terminal { display: flex; height: 100%; min-height: 0; min-width: 0; flex-direction: column; container-type: inline-size; }
+.panel-terminal-tabs { display: flex; min-width: 0; align-items: center; gap: 4px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+/* The list scrolls, the new-terminal button stays reachable at any width. */
+.panel-terminal-tabs-scroll { display: flex; flex: 1; min-width: 0; align-items: center; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.panel-terminal-tabs-scroll::-webkit-scrollbar { display: none; }
+@container (max-width: 400px) { .panel-terminal-tab-label { max-width: 64px; } }
+.panel-terminal-tab { display: inline-flex; flex: 0 0 auto; align-items: center; border-radius: 6px; }
+.panel-terminal-tab[data-active="true"] { background: var(--surface-active); }
+.panel-terminal-tab:hover { background: var(--surface-hover); }
+.panel-terminal-tab[data-active="true"]:hover { background: var(--surface-active); }
+.panel-terminal-tab-trigger { display: inline-flex; min-width: 0; align-items: center; gap: 6px; padding: 4px 2px 4px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; }
+.panel-terminal-tab[data-active="true"] .panel-terminal-tab-trigger { color: var(--foreground); }
+.panel-terminal-tab-label { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel-terminal-tab-dot { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 9999px; background: var(--text-faint); }
+.panel-terminal-tab-dot[data-status="running"] { background: var(--success); }
+.panel-terminal-tab-dot[data-status="starting"] { background: var(--warning); }
+.panel-terminal-tab-dot[data-status="failed"] { background: var(--destructive); }
+.panel-terminal-tab-close { display: grid; place-items: center; width: 18px; height: 18px; margin-right: 2px; border: 0; border-radius: 5px; background: transparent; color: var(--text-faint); cursor: pointer; }
+.panel-terminal-tab-close:hover { background: var(--surface-sidebar); color: var(--foreground); }
+.panel-terminal-tab-add { display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 auto; margin-left: 2px; border: 0; border-radius: 6px; background: transparent; color: var(--text-tertiary); cursor: pointer; }
+.panel-terminal-tab-add:hover:not(:disabled) { background: var(--surface-hover); color: var(--foreground); }
+.panel-terminal-tab-add:disabled { color: var(--text-faint); cursor: not-allowed; }
+.panel-terminal button:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.panel-terminal-banner { margin: 0; padding: 6px 12px; color: var(--destructive); font-size: 12px; }
+.panel-terminal-empty { display: flex; flex: 1; min-height: 0; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; color: var(--text-tertiary); text-align: center; }
+.panel-terminal-empty-title { margin: 0; color: var(--foreground); font-size: 13px; font-weight: 550; }
+.panel-terminal-empty-hint { max-width: 34ch; margin: 0; font-size: 12px; line-height: 1.7; }
+.panel-terminal-surface { position: relative; flex: 1; min-height: 0; min-width: 0; padding: 6px 8px; overflow: hidden; }
+/* xterm renders a fixed cell grid: without min-width:0 the grid's min-content would
+   stretch the dock column and fit() could never shrink the terminal. */
+.panel-terminal-surface[data-active="false"] { display: none; }
+.panel-terminal-surface .xterm { height: 100%; }
+.panel-terminal-surface .xterm-viewport { background: transparent !important; }
+.panel-terminal-status { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 12px; background: color-mix(in srgb, var(--background) 88%, transparent); color: var(--text-secondary); font-size: 12px; text-align: center; }
+.panel-terminal-notice { position: absolute; top: 8px; left: 12px; right: 12px; z-index: 1; margin: 0; padding: 4px 8px; border-radius: 6px; background: var(--surface-elevated); color: var(--text-tertiary); font-size: 11px; }
