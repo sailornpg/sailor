@@ -59,6 +59,14 @@ pnpm build      # 生产构建
 pnpm preview    # 预览生产构建
 ```
 
+## 提交前格式化
+
+`pnpm install` 会通过 Husky 安装 `pre-commit` hook。提交时，lint-staged 仅处理已暂存文件：Prettier 先格式化受支持文件，然后 ESLint 校验 JS/TS，Stylelint 校验 CSS/SCSS；校验失败会阻止提交。格式化结果会重新暂存，未暂存文件不会被纳入提交。`pnpm-lock.yaml` 不交给 Prettier 处理。hook 不运行类型检查或构建，这两项仍由项目验证流程执行。
+
+本地可运行 `pnpm exec prettier --write <文件>` 格式化指定文件。首次接入没有批量重排现有源码；以后某个文件进入提交时才会按 `.prettierrc.json` 的规则格式化。
+
+全仓库校验运行 `pnpm run lint`，也可分别运行 `pnpm run lint:js` 和 `pnpm run lint:css`。TypeScript 7 目前不受 `typescript-eslint` 支持，因此 ESLint 使用 Babel 解析 TS/TSX 并检查基础规则；类型语义仍由 `pnpm run typecheck` 校验。Stylelint 识别 Tailwind 4 的自定义 at-rules；现有样式表中的重复选择器及特异性顺序暂不设为提交阻断项。
+
 ### AI SDK DevTools（本地调试）
 
 开发时可用 AI SDK DevTools 查看 HarnessAgent 的模型调用、工具调用、耗时和 token 用量。需要分别启动查看器和 Sailor：

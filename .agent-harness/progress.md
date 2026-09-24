@@ -1,47 +1,30 @@
-# Session Progress Log
+# Agent Progress
 
-## Current State
+## Current Active Feature
 
-**Last Updated:** 2026-09-24T02:44:34.669Z
-**Session ID:** [optional]
-**Active Feature:** [none]
+**feat-precommit-linting** — Pre-commit ESLint and Stylelint
 
-## Status
+Status: `in-progress`
 
-### 已完成
+## Checklist
 
-- [ ] No active feature selected
+| #   | Action                                                    | Status |
+| --- | --------------------------------------------------------- | ------ |
+| 1   | Configure ESLint and Stylelint; make repository lint pass | done   |
+| 2   | Add staged lint hook, docs, and blocking smoke test       | done   |
 
-### 进行中
+## Execution Log
 
-- [ ] Waiting for the next unarchived feature
-  - Details: Select the next unarchived feature from `.agent-harness/feature_list.json`
-  - Blockers: none
+- Baseline `./.agent-harness/init.sh`: passed (typecheck and build).
+- Existing Husky/Prettier changes remain uncommitted and in scope for this extension.
+- Checklist #1: ESLint 9 with Babel syntax parsing and Stylelint 17 configured; full `pnpm run lint` passed. `typescript-eslint` was rejected by its TS 7 guard, so TypeScript type checking remains with `typecheck`.
+- Checklist #2: lint-staged runs Prettier then ESLint/Stylelint. Smoke test confirmed both lint errors block the hook, and an unrelated unstaged file stays untouched. Verifier passed hook, typecheck, and build.
 
-### 下一步
+## 验证
 
-1. Select the next unarchived feature from `.agent-harness/feature_list.json`
-2. Update this file when the next active feature starts
+- `verify-feature.mjs --item 1`: full lint passed.
+- `verify-feature.mjs --item 2`: hook, typecheck, and build passed.
 
-## Blockers / Risks
+## Feature Complete
 
-- [ ] None currently
-
-## Decisions Made
-
-- **Active feature archived**: Reset the root progress panel after archiving the current feature
-  - Context: Historical detail now lives under `.agent-harness/archive/index.json`
-  - Alternatives considered: Keep all historical detail in the root progress file
-
-## Files Modified This Session
-
-- `.agent-harness/progress.md` - reset after archiving the active feature
-- `.agent-harness/archive/index.json` - archive index updated
-
-## Evidence of Completion
-
-- [ ] Archive command executed successfully
-
-## Notes for Next Session
-
-Start the next active feature and replace this placeholder state with real progress notes.
+`feat-precommit-linting` is `done` according to the external verifier. No commit was created.
