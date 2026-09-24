@@ -52,6 +52,7 @@ const api: SailorApi = {
     snapshot: () => ipcRenderer.invoke(IPC.workspaceSnapshot),
     pickProject: () => ipcRenderer.invoke(IPC.workspacePick),
     createChat: (id) => ipcRenderer.invoke(IPC.workspaceCreateChat, id),
+    createSideChat: (id) => ipcRenderer.invoke(IPC.workspaceCreateSideChat, id),
     getChat: (id) => ipcRenderer.invoke(IPC.workspaceGetChat, id),
     setPreferences: (input) => ipcRenderer.invoke(IPC.workspacePreferences, input),
     files: {
@@ -78,7 +79,8 @@ const api: SailorApi = {
     resize: (input: TerminalResizeInput) => ipcRenderer.invoke(IPC.terminalResize, input),
     terminate: (input: TerminalSessionInput) => ipcRenderer.invoke(IPC.terminalTerminate, input),
     subscribe: (listener) => {
-      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalIpcEvent) => listener(payload)
+      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalIpcEvent) =>
+        listener(payload)
       ipcRenderer.on(IPC.terminalEvent, handler)
       return () => ipcRenderer.removeListener(IPC.terminalEvent, handler)
     },

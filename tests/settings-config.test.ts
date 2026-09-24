@@ -10,7 +10,9 @@ const cipher: CredentialCipher = {
     return Buffer.from(`encrypted:${value}`).toString('base64')
   },
   decrypt(value) {
-    return Buffer.from(value, 'base64').toString('utf8').replace(/^encrypted:/, '')
+    return Buffer.from(value, 'base64')
+      .toString('utf8')
+      .replace(/^encrypted:/, '')
   },
 }
 
@@ -29,19 +31,81 @@ const model = {
   vision: true,
 }
 
-test('starts with editable OpenAI and DeepSeek provider presets', async () => {
+test('starts with the DeepSeek provider preset', async () => {
   const { service } = await createService()
   const snapshot = await service.getSnapshot()
 
   assert.deepEqual(
-    snapshot.providers.map(({ id, hasApiKey, kind, protocol }) => ({ id, hasApiKey, kind, protocol })),
-    [
-      { id: 'openai', hasApiKey: false, kind: 'builtin', protocol: 'openai-completions' },
-      { id: 'deepseek', hasApiKey: false, kind: 'builtin', protocol: 'openai-completions' },
-    ],
+    snapshot.providers.map(({ id, hasApiKey, kind, protocol }) => ({
+      id,
+      hasApiKey,
+      kind,
+      protocol,
+    })),
+    [{ id: 'deepseek', hasApiKey: false, kind: 'builtin', protocol: 'openai-completions' }],
   )
   assert.equal(snapshot.activeModel, null)
-  assert.deepEqual(snapshot.providers.flatMap(({ models }) => models), [])
+  assert.deepEqual(
+    snapshot.providers.flatMap(({ models }) => models),
+    [],
+  )
+})
+
+test('removes the retired unconfigured OpenAI preset', async () => {
+  const { filePath, service } = await createService()
+  await writeFile(
+    filePath,
+    JSON.stringify({
+      version: 3,
+      providers: [
+        {
+          id: 'openai',
+          name: 'OpenAI',
+          baseUrl: 'https://api.openai.com/v1',
+          protocol: 'openai-responses',
+          models: [model],
+          kind: 'builtin',
+        },
+      ],
+      activeModel: { providerId: 'openai', modelId: model.id },
+    }),
+  )
+
+  const snapshot = await service.getSnapshot()
+  assert.deepEqual(
+    snapshot.providers.map(({ id }) => id),
+    [],
+  )
+  assert.equal(snapshot.activeModel, null)
+})
+
+test('preserves a configured OpenAI provider during migration', async () => {
+  const { filePath, service } = await createService()
+  await writeFile(
+    filePath,
+    JSON.stringify({
+      version: 3,
+      providers: [
+        {
+          id: 'openai',
+          name: 'OpenAI',
+          baseUrl: 'https://api.openai.com/v1',
+          protocol: 'openai-responses',
+          models: [model],
+          kind: 'builtin',
+          encryptedApiKey: cipher.encrypt('secret'),
+        },
+      ],
+      activeModel: null,
+    }),
+  )
+
+  const snapshot = await service.getSnapshot()
+  assert.deepEqual(
+    snapshot.providers.map(({ id }) => id),
+    ['openai'],
+  )
+  assert.equal(snapshot.providers[0]?.hasApiKey, true)
 })
 
 test('persists only encrypted credentials and never returns a saved API key', async () => {
@@ -102,30 +166,37 @@ test('blank credentials preserve the stored key and active model resolution decr
 
 test('migrates version 1 string models without losing credentials or active selection', async () => {
   const { filePath, service } = await createService()
-  await writeFile(filePath, JSON.stringify({
-    version: 1,
-    providers: [{
-      id: 'legacy',
-      name: 'Legacy',
-      baseUrl: 'https://legacy.example/v1',
-      protocol: 'openai-completions',
-      models: ['legacy-code'],
-      kind: 'custom',
-      encryptedApiKey: cipher.encrypt('legacy-secret'),
-    }],
-    activeModel: { providerId: 'legacy', modelId: 'legacy-code' },
-  }))
+  await writeFile(
+    filePath,
+    JSON.stringify({
+      version: 1,
+      providers: [
+        {
+          id: 'legacy',
+          name: 'Legacy',
+          baseUrl: 'https://legacy.example/v1',
+          protocol: 'openai-completions',
+          models: ['legacy-code'],
+          kind: 'custom',
+          encryptedApiKey: cipher.encrypt('legacy-secret'),
+        },
+      ],
+      activeModel: { providerId: 'legacy', modelId: 'legacy-code' },
+    }),
+  )
 
   const snapshot = await service.getSnapshot()
 
-  assert.deepEqual(snapshot.providers[0]?.models, [{
-    id: 'legacy-code',
-    name: 'legacy-code',
-    contextWindow: null,
-    maxOutputTokens: null,
-    reasoningLevels: [],
-    vision: false,
-  }])
+  assert.deepEqual(snapshot.providers[0]?.models, [
+    {
+      id: 'legacy-code',
+      name: 'legacy-code',
+      contextWindow: null,
+      maxOutputTokens: null,
+      reasoningLevels: [],
+      vision: false,
+    },
+  ])
   assert.deepEqual(snapshot.activeModel, { providerId: 'legacy', modelId: 'legacy-code' })
   assert.equal(JSON.parse(await readFile(filePath, 'utf8')).version, 3)
   assert.equal((await service.resolveActiveModel())?.apiKey, 'legacy-secret')

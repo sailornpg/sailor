@@ -1,0 +1,89 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-24T03:32:00.371Z
+**Feature ID:** feat-precommit-formatting
+**Feature Name:** Pre-commit formatting
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** feat-precommit-linting
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+Use Husky and lint-staged to format staged source and documentation files with Prettier before Git commits.
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-24T03:06:02.936Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "checklist": [
+    {
+      "action": "Install and configure Husky, lint-staged, and Prettier so pre-commit formats only supported staged files and restages changes.",
+      "coverage": "static",
+      "verify": ["pnpm run typecheck", "pnpm run build"],
+      "tdd": false,
+      "coverage_reason": "Package scripts and Git hook wiring are static configuration; a live hook smoke test validates the behavior.",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-24T03:04:43.540Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-24T03:04:56.152Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 37 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           131.00 kB\n✓ built in 204ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.37 kB\n✓ built in 10ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3358 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BUofxZv4.css                   196.08 kB\n../../out/renderer/assets/SideChatPanel-DNIV74Ux.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-BrKLyrY7.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cbd8Bv4Y.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkVU7A09.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/ParticleSailboatScene-B5_Oj4rE.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Dqi3e_YE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BRU6jlmn.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-iswI00kq.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DFhW3LOH.js             4,725.90 kB\n../../out/renderer/assets/index-Cf0MzEKD.js                  6,759.12 kB\n✓ built in 10.77s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        }
+      ],
+      "evidence": {
+        "command": "pnpm run typecheck && pnpm run build",
+        "verifiedAt": "2026-09-24T03:04:56.152Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 37 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           131.00 kB\n✓ built in 204ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.37 kB\n✓ built in 10ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3358 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BUofxZv4.css                   196.08 kB\n../../out/renderer/assets/SideChatPanel-DNIV74Ux.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-BrKLyrY7.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cbd8Bv4Y.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkVU7A09.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/ParticleSailboatScene-B5_Oj4rE.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Dqi3e_YE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BRU6jlmn.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-iswI00kq.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DFhW3LOH.js             4,725.90 kB\n../../out/renderer/assets/index-Cf0MzEKD.js                  6,759.12 kB\n✓ built in 10.77s",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    },
+    {
+      "action": "Document the formatting workflow and verify a real pre-commit hook run without changing unrelated staged files.",
+      "coverage": "static",
+      "verify": "node .agent-harness/scripts/check-precommit-formatting.mjs",
+      "tdd": false,
+      "coverage_reason": "The check exercises Git index and hook integration using a temporary index and fixture files.",
+      "status": "done",
+      "verifyEvidence": {
+        "command": "node .agent-harness/scripts/check-precommit-formatting.mjs",
+        "verifiedAt": "2026-09-24T03:06:02.935Z",
+        "exitCode": 0,
+        "stdout": "Staged file formatted and restaged; unstaged file untouched.",
+        "stderr": ""
+      },
+      "evidence": {
+        "command": "node .agent-harness/scripts/check-precommit-formatting.mjs",
+        "verifiedAt": "2026-09-24T03:06:02.935Z",
+        "exitCode": 0,
+        "stdout": "Staged file formatted and restaged; unstaged file untouched.",
+        "stderr": ""
+      }
+    }
+  ]
+}
+```

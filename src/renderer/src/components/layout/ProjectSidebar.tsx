@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 import {
   ChevronDown,
   Folder,
@@ -8,41 +8,33 @@ import {
   Plus,
   Settings,
   SquarePen,
-} from "lucide-react";
-import { WorkspaceThreadList } from "@/components/chat/sidebar/WorkspaceThreadList";
-import type { ChatManagement, WorkspaceSnapshot } from "@shared/workspaces";
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { SIDEBAR_TOGGLE_SHORTCUT } from "@/lib/layout/useUiLayout";
-import { formatShortcut, type PanelPlatform } from "@/lib/panels/shortcuts";
-import { SailboatLogo } from "@/components/home/SailboatLogo";
+} from 'lucide-react'
+import { WorkspaceThreadList } from '@/components/chat/sidebar/WorkspaceThreadList'
+import type { ChatManagement, WorkspaceSnapshot } from '@shared/workspaces'
+import { Button } from '@/components/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { SIDEBAR_TOGGLE_SHORTCUT } from '@/lib/layout/useUiLayout'
+import { formatShortcut, type PanelPlatform } from '@/lib/panels/shortcuts'
+import { SailboatLogo } from '@/components/home/SailboatLogo'
 
 interface ProjectSidebarProps {
   /** The pane separator, rendered inside the sidebar so it anchors to this column. */
-  resizer?: ReactNode;
-  snapshot: WorkspaceSnapshot;
-  activeId: string | null;
-  loading: boolean;
-  error: string | null;
-  collapsed: boolean;
-  platform: PanelPlatform;
-  onOpenSettings: () => void;
-  onAddProject: () => void;
-  onNewChat: (projectId?: string) => void;
-  onSelect: (id: string) => void;
-  onCollapse: (id: string, open: boolean) => void;
-  onRetry: () => void;
-  onManage: (id: string, input: ChatManagement) => Promise<void>;
-  onToggleCollapsed: () => void;
+  resizer?: ReactNode
+  snapshot: WorkspaceSnapshot
+  activeId: string | null
+  loading: boolean
+  error: string | null
+  collapsed: boolean
+  platform: PanelPlatform
+  onOpenSettings: () => void
+  onAddProject: () => void
+  onNewChat: (projectId?: string) => void
+  onSelect: (id: string) => void
+  onCollapse: (id: string, open: boolean) => void
+  onRetry: () => void
+  onManage: (id: string, input: ChatManagement) => Promise<void>
+  onToggleCollapsed: () => void
 }
 
 /** Collapsed rail keeps every top-level entry reachable as one icon row. */
@@ -54,19 +46,15 @@ function SidebarRail({
   onOpenSettings,
   onToggleCollapsed,
 }: {
-  resizer?: ReactNode;
-  platform: PanelPlatform;
-  onAddProject: () => void;
-  onNewChat: (projectId?: string) => void;
-  onOpenSettings: () => void;
-  onToggleCollapsed: () => void;
+  resizer?: ReactNode
+  platform: PanelPlatform
+  onAddProject: () => void
+  onNewChat: (projectId?: string) => void
+  onOpenSettings: () => void
+  onToggleCollapsed: () => void
 }) {
   return (
-    <aside
-      aria-label="Sailor 导航"
-      className="sidebar sidebar-rail"
-      data-collapsed="true"
-    >
+    <aside aria-label="Sailor 导航" className="sidebar sidebar-rail" data-collapsed="true">
       {resizer}
       <div className="window-drag h-12" />
       <div className="sidebar-rail-group">
@@ -137,7 +125,7 @@ function SidebarRail({
         </Tooltip>
       </div>
     </aside>
-  );
+  )
 }
 
 export function ProjectSidebar({
@@ -167,14 +155,17 @@ export function ProjectSidebar({
         platform={platform}
         resizer={resizer}
       />
-    );
+    )
   }
   return (
     <aside className="sidebar" data-collapsed="false">
       {resizer}
       <div className="window-drag h-12" />
       <div className="sidebar-header workspace-brand">
-        <div className="workspace-brand-name"><SailboatLogo size={30} /><strong>Sailor</strong></div>
+        <div className="workspace-brand-name">
+          <SailboatLogo size={30} />
+          <strong>Sailor</strong>
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -194,11 +185,7 @@ export function ProjectSidebar({
           </TooltipContent>
         </Tooltip>
       </div>
-      <Button
-        className="new-chat-button"
-        onClick={() => onNewChat()}
-        variant="ghost"
-      >
+      <Button className="new-chat-button" onClick={() => onNewChat()} variant="ghost">
         <SquarePen size={16} />
         新建会话
       </Button>
@@ -206,12 +193,7 @@ export function ProjectSidebar({
         <span>工作区</span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              aria-label="添加工作区"
-              size="icon"
-              variant="ghost"
-              onClick={onAddProject}
-            >
+            <Button aria-label="添加工作区" size="icon" variant="ghost" onClick={onAddProject}>
               <Plus size={16} />
             </Button>
           </TooltipTrigger>
@@ -236,10 +218,10 @@ export function ProjectSidebar({
           <p className="sidebar-empty">暂无工作区，点击 + 添加</p>
         )}
         {snapshot.projects.map((project) => {
-          const open = !snapshot.collapsedProjectIds.includes(project.id);
+          const open = !snapshot.collapsedProjectIds.includes(project.id)
           const chats = snapshot.chats.filter(
-            (chat) => chat.projectId === project.id,
-          );
+            (chat) => chat.projectId === project.id && !chat.parentChatId,
+          )
           return (
             <Collapsible
               key={project.id}
@@ -247,14 +229,8 @@ export function ProjectSidebar({
               onOpenChange={(value) => onCollapse(project.id, value)}
             >
               <div className="workspace-project-row">
-                <CollapsibleTrigger
-                  className="workspace-project-trigger"
-                  title={project.rootPath}
-                >
-                  <ChevronDown
-                    size={13}
-                    className={open ? "" : "collapsed-chevron"}
-                  />
+                <CollapsibleTrigger className="workspace-project-trigger" title={project.rootPath}>
+                  <ChevronDown size={13} className={open ? '' : 'collapsed-chevron'} />
                   {open ? <FolderOpen size={17} /> : <Folder size={17} />}
                   <span>{project.name}</span>
                 </CollapsibleTrigger>
@@ -286,19 +262,15 @@ export function ProjectSidebar({
                 />
               </CollapsibleContent>
             </Collapsible>
-          );
+          )
         })}
       </nav>
       <div className="sidebar-footer">
-        <button
-          className="sidebar-action"
-          onClick={onOpenSettings}
-          type="button"
-        >
+        <button className="sidebar-action" onClick={onOpenSettings} type="button">
           <Settings size={16} />
           设置
         </button>
       </div>
     </aside>
-  );
+  )
 }

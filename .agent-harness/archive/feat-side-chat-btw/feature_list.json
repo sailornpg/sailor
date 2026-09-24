@@ -1,0 +1,390 @@
+{
+  "features": [
+    {
+      "id": "feat-side-chat-btw",
+      "name": "主会话上下文侧聊",
+      "description": "提供类似 /btw 的只读侧聊：在主会话已完成回合创建冻结的、有大小上限的文本上下文快照；侧聊独立多轮运行和持久化，其消息不进入主会话，工作区写入工具不可用。首版不承诺复制 Pi 原生 journal、历史图片或工具结果。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "编写侧聊规格，明确分叉点、文本快照上限与超限反馈、独立历史、只读工具、主会话运行中处理、关闭与删除行为，并同步架构文档。",
+          "coverage": "static",
+          "verify": [
+            "test -s docs/side-chat.md",
+            "rg -n '侧聊|/btw' docs/architecture.md docs/side-chat.md"
+          ],
+          "tdd": false,
+          "coverage_reason": "规格和架构说明是设计文档，无法用实现前的行为断言验证内容质量；以文件检查和人工评审验收。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "test -s docs/side-chat.md",
+              "verifiedAt": "2026-09-24T03:44:39.757Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "rg -n '侧聊|/btw' docs/architecture.md docs/side-chat.md",
+              "verifiedAt": "2026-09-24T03:44:39.774Z",
+              "exitCode": 0,
+              "stdout": "docs/architecture.md:213:## Side chat (`/btw`)\ndocs/side-chat.md:1:# Side Chat (`/btw`)\ndocs/side-chat.md:11:- In a completed, saved main chat, submitting `/btw` opens a new side chat with an empty composer. Submitting `/btw <question>` opens it and sends the question there. Neither form adds a user message to the main chat.\ndocs/side-chat.md:12:- Each invocation creates a new side chat at the latest completed parent turn. Closing the panel hides its view; it does not stop or delete the chat. Reopening the side-chat panel for a parent selects that parent's most recently updated side chat. A new `/btw` starts a fresh branch.",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "test -s docs/side-chat.md && rg -n '侧聊|/btw' docs/architecture.md docs/side-chat.md",
+            "verifiedAt": "2026-09-24T03:44:39.774Z",
+            "exitCode": 0,
+            "stdout": "docs/architecture.md:213:## Side chat (`/btw`)\ndocs/side-chat.md:1:# Side Chat (`/btw`)\ndocs/side-chat.md:11:- In a completed, saved main chat, submitting `/btw` opens a new side chat with an empty composer. Submitting `/btw <question>` opens it and sends the question there. Neither form adds a user message to the main chat.\ndocs/side-chat.md:12:- Each invocation creates a new side chat at the latest completed parent turn. Closing the panel hides its view; it does not stop or delete the chat. Reopening the side-chat panel for a parent selects that parent's most recently updated side chat. A new `/btw` starts a fresh branch.",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "扩展工作区契约和 main/preload API，原子创建关联主会话与分叉点的侧聊，保存冻结文本快照；拒绝运行中、未保存或无效的主会话，并保证主会话记录不被修改。",
+          "coverage": "integration",
+          "test": "node --test tests/side-chat-workspace.test.ts",
+          "verify": [
+            "node --test tests/side-chat-workspace.test.ts tests/workspace-store.test.ts tests/workspace-ipc.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/side-chat-workspace.test.ts",
+            "verifiedAt": "2026-09-24T03:47:34.146Z",
+            "exitCode": 0,
+            "stdout": "✔ 从已完成主会话原子创建独立侧聊，保留冻结文本且不改变父记录或选择 (880.179334ms)\n✔ 运行中、未保存、无完整回答和侧聊父节点不能分叉 (315.773875ms)\n✔ 文本快照超限时拒绝且不创建侧聊 (296.458667ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1648.661541",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/side-chat-workspace.test.ts tests/workspace-store.test.ts tests/workspace-ipc.test.ts",
+              "verifiedAt": "2026-09-24T03:47:36.475Z",
+              "exitCode": 0,
+              "stdout": "✔ 从已完成主会话原子创建独立侧聊，保留冻结文本且不改变父记录或选择 (1241.473625ms)\n✔ 运行中、未保存、无完整回答和侧聊父节点不能分叉 (410.067708ms)\n✔ 文本快照超限时拒绝且不创建侧聊 (398.183542ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (1417.030333ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (359.879292ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (361.02125ms)\n✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (460.934417ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (403.963375ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (451.503583ms)\n✔ 损坏和非法外键文件不被覆盖 (375.071ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (369.743542ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2298.026333",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T03:47:38.116Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/side-chat-workspace.test.ts tests/workspace-store.test.ts tests/workspace-ipc.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-24T03:47:38.116Z",
+            "exitCode": 0,
+            "stdout": "✔ 从已完成主会话原子创建独立侧聊，保留冻结文本且不改变父记录或选择 (1241.473625ms)\n✔ 运行中、未保存、无完整回答和侧聊父节点不能分叉 (410.067708ms)\n✔ 文本快照超限时拒绝且不创建侧聊 (398.183542ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (1417.030333ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (359.879292ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (361.02125ms)\n✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (460.934417ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (403.963375ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (451.503583ms)\n✔ 损坏和非法外键文件不被覆盖 (375.071ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (369.743542ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2298.026333",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "侧聊首次运行时只向新 Pi session 注入冻结的主会话文本快照，后续多轮只续接侧聊自身状态；验证侧聊输出不进入主会话，以及重启后仍能续聊。",
+          "coverage": "integration",
+          "test": "node --test tests/side-chat-agent.test.ts",
+          "verify": [
+            "node --test tests/side-chat-agent.test.ts tests/pi-agent.test.ts tests/pi-storage.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/side-chat-agent.test.ts",
+            "verifiedAt": "2026-09-24T04:18:44.662Z",
+            "exitCode": 0,
+            "stdout": "✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (7958.400958ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8164.833875",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/side-chat-agent.test.ts tests/pi-agent.test.ts tests/pi-storage.test.ts",
+              "verifiedAt": "2026-09-24T04:20:13.640Z",
+              "exitCode": 0,
+              "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (7927.275416ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (5374.211375ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (5782.164291ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (12847.488375ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (5510.239583ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (7357.721542ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (5114.175209ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (5215.967958ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (12552.857917ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (5973.884542ms)\n✔ 同一会话切换视觉模型后图片实际送达 provider (8560.973625ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (87.8975ms)\n✔ 非图片附件返回明确提示且不发模型请求 (76.803916ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (74.939375ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (72.567375ms)\n✔ 文档附件写入会话 VFS 并在本轮 prompt 中列出绝对路径 (2857.789334ms)\n✔ read_document 读取上传的 xlsx 附件并返回解析结果 (2972.849958ms)\n✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (520.429292ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (428.635125ms)\n✔ 本地挂载读写真实文件，拒绝敏感路径与符号链接；快照不包含项目内容 (397.317125ms)\n✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (8372.709875ms)\nℹ tests 21\nℹ suites 0\nℹ pass 21\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 88946.549125",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T04:20:14.549Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/side-chat-agent.test.ts tests/pi-agent.test.ts tests/pi-storage.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-24T04:20:14.549Z",
+            "exitCode": 0,
+            "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (7927.275416ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (5374.211375ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (5782.164291ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (12847.488375ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (5510.239583ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (7357.721542ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (5114.175209ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (5215.967958ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (12552.857917ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (5973.884542ms)\n✔ 同一会话切换视觉模型后图片实际送达 provider (8560.973625ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (87.8975ms)\n✔ 非图片附件返回明确提示且不发模型请求 (76.803916ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (74.939375ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (72.567375ms)\n✔ 文档附件写入会话 VFS 并在本轮 prompt 中列出绝对路径 (2857.789334ms)\n✔ read_document 读取上传的 xlsx 附件并返回解析结果 (2972.849958ms)\n✔ 内部虚拟文件可恢复；命令不能读取真实主机文件 (520.429292ms)\n✔ Skills 仅加载工作区内的合法文件，拒绝越界符号链接与敏感附件 (428.635125ms)\n✔ 本地挂载读写真实文件，拒绝敏感路径与符号链接；快照不包含项目内容 (397.317125ms)\n✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (8372.709875ms)\nℹ tests 21\nℹ suites 0\nℹ pass 21\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 88946.549125",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "为侧聊运行配置只读工具边界，禁止注册 Pi write/edit/bash 及其他可写工作区工具，并验证伪造的侧聊写入审批不能执行。",
+          "coverage": "integration",
+          "test": "node --test tests/side-chat-permissions.test.ts",
+          "verify": [
+            "node --test tests/side-chat-permissions.test.ts tests/tool-write-approval.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/side-chat-permissions.test.ts",
+            "verifiedAt": "2026-09-24T04:23:10.174Z",
+            "exitCode": 0,
+            "stdout": "✔ 侧聊只暴露只读工具且没有可伪造的写入审批 (4525.334417ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4695.658666",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/side-chat-permissions.test.ts tests/tool-write-approval.test.ts",
+              "verifiedAt": "2026-09-24T04:23:14.585Z",
+              "exitCode": 0,
+              "stdout": "✔ 侧聊只暴露只读工具且没有可伪造的写入审批 (4221.961458ms)\n✔ binds a one-shot approval to chat, origin run, resume run, call and exact input (72.015958ms)\n✔ fails closed for tampering, rejection, expiry, duplicate response, revocation and restart replay (16.659583ms)\n✔ uses AI SDK toolApproval to pause before any write executor runs (38.677291ms)\n✔ wires the main approval channel through existing assistant-ui approval controls (0.909583ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4381.6745",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T04:23:15.456Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/side-chat-permissions.test.ts tests/tool-write-approval.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-24T04:23:15.456Z",
+            "exitCode": 0,
+            "stdout": "✔ 侧聊只暴露只读工具且没有可伪造的写入审批 (4221.961458ms)\n✔ binds a one-shot approval to chat, origin run, resume run, call and exact input (72.015958ms)\n✔ fails closed for tampering, rejection, expiry, duplicate response, revocation and restart replay (16.659583ms)\n✔ uses AI SDK toolApproval to pause before any write executor runs (38.677291ms)\n✔ wires the main approval channel through existing assistant-ui approval controls (0.909583ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4381.6745",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "在主会话提供 /btw 入口和可关闭的侧聊视图，支持独立发送、流式回复、错误与停止状态，并按 assistant-ui 设计规范验收浅色、深色和窄窗口布局。",
+          "coverage": "manual-exception",
+          "verify": ["pnpm run build", "test -s .agent-harness/evidence/side-chat-visual.md"],
+          "tdd": false,
+          "coverage_reason": "侧栏布局、焦点、溢出及主题一致性需要真实 Electron 界面目视验收；构建与视觉证据共同作为 gate。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T07:40:54.784Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           141.14 kB\n✓ built in 183ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-Brv7_JbV.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CBBpp5bl.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CE-606F_.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bl8ZfFK-.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-Dyp5d1pb.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BSGukR79.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BMwlzLrL.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-Ch8Q8YeM.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DZMgNl8o.js             4,725.90 kB\n../../out/renderer/assets/index-BXv6rFTG.js                  6,776.57 kB\n✓ built in 11.10s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            },
+            {
+              "command": "test -s .agent-harness/evidence/side-chat-visual.md",
+              "verifiedAt": "2026-09-24T07:40:54.791Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run build && test -s .agent-harness/evidence/side-chat-visual.md",
+            "verifiedAt": "2026-09-24T07:40:54.791Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           141.14 kB\n✓ built in 183ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-Brv7_JbV.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CBBpp5bl.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CE-606F_.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bl8ZfFK-.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-Dyp5d1pb.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BSGukR79.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BMwlzLrL.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-Ch8Q8YeM.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DZMgNl8o.js             4,725.90 kB\n../../out/renderer/assets/index-BXv6rFTG.js                  6,776.57 kB\n✓ built in 11.10s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "完善侧聊与主会话的归档、删除和重启生命周期：侧聊清理自身 UI 历史与 Pi 状态，父会话操作不留下不可访问的侧聊；运行全量回归并记录证据。",
+          "coverage": "integration",
+          "test": "node --test tests/side-chat-lifecycle.test.ts",
+          "verify": [
+            "node --test tests/side-chat-agent.test.ts tests/side-chat-workspace.test.ts tests/side-chat-lifecycle.test.ts tests/side-chat-permissions.test.ts tests/side-chat-quote.test.ts",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/side-chat-lifecycle.test.ts",
+            "verifiedAt": "2026-09-24T07:49:47.240Z",
+            "exitCode": 0,
+            "stdout": "✔ 父会话归档和恢复同步侧聊，重启后关系仍有效 (1036.838958ms)\n✔ 删除父会话原子清理全部侧聊记录并返回待删 Pi 状态 ID (332.574417ms)\n✔ 忙碌或未保存的侧聊阻止父会话归档删除；单独删除侧聊不影响父会话 (306.233625ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1839.253959",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/side-chat-agent.test.ts tests/side-chat-workspace.test.ts tests/side-chat-lifecycle.test.ts tests/side-chat-permissions.test.ts tests/side-chat-quote.test.ts",
+              "verifiedAt": "2026-09-24T07:50:12.995Z",
+              "exitCode": 0,
+              "stdout": "✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (12646.117542ms)\n✔ 侧聊首轮模型请求包含主会话图片像素 (12877.381667ms)\n✔ 父会话归档和恢复同步侧聊，重启后关系仍有效 (2048.068333ms)\n✔ 删除父会话原子清理全部侧聊记录并返回待删 Pi 状态 ID (721.842166ms)\n✔ 忙碌或未保存的侧聊阻止父会话归档删除；单独删除侧聊不影响父会话 (128.4ms)\n✔ 侧聊只暴露只读工具且没有可伪造的写入审批 (8270.589333ms)\n✔ 主会话选区交给指定侧聊草稿，消费后不重复且有大小边界 (729.465125ms)\n✔ 消息引用只投影给模型，保留原始侧聊消息供历史展示 (940.210209ms)\n✔ 从已完成主会话原子创建独立侧聊，保留冻结文本且不改变父记录或选择 (1869.335125ms)\n✔ 运行中、未保存、无完整回答和侧聊父节点不能分叉 (637.199125ms)\n✔ 文本快照超限时拒绝且不创建侧聊 (592.420834ms)\n✔ 原生 Pi 分叉可越过旧文本快照上限，分叉失败不留下侧聊 (70.055042ms)\n✔ 没有原生 Pi 状态的图片会话不能伪装为完整侧聊 (46.796042ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 25725.354791",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T07:50:13.775Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T07:50:25.370Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           141.14 kB\n✓ built in 172ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-Brv7_JbV.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CBBpp5bl.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CE-606F_.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bl8ZfFK-.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-Dyp5d1pb.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BSGukR79.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BMwlzLrL.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-Ch8Q8YeM.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DZMgNl8o.js             4,725.90 kB\n../../out/renderer/assets/index-BXv6rFTG.js                  6,776.57 kB\n✓ built in 10.03s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/side-chat-agent.test.ts tests/side-chat-workspace.test.ts tests/side-chat-lifecycle.test.ts tests/side-chat-permissions.test.ts tests/side-chat-quote.test.ts && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-24T07:50:25.370Z",
+            "exitCode": 0,
+            "stdout": "✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (12646.117542ms)\n✔ 侧聊首轮模型请求包含主会话图片像素 (12877.381667ms)\n✔ 父会话归档和恢复同步侧聊，重启后关系仍有效 (2048.068333ms)\n✔ 删除父会话原子清理全部侧聊记录并返回待删 Pi 状态 ID (721.842166ms)\n✔ 忙碌或未保存的侧聊阻止父会话归档删除；单独删除侧聊不影响父会话 (128.4ms)\n✔ 侧聊只暴露只读工具且没有可伪造的写入审批 (8270.589333ms)\n✔ 主会话选区交给指定侧聊草稿，消费后不重复且有大小边界 (729.465125ms)\n✔ 消息引用只投影给模型，保留原始侧聊消息供历史展示 (940.210209ms)\n✔ 从已完成主会话原子创建独立侧聊，保留冻结文本且不改变父记录或选择 (1869.335125ms)\n✔ 运行中、未保存、无完整回答和侧聊父节点不能分叉 (637.199125ms)\n✔ 文本快照超限时拒绝且不创建侧聊 (592.420834ms)\n✔ 原生 Pi 分叉可越过旧文本快照上限，分叉失败不留下侧聊 (70.055042ms)\n✔ 没有原生 Pi 状态的图片会话不能伪装为完整侧聊 (46.796042ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 25725.354791\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           141.14 kB\n✓ built in 172ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-Brv7_JbV.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CBBpp5bl.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CE-606F_.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bl8ZfFK-.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-Dyp5d1pb.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BSGukR79.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BMwlzLrL.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-Ch8Q8YeM.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DZMgNl8o.js             4,725.90 kB\n../../out/renderer/assets/index-BXv6rFTG.js                  6,776.57 kB\n✓ built in 10.03s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "主会话消息选区提供引用操作：可加入主输入区，或创建侧聊并将选中文字作为可移除的引用草稿；侧聊发送时把引用只投影到侧聊模型请求并保留来源展示，不修改主会话消息。",
+          "coverage": "integration",
+          "test": "node --test tests/side-chat-quote.test.ts",
+          "verify": [
+            "node --test tests/side-chat-quote.test.ts tests/side-chat-agent.test.ts tests/composer-context.test.ts",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/side-chat-quote.test.ts",
+            "verifiedAt": "2026-09-24T05:56:35.285Z",
+            "exitCode": 0,
+            "stdout": "✔ 主会话选区交给指定侧聊草稿，消费后不重复且有大小边界 (400.211375ms)\n✔ 消息引用只投影给模型，保留原始侧聊消息供历史展示 (730.294292ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1293.317125",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/side-chat-quote.test.ts tests/side-chat-agent.test.ts tests/composer-context.test.ts",
+              "verifiedAt": "2026-09-24T05:56:43.875Z",
+              "exitCode": 0,
+              "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (0.751917ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.145ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.079666ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.086ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.197542ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (0.204792ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.088ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.097083ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.086459ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (6.152416ms)\n✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (8350.578125ms)\n✔ 主会话选区交给指定侧聊草稿，消费后不重复且有大小边界 (569.628917ms)\n✔ 消息引用只投影给模型，保留原始侧聊消息供历史展示 (567.850125ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8549.556917",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T05:56:44.857Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T05:56:58.304Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           137.47 kB\n✓ built in 217ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 11ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3362 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-DayfjK1a.css                   199.58 kB\n../../out/renderer/assets/ReviewPanel-Cu8HntqK.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CB89kIxc.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DzVvPvbD.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-D1h4hiK5.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-C_igQ6VF.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CAgfM4Ar.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-Cb8E8Lf2.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DKjXECri.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DxtQOznA.js             4,725.90 kB\n../../out/renderer/assets/index-arRZh7f0.js                  6,775.35 kB\n✓ built in 11.81s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/side-chat-quote.test.ts tests/side-chat-agent.test.ts tests/composer-context.test.ts && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-24T05:56:58.304Z",
+            "exitCode": 0,
+            "stdout": "✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (0.751917ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.145ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.079666ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.086ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.197542ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (0.204792ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.088ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.097083ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.086459ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segments 与 limit (6.152416ms)\n✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (8350.578125ms)\n✔ 主会话选区交给指定侧聊草稿，消费后不重复且有大小边界 (569.628917ms)\n✔ 消息引用只投影给模型，保留原始侧聊消息供历史展示 (567.850125ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8549.556917\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           137.47 kB\n✓ built in 217ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 11ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3362 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-DayfjK1a.css                   199.58 kB\n../../out/renderer/assets/ReviewPanel-Cu8HntqK.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CB89kIxc.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DzVvPvbD.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-D1h4hiK5.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-C_igQ6VF.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CAgfM4Ar.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-Cb8E8Lf2.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DKjXECri.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DxtQOznA.js             4,725.90 kB\n../../out/renderer/assets/index-arRZh7f0.js                  6,775.35 kB\n✓ built in 11.81s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "统一消息文本引用与文件文本引用的输入区摘要、详情浮层及已发送消息展示；复用现有引用样式和 assistant-ui Quote primitives。深浅色及窄窗口视觉验收由第 5 项覆盖。",
+          "coverage": "manual-exception",
+          "verify": [
+            "node --test tests/side-chat-quote.test.ts tests/side-chat-agent.test.ts",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "coverage_reason": "本项复用既有引用展示与 assistant-ui primitives；引用行为由聚焦测试覆盖，实际渲染检查继续由第 5 项负责。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/side-chat-quote.test.ts tests/side-chat-agent.test.ts",
+              "verifiedAt": "2026-09-24T06:16:08.761Z",
+              "exitCode": 0,
+              "stdout": "✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (11029.618709ms)\n✔ 主会话选区交给指定侧聊草稿，消费后不重复且有大小边界 (635.437334ms)\n✔ 消息引用只投影给模型，保留原始侧聊消息供历史展示 (670.448334ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 11280.221542",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T06:16:09.627Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T06:16:25.727Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           137.47 kB\n✓ built in 262ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 13ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-CuvMDeNx.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-DAnPAOwK.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkDlV7wA.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-hYalvtGX.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-a80iqUq_.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CHjhIj3E.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-zADL7_fN.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-C1MyfVab.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-D1UKqSDR.js             4,725.90 kB\n../../out/renderer/assets/index-D_KpL48_.js                  6,776.89 kB\n✓ built in 14.18s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/side-chat-quote.test.ts tests/side-chat-agent.test.ts && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-24T06:16:25.727Z",
+            "exitCode": 0,
+            "stdout": "✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (11029.618709ms)\n✔ 主会话选区交给指定侧聊草稿，消费后不重复且有大小边界 (635.437334ms)\n✔ 消息引用只投影给模型，保留原始侧聊消息供历史展示 (670.448334ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 11280.221542\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           137.47 kB\n✓ built in 262ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 13ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-CuvMDeNx.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-DAnPAOwK.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkDlV7wA.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-hYalvtGX.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-a80iqUq_.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CHjhIj3E.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-zADL7_fN.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-C1MyfVab.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-D1UKqSDR.js             4,725.90 kB\n../../out/renderer/assets/index-D_KpL48_.js                  6,776.89 kB\n✓ built in 14.18s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "侧聊从主会话已保存的 Pi checkpoint 创建隔离分支，继承图片、工具结果和压缩上下文；后续主侧对话互不回写，缺少 checkpoint 时保留文本回退。",
+          "coverage": "integration",
+          "test": "node --test --test-name-pattern='图片像素' tests/side-chat-agent.test.ts",
+          "verify": [
+            "node --test tests/side-chat-agent.test.ts tests/side-chat-workspace.test.ts tests/side-chat-lifecycle.test.ts tests/side-chat-permissions.test.ts",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test --test-name-pattern='图片像素' tests/side-chat-agent.test.ts",
+            "verifiedAt": "2026-09-24T06:51:50.647Z",
+            "exitCode": 0,
+            "stdout": "✔ 侧聊首轮模型请求包含主会话图片像素 (13283.510459ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 13517.909041",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/side-chat-agent.test.ts tests/side-chat-workspace.test.ts tests/side-chat-lifecycle.test.ts tests/side-chat-permissions.test.ts",
+              "verifiedAt": "2026-09-24T06:52:10.683Z",
+              "exitCode": 0,
+              "stdout": "✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (8051.036667ms)\n✔ 侧聊首轮模型请求包含主会话图片像素 (11762.89325ms)\n✔ 父会话归档和恢复同步侧聊，重启后关系仍有效 (1165.421625ms)\n✔ 删除父会话原子清理全部侧聊记录并返回待删 Pi 状态 ID (127.202042ms)\n✔ 忙碌或未保存的侧聊阻止父会话归档删除；单独删除侧聊不影响父会话 (162.735167ms)\n✔ 侧聊只暴露只读工具且没有可伪造的写入审批 (5002.860166ms)\n✔ 从已完成主会话原子创建独立侧聊，保留冻结文本且不改变父记录或选择 (1228.347292ms)\n✔ 运行中、未保存、无完整回答和侧聊父节点不能分叉 (85.941625ms)\n✔ 文本快照超限时拒绝且不创建侧聊 (68.947291ms)\n✔ 原生 Pi 分叉可越过旧文本快照上限，分叉失败不留下侧聊 (86.980417ms)\n✔ 没有原生 Pi 状态的图片会话不能伪装为完整侧聊 (68.299834ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 20004.378042",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T06:52:11.451Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T06:52:23.033Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           140.68 kB\n✓ built in 174ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-CM02Vfh8.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-LreLGWu3.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-ofg4JEXr.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Dz9zX8MH.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-Cn84DIKc.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BcdR8Ykq.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BNsNhl9h.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DiwKX8rB.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-Cr5BQXu1.js             4,725.90 kB\n../../out/renderer/assets/index-CShCko_X.js                  6,776.58 kB\n✓ built in 10.00s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/side-chat-agent.test.ts tests/side-chat-workspace.test.ts tests/side-chat-lifecycle.test.ts tests/side-chat-permissions.test.ts && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-24T06:52:23.033Z",
+            "exitCode": 0,
+            "stdout": "✔ 侧聊首轮继承冻结文本，重启后独立续聊且不回写主会话 (8051.036667ms)\n✔ 侧聊首轮模型请求包含主会话图片像素 (11762.89325ms)\n✔ 父会话归档和恢复同步侧聊，重启后关系仍有效 (1165.421625ms)\n✔ 删除父会话原子清理全部侧聊记录并返回待删 Pi 状态 ID (127.202042ms)\n✔ 忙碌或未保存的侧聊阻止父会话归档删除；单独删除侧聊不影响父会话 (162.735167ms)\n✔ 侧聊只暴露只读工具且没有可伪造的写入审批 (5002.860166ms)\n✔ 从已完成主会话原子创建独立侧聊，保留冻结文本且不改变父记录或选择 (1228.347292ms)\n✔ 运行中、未保存、无完整回答和侧聊父节点不能分叉 (85.941625ms)\n✔ 文本快照超限时拒绝且不创建侧聊 (68.947291ms)\n✔ 原生 Pi 分叉可越过旧文本快照上限，分叉失败不留下侧聊 (86.980417ms)\n✔ 没有原生 Pi 状态的图片会话不能伪装为完整侧聊 (68.299834ms)\nℹ tests 11\nℹ suites 0\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 20004.378042\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 39 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           140.68 kB\n✓ built in 174ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.52 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3363 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B7PADi4V.css                   199.81 kB\n../../out/renderer/assets/ReviewPanel-CM02Vfh8.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-LreLGWu3.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-ofg4JEXr.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Dz9zX8MH.js              3.98 kB\n../../out/renderer/assets/ParticleSailboatScene-Cn84DIKc.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BcdR8Ykq.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BNsNhl9h.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DiwKX8rB.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-Cr5BQXu1.js             4,725.90 kB\n../../out/renderer/assets/index-CShCko_X.js                  6,776.58 kB\n✓ built in 10.00s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-24T07:50:25.371Z"
+    }
+  ]
+}

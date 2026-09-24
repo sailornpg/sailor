@@ -1,139 +1,92 @@
 {
   "features": [
     {
-      "id": "feat-precommit-formatting",
-      "name": "Pre-commit formatting",
-      "description": "Use Husky and lint-staged to format staged source and documentation files with Prettier before Git commits.",
-      "status": "done",
+      "id": "feat-ask-user-human-in-loop",
+      "name": "Ask User Human-in-the-Loop Interaction",
+      "description": "为 Sailor 接入结构化 ask_user 人机协作能力，并为计划提供可持久化的 TodoList 展示：Agent 可以在执行过程中提出带选项和可选自由文本的问题，用户在聊天消息内完成回答后恢复同一个 Pi 运行；计划步骤拥有稳定 ID、状态和 revision，并沿用 assistant-ui 的工具状态、审批语义与现有 Sailor 视觉规范。真实 bash 执行不纳入本 feature。",
+      "status": "not-started",
+      "prd_spec": "docs/product-okr.md",
+      "trd_spec": "docs/architecture.md",
       "checklist": [
         {
-          "action": "Install and configure Husky, lint-staged, and Prettier so pre-commit formats only supported staged files and restages changes.",
-          "coverage": "static",
-          "verify": ["pnpm run typecheck", "pnpm run build"],
-          "tdd": false,
-          "coverage_reason": "Package scripts and Git hook wiring are static configuration; a live hook smoke test validates the behavior.",
-          "status": "done",
-          "verifyEvidenceList": [
-            {
-              "command": "pnpm run typecheck",
-              "verifiedAt": "2026-09-24T03:04:43.540Z",
-              "exitCode": 0,
-              "stdout": "",
-              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
-            },
-            {
-              "command": "pnpm run build",
-              "verifiedAt": "2026-09-24T03:04:56.152Z",
-              "exitCode": 0,
-              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 37 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           131.00 kB\n✓ built in 204ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.37 kB\n✓ built in 10ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3358 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BUofxZv4.css                   196.08 kB\n../../out/renderer/assets/SideChatPanel-DNIV74Ux.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-BrKLyrY7.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cbd8Bv4Y.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkVU7A09.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/ParticleSailboatScene-B5_Oj4rE.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Dqi3e_YE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BRU6jlmn.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-iswI00kq.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DFhW3LOH.js             4,725.90 kB\n../../out/renderer/assets/index-Cf0MzEKD.js                  6,759.12 kB\n✓ built in 10.77s",
-              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
-            }
-          ],
-          "evidence": {
-            "command": "pnpm run typecheck && pnpm run build",
-            "verifiedAt": "2026-09-24T03:04:56.152Z",
-            "exitCode": 0,
-            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 37 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           131.00 kB\n✓ built in 204ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.37 kB\n✓ built in 10ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3358 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BUofxZv4.css                   196.08 kB\n../../out/renderer/assets/SideChatPanel-DNIV74Ux.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-BrKLyrY7.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cbd8Bv4Y.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkVU7A09.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/ParticleSailboatScene-B5_Oj4rE.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Dqi3e_YE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BRU6jlmn.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-iswI00kq.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DFhW3LOH.js             4,725.90 kB\n../../out/renderer/assets/index-Cf0MzEKD.js                  6,759.12 kB\n✓ built in 10.77s",
-            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
-          }
+          "action": "定义并校验 ask_user 的结构化输入、选项、自由文本、跳过、回答结果和终态契约；扩展共享类型时保持现有 write/edit/bash 审批响应向后兼容，并拒绝缺少问题文本、重复选项 ID、非法选项答案和超限文本。",
+          "coverage": "unit",
+          "test": "node --test tests/ask-user-contract.test.ts",
+          "verify": ["node --test tests/ask-user-contract.test.ts", "pnpm run typecheck"],
+          "tdd": true,
+          "status": "not-started"
         },
         {
-          "action": "Document the formatting workflow and verify a real pre-commit hook run without changing unrelated staged files.",
-          "coverage": "static",
-          "verify": "node .agent-harness/scripts/check-precommit-formatting.mjs",
-          "tdd": false,
-          "coverage_reason": "The check exercises Git index and hook integration using a temporary index and fixture files.",
-          "status": "done",
-          "verifyEvidence": {
-            "command": "node .agent-harness/scripts/check-precommit-formatting.mjs",
-            "verifiedAt": "2026-09-24T03:06:02.935Z",
-            "exitCode": 0,
-            "stdout": "Staged file formatted and restaged; unstaged file untouched.",
-            "stderr": ""
-          },
-          "evidence": {
-            "command": "node .agent-harness/scripts/check-precommit-formatting.mjs",
-            "verifiedAt": "2026-09-24T03:06:02.935Z",
-            "exitCode": 0,
-            "stdout": "Staged file formatted and restaged; unstaged file untouched.",
-            "stderr": ""
-          }
-        }
-      ],
-      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-24T03:06:02.936Z"
-    },
-    {
-      "id": "feat-precommit-linting",
-      "name": "Pre-commit ESLint and Stylelint",
-      "description": "Add JavaScript/TypeScript and CSS lint checks to the repository and the staged-file commit workflow.",
-      "status": "done",
-      "checklist": [
-        {
-          "action": "Configure ESLint and Stylelint with repository-compatible rules and passing full-repository lint scripts.",
-          "coverage": "static",
-          "verify": "pnpm run lint",
-          "tdd": false,
-          "coverage_reason": "Tool configuration has no standalone logic; the full-repository lint command checks the configuration against real files.",
-          "status": "done",
-          "verifyEvidence": {
-            "command": "pnpm run lint",
-            "verifiedAt": "2026-09-24T03:26:22.712Z",
-            "exitCode": 0,
-            "stdout": "",
-            "stderr": "$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'"
-          },
-          "evidence": {
-            "command": "pnpm run lint",
-            "verifiedAt": "2026-09-24T03:26:22.712Z",
-            "exitCode": 0,
-            "stdout": "",
-            "stderr": "$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'"
-          }
-        },
-        {
-          "action": "Run lint checks after formatting in pre-commit, document usage, and verify staged lint failures block the hook.",
-          "coverage": "static",
+          "action": "在 main/Pi 编排层注册 ask_user 的暂停生命周期：发送结构化问题、绑定 chatId/runId/toolCallId、生成可在同一进程续跑的 pending interaction，并区分回答、拒绝、跳过、取消、过期和重复提交；回答后只能续跑原 Pi session，不得重新执行已经完成的工具调用；应用重启后旧问题失效并提示重新发起。",
+          "coverage": "integration",
+          "test": "node --test tests/ask-user-agent.test.ts",
           "verify": [
-            "node .agent-harness/scripts/check-precommit-formatting.mjs",
+            "node --test tests/ask-user-agent.test.ts tests/pi-agent.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "not-started"
+        },
+        {
+          "action": "扩展 shared contracts、preload 和 IPC/runtime 适配，使 assistant-ui 的 respondToApproval、resume 或 addResult 能传递 optionId、text、reason 等回答信息；主进程必须校验真实审批记录、运行 ID、工具调用 ID 和一次性消费语义。",
+          "coverage": "integration",
+          "test": "node --test tests/ask-user-ipc.test.ts",
+          "verify": [
+            "node --test tests/ask-user-ipc.test.ts tests/tool-write-approval.test.ts tests/workspace-ipc.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "not-started"
+        },
+        {
+          "action": "定义计划和 todo 步骤的共享契约与持久化边界：步骤拥有稳定 ID、文本、pending/in-progress/completed/blocked/skipped 状态和 revision；计划更新必须绑定 chatId/runId，恢复会话时保留已完成状态，不重放旧工具调用。",
+          "coverage": "integration",
+          "test": "node --test tests/plan-todo.test.ts",
+          "verify": [
+            "node --test tests/plan-todo.test.ts tests/workspace-store.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "not-started"
+        },
+        {
+          "action": "接入 assistant-ui 的 elements-todo-list registry，并实现 SailorAskUserCard 与计划 TodoList 展示：在 SailorToolCall 中识别 ask_user，在计划消息或计划区域渲染 TodoList，支持 revision 更新、当前步骤高亮、完成/阻塞状态和未知状态回退；UI 不直接绕过 runtime 调 IPC。",
+          "coverage": "integration",
+          "test": "node --test tests/ask-user-ui.test.ts tests/plan-todo-ui.test.ts",
+          "verify": [
+            "node --test tests/ask-user-ui.test.ts tests/plan-todo-ui.test.ts tests/tool-feedback-ui.test.ts tests/assistant-ui-message-rendering.test.ts",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "not-started"
+        },
+        {
+          "action": "覆盖 ask_user 卡片和 TodoList 的真实状态与可访问性：未回答、提交中、已回答、被拒绝、已跳过、已取消、已过期、提交失败、恢复失败、todo 更新和无步骤空态；确保提交按钮防重复、选项无默认误选、键盘与屏幕阅读器语义完整，并在窄窗口和深色主题下不发生文本溢出或遮挡。",
+          "coverage": "manual-exception",
+          "verify": [
+            "test -f .agent-harness/evidence/ask-user-ui-acceptance.md",
+            "pnpm run lint",
             "pnpm run typecheck",
             "pnpm run build"
           ],
           "tdd": false,
-          "coverage_reason": "This is Git hook integration and documentation; the smoke test exercises the real hook with an isolated index.",
-          "status": "done",
-          "verifyEvidenceList": [
-            {
-              "command": "node .agent-harness/scripts/check-precommit-formatting.mjs",
-              "verifiedAt": "2026-09-24T03:26:56.991Z",
-              "exitCode": 0,
-              "stdout": "Staged formatting passed; ESLint and Stylelint violations blocked the hook.",
-              "stderr": "✖ eslint\n\n✖ eslint:\n\n/Users/hs/Documents/learning/sailor/.precommit-invalid.ts\n  1:1  error  Unexpected 'debugger' statement  no-debugger\n\n✖ 1 problem (1 error, 0 warnings)\n✖ stylelint\n\n✖ stylelint:\n\n.precommit-invalid.css\n  2:3  ✖  Unknown property \"colour\"  property-no-unknown\n\n✖ 1 problem (1 error, 0 warnings)"
-            },
-            {
-              "command": "pnpm run typecheck",
-              "verifiedAt": "2026-09-24T03:26:58.190Z",
-              "exitCode": 0,
-              "stdout": "",
-              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
-            },
-            {
-              "command": "pnpm run build",
-              "verifiedAt": "2026-09-24T03:27:09.886Z",
-              "exitCode": 0,
-              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 37 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           131.00 kB\n✓ built in 175ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.37 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3358 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BUofxZv4.css                   196.08 kB\n../../out/renderer/assets/SideChatPanel-DNIV74Ux.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-BrKLyrY7.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cbd8Bv4Y.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkVU7A09.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/ParticleSailboatScene-B5_Oj4rE.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Dqi3e_YE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BRU6jlmn.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-iswI00kq.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DFhW3LOH.js             4,725.90 kB\n../../out/renderer/assets/index-Cf0MzEKD.js                  6,759.12 kB\n✓ built in 9.97s",
-              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
-            }
+          "coverage_reason": "键盘焦点、屏幕阅读器标签、深浅主题、窄窗口布局和提交中视觉反馈需要真实 Electron 渲染与人工检查，静态测试不能可靠替代这些验收。",
+          "status": "not-started"
+        },
+        {
+          "action": "同步架构与产品文档，记录 ask_user 的数据边界、回答恢复流程、失败与过期语义、TodoList 的步骤状态和持久化 revision，以及未纳入本 feature 的真实 bash 执行范围；运行 feature 级全量验证并保留可复现 evidence。",
+          "coverage": "static",
+          "verify": [
+            "rg -n \"ask_user|human-in-the-loop|HITL|TodoList|todo|真实 bash|plan-execute\" docs/architecture.md docs/product-okr.md README.md",
+            "node ./.agent-harness/scripts/verify-feature.mjs --validate --feature-id feat-ask-user-human-in-loop",
+            "pnpm run build"
           ],
-          "evidence": {
-            "command": "node .agent-harness/scripts/check-precommit-formatting.mjs && pnpm run typecheck && pnpm run build",
-            "verifiedAt": "2026-09-24T03:27:09.886Z",
-            "exitCode": 0,
-            "stdout": "Staged formatting passed; ESLint and Stylelint violations blocked the hook.\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 37 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           131.00 kB\n✓ built in 175ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.37 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3358 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BUofxZv4.css                   196.08 kB\n../../out/renderer/assets/SideChatPanel-DNIV74Ux.js              0.58 kB\n../../out/renderer/assets/ReviewPanel-BrKLyrY7.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cbd8Bv4Y.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BkVU7A09.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/ParticleSailboatScene-B5_Oj4rE.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Dqi3e_YE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-BRU6jlmn.js             21.58 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-iswI00kq.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DFhW3LOH.js             4,725.90 kB\n../../out/renderer/assets/index-Cf0MzEKD.js                  6,759.12 kB\n✓ built in 9.97s",
-            "stderr": "✖ eslint\n\n✖ eslint:\n\n/Users/hs/Documents/learning/sailor/.precommit-invalid.ts\n  1:1  error  Unexpected 'debugger' statement  no-debugger\n\n✖ 1 problem (1 error, 0 warnings)\n✖ stylelint\n\n✖ stylelint:\n\n.precommit-invalid.css\n  2:3  ✖  Unknown property \"colour\"  property-no-unknown\n\n✖ 1 problem (1 error, 0 warnings)\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
-          }
+          "tdd": false,
+          "coverage_reason": "文档同步、feature schema 校验和项目级 verification 是静态/集成 gate，不能通过一个先失败的单元测试表达完整要求。",
+          "status": "not-started"
         }
-      ],
-      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-24T03:27:09.887Z"
+      ]
     }
   ]
 }

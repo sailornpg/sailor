@@ -92,7 +92,7 @@ src/
 
 ## Current scope
 
-The current architecture includes directory-scoped persistent chats with independent background runs, OpenAI/DeepSeek/custom provider settings, remote model catalog retrieval, per-model capability metadata, encrypted model credentials, selectable models, renderer-only system/light/dark appearance preferences with accent presets, streamed text and provider-returned reasoning summaries, Pi workspace tools, a structured auditable process view, source citations, generic tool-state fallback rendering, cancellation, a Codex-style three-column shell, and a user-driven interactive terminal panel scoped to the active workspace. All visible application copy is Chinese while protocol and model identifiers keep their official names.
+The current architecture includes directory-scoped persistent chats with independent background runs, DeepSeek/custom provider settings, remote model catalog retrieval, per-model capability metadata, encrypted model credentials, selectable models, renderer-only system/light/dark appearance preferences with accent presets, streamed text and provider-returned reasoning summaries, Pi workspace tools, a structured auditable process view, source citations, generic tool-state fallback rendering, cancellation, a Codex-style three-column shell, and a user-driven interactive terminal panel scoped to the active workspace. All visible application copy is Chinese while protocol and model identifiers keep their official names.
 
 The settings dialog only exposes Models and Appearance. It composes shared Dialog, Button, Input and Select controls with official surface helpers and Collapsible, using flat rows, section rules, 8px controls and 12px dialogs. Model settings have a scrollable body and a fixed save footer. Appearance changes remain immediate and renderer-only.
 
@@ -174,11 +174,9 @@ Verification: `tests/pi-provider.test.ts`, `tests/pi-storage.test.ts`, and `test
 
 The compact model menu composes official `ComposerModelTrigger`, `ComposerMenu` and `ComposerModelItem`; selection continues through Settings IPC and the active-model snapshot, rather than a second modelContext owner. Reasoning remains a per-chat choice. The official `ComposerContext` ring displays a recent-call snapshot, not cumulative billing usage. A trusted inline Pi `message_end` observer reads per-call usage (including cache reads/writes), because harness-pi 1.0.119 emits zero step usage and cumulative session usage. The usage cell is shared with a parked Pi session across approval continuations. At both `finish-step` and `finish` (continuations can omit the former), Sailor publishes optional `UIMessage.metadata.contextUsage` with `{ inputTokens, outputTokens, contextWindow, modelId }` through the existing native metadata stream and workspace persistence. Zero synthetic compaction steps do not overwrite real usage. The tooltip labels inputs/outputs instead of inventing system/tool splits; post-compaction occupancy is refreshed by the next call. The renderer selects the most recent valid assistant usage in the current chat, so a newer unmetered message does not hide earlier statistics. Chats with no valid metadata display unknown; usage is not inferred from text or cumulative billing totals. No new IPC channel or credential exposure is introduced.
 
-
 ## Conversation map
 
 `SailorThread` supplies the official `ConversationMapAui` through the optional `ThreadComponents.ViewportNavigation` slot, rendered inside `ThreadPrimitive.Viewport` so the map shares its viewport store. The right rail groups each user message and subsequent assistant responses into a turn, derives short titles/previews from the existing assistant-ui message content, tracks visible/current turns, and scrolls the viewport to the existing `data-message-id` anchor. The content reserves a right gutter; empty conversations hide the rail. PreviewCard uses the registry-required `@base-ui/react` dependency. No model call, message persistence changes, or independent AI SDK Chat instance is introduced.
-
 
 ## Thread list management
 
@@ -209,3 +207,7 @@ ChatParticleBackdrop lives outside the welcome subtree and keeps one R3F Canvas/
 ComposerTransition captures the old footer rectangle before the React commit and interpolates to its measured destination over 570ms after an 80ms delay. It remeasures while animating to accommodate runtime scrolling, attachment/error rows and resize, then removes inline transforms/width. The existing Composer instance, official scroll viewport, focus behavior and native submission pipeline remain in place. The copied Thread element consumes an optional ChatEntryContext; outside Sailor it retains its original behavior.
 
 Validation: tests/particle-grid-transition.test.ts and tests/chat-entry-transition.test.ts cover geometry and state decisions. Runtime evidence, screenshots and limitations are recorded in .agent-harness/evidence/chat-particle-grid-transition.md.
+
+## Side chat (`/btw`)
+
+The side-chat design and lifecycle contract are in [side-chat.md](side-chat.md). A side chat is a separate chatId with main-owned parent/fork metadata and an isolated clone of the parent's latest saved Pi checkpoint when available; the bounded text snapshot remains the fallback. Its first Pi turn resumes only the side checkpoint, subsequent turns use only its own checkpoint, and its read-only tool set excludes write/edit/bash. The right dock reuses the existing SailorThread with a separate Chat/runtime provider; side messages never enter the parent's UI or native Pi history.

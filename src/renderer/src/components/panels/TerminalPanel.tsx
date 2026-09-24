@@ -37,19 +37,38 @@ export interface TerminalTabsViewProps {
 }
 
 /** Session tab strip; it is the panel's whole chrome — no status/size/PID text. */
-export function TerminalTabsView({ tabs, activeSessionId, canCreate, createHint, onCreate, onSelect, onClose }: TerminalTabsViewProps) {
+export function TerminalTabsView({
+  tabs,
+  activeSessionId,
+  canCreate,
+  createHint,
+  onCreate,
+  onSelect,
+  onClose,
+}: TerminalTabsViewProps) {
   const listRef = useRef<HTMLDivElement | null>(null)
 
   // The strip scrolls once there are more tabs than fit; keep the active one reachable.
   useEffect(() => {
-    listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    listRef.current
+      ?.querySelector('[data-active="true"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   }, [activeSessionId])
 
   return (
     <div className="panel-terminal-tabs">
-      <div aria-label="终端会话" className="panel-terminal-tabs-scroll" ref={listRef} role="tablist">
-          {tabs.map(tab => (
-          <span className="panel-terminal-tab" data-active={tab.sessionId === activeSessionId} key={tab.sessionId}>
+      <div
+        aria-label="终端会话"
+        className="panel-terminal-tabs-scroll"
+        ref={listRef}
+        role="tablist"
+      >
+        {tabs.map((tab) => (
+          <span
+            className="panel-terminal-tab"
+            data-active={tab.sessionId === activeSessionId}
+            key={tab.sessionId}
+          >
             <button
               aria-selected={tab.sessionId === activeSessionId}
               className="panel-terminal-tab-trigger"
@@ -137,7 +156,15 @@ interface SessionSurfaceProps {
 }
 
 /** One xterm instance per session; inactive tabs stay mounted so their buffer survives. */
-function SessionSurface({ api, projectId, tab, isActive, onView, onCreate, register }: SessionSurfaceProps) {
+function SessionSurface({
+  api,
+  projectId,
+  tab,
+  isActive,
+  onView,
+  onCreate,
+  register,
+}: SessionSurfaceProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const controllerRef = useRef<TerminalController | null>(null)
   const terminalRef = useRef<import('@xterm/xterm').Terminal | null>(null)
@@ -164,7 +191,10 @@ function SessionSurface({ api, projectId, tab, isActive, onView, onCreate, regis
     let themeObserver: MutationObserver | null = null
 
     const mount = async () => {
-      const [{ Terminal }, { FitAddon }] = await Promise.all([import('@xterm/xterm'), import('@xterm/addon-fit')])
+      const [{ Terminal }, { FitAddon }] = await Promise.all([
+        import('@xterm/xterm'),
+        import('@xterm/addon-fit'),
+      ])
       const container = containerRef.current
       if (cancelled || !container) return
       terminal = new Terminal({
@@ -184,9 +214,9 @@ function SessionSurface({ api, projectId, tab, isActive, onView, onCreate, regis
       controller = createTerminalController({
         api,
         projectId,
-        write: data => terminal?.write(data),
+        write: (data) => terminal?.write(data),
         reset: () => terminal?.reset(),
-        onState: next => {
+        onState: (next) => {
           if (cancelled) return
           setView(next)
           onView(tab.sessionId, next)
@@ -194,7 +224,7 @@ function SessionSurface({ api, projectId, tab, isActive, onView, onCreate, regis
       })
       controllerRef.current = controller
       register(tab.sessionId, controller)
-      dataSubscription = terminal.onData(data => {
+      dataSubscription = terminal.onData((data) => {
         void controller?.send(data)
       })
       await controller.attach(tab.sessionId, terminal.cols, terminal.rows)
@@ -205,7 +235,10 @@ function SessionSurface({ api, projectId, tab, isActive, onView, onCreate, regis
     themeObserver = new MutationObserver(() => {
       if (terminal) terminal.options.theme = readTerminalTheme(document.documentElement)
     })
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] })
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    })
 
     return () => {
       cancelled = true
@@ -265,7 +298,7 @@ function TerminalWorkspace({ projectId }: { projectId: string }) {
         // Opening the panel is the user's request for a terminal: start the first one here.
         const created = await startFirstSession(api, projectId)
         if (cancelled) return
-        setState(current => addTab(current, created))
+        setState((current) => addTab(current, created))
         setBooting(false)
       } catch (reason) {
         if (cancelled) return
@@ -285,7 +318,7 @@ function TerminalWorkspace({ projectId }: { projectId: string }) {
   }, [])
 
   const handleView = useCallback((sessionId: string, view: TerminalViewState) => {
-    setState(current =>
+    setState((current) =>
       updateTab(current, sessionId, {
         phase: view.phase,
         truncated: view.truncated,
@@ -299,29 +332,37 @@ function TerminalWorkspace({ projectId }: { projectId: string }) {
     if (!api) return
     setError(null)
     try {
-      const info = await api.create({ projectId, cols: TERMINAL_LIMITS.defaultCols, rows: TERMINAL_LIMITS.defaultRows })
-      setState(current => addTab(current, info))
+      const info = await api.create({
+        projectId,
+        cols: TERMINAL_LIMITS.defaultCols,
+        rows: TERMINAL_LIMITS.defaultRows,
+      })
+      setState((current) => addTab(current, info))
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason))
     }
   }, [api, projectId])
 
-  const close = useCallback(
-    (sessionId: string) => {
-      void controllers.current.get(sessionId)?.terminate()
-      setState(current => removeTab(current, sessionId))
-    },
-    [],
-  )
+  const close = useCallback((sessionId: string) => {
+    void controllers.current.get(sessionId)?.terminate()
+    setState((current) => removeTab(current, sessionId))
+  }, [])
 
   const allowed = canCreateTab(state, TERMINAL_LIMITS.maxSessionsPerProject)
   const createHint = useMemo(
-    () => `每个工作区最多同时打开 ${TERMINAL_LIMITS.maxSessionsPerProject} 个终端（当前 ${liveTabCount(state)} 个）。`,
+    () =>
+      `每个工作区最多同时打开 ${TERMINAL_LIMITS.maxSessionsPerProject} 个终端（当前 ${liveTabCount(state)} 个）。`,
     [state],
   )
 
   if (!api) {
-    return <PanelPlaceholder icon={TerminalIcon} title="终端" description="终端通道不可用，请重启应用。" />
+    return (
+      <PanelPlaceholder
+        icon={TerminalIcon}
+        title="终端"
+        description="终端通道不可用，请重启应用。"
+      />
+    )
   }
 
   return (
@@ -334,7 +375,7 @@ function TerminalWorkspace({ projectId }: { projectId: string }) {
         onCreate={() => {
           void create()
         }}
-        onSelect={sessionId => setState(current => activateTab(current, sessionId))}
+        onSelect={(sessionId) => setState((current) => activateTab(current, sessionId))}
         tabs={state.tabs}
       />
       {error ? (
@@ -352,15 +393,15 @@ function TerminalWorkspace({ projectId }: { projectId: string }) {
       ) : null}
       {!booting && state.tabs.length === 0 ? (
         <div className="panel-terminal-empty">
-          <p className="panel-terminal-empty-title">终端没有启动</p>
-          <p className="panel-terminal-empty-hint">可以重试，或用顶部的 + 新建一个；工作目录就是当前工作区的项目根目录。</p>
+          {/* <p className="panel-terminal-empty-title">终端没有启动</p> */}
+          {/* <p className="panel-terminal-empty-hint">可以重试，或用顶部的 + 新建一个；工作目录就是当前工作区的项目根目录。</p> */}
           <Button onClick={() => void create()} size="sm" variant="outline">
             <Plus className="size-3" />
             新建终端
           </Button>
         </div>
       ) : null}
-      {state.tabs.map(tab => (
+      {state.tabs.map((tab) => (
         <SessionSurface
           api={api}
           isActive={tab.sessionId === state.activeSessionId}

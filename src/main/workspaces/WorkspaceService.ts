@@ -1,8 +1,10 @@
 import { projectWorkspaceMessages } from '../agent/pi/workspaceContext.js'
 import { stat } from 'node:fs/promises'
+import { Buffer } from 'node:buffer'
 import { type UIMessage } from 'ai'
 import { validateChatMessages } from './validateChatMessages.js'
 import { z } from 'zod'
+import { isImageMediaType } from '../../shared/attachments.js'
 import type { AgentRunRequest } from '../../shared/contracts.js'
 import type { WorkspaceChat, WorkspacePreferences, RunStatus } from '../../shared/workspaces.js'
 import type { WorkspaceStore } from './WorkspaceStore.js'
@@ -10,10 +12,15 @@ import { WorkspaceToolScope, type WorkspaceToolContext } from './WorkspaceToolSc
 
 const idSchema = z.string().min(1).max(200)
 const requestSchema = z.object({
-  runId: idSchema, chatId: idSchema, messages: z.array(z.unknown()),
+  runId: idSchema,
+  chatId: idSchema,
+  messages: z.array(z.unknown()),
   reasoning: z.enum(['provider-default', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh']),
 })
-const preferencesSchema = z.object({ activeChatId: idSchema.nullable().optional(), collapsedProjectIds: z.array(idSchema).optional() })
+const preferencesSchema = z.object({
+  activeChatId: idSchema.nullable().optional(),
+  collapsedProjectIds: z.array(idSchema).optional(),
+})
 
 export class WorkspaceService {
   private readonly live = new Map<string, WorkspaceChat>()
@@ -23,7 +30,12 @@ export class WorkspaceService {
   private viewedChatId: string | null | undefined
   protected readonly store: WorkspaceStore
   private readonly selectDirectory: () => Promise<string | null>
-  constructor(store: WorkspaceStore, selectDirectory: () => Promise<string | null>, changed: () => void = () => {}) {
+  constructor(
+    store: WorkspaceStore,
+    selectDirectory: () => Promise<string | null>,
+    changed: () => void = () => {},
+    private readonly forkPiSession?: (parentId: string, sideId: string) => Promise<boolean>,
+  ) {
     this.changed = changed
     this.store = store
     this.selectDirectory = selectDirectory
@@ -31,11 +43,18 @@ export class WorkspaceService {
   async snapshot() {
     const snapshot = await this.store.snapshot()
     if (this.viewedChatId === undefined) this.viewedChatId = snapshot.activeChatId
-    snapshot.chats = snapshot.chats.map(chat => {
-      const live = this.live.get(chat.id)
-      if (live) { const { messages: _messages, ...summary } = live; return summary }
-      return chat.status === 'running' ? { ...chat, status: 'stopped' as const, error: '上次运行已中断，可继续发送消息。' } : chat
-    }).sort((a, b) => b.updatedAt - a.updatedAt)
+    snapshot.chats = snapshot.chats
+      .map((chat) => {
+        const live = this.live.get(chat.id)
+        if (live) {
+          const { messages: _messages, contextSnapshot: _contextSnapshot, ...summary } = live
+          return summary
+        }
+        return chat.status === 'running'
+          ? { ...chat, status: 'stopped' as const, error: '上次运行已中断，可继续发送消息。' }
+          : chat
+      })
+      .sort((a, b) => b.updatedAt - a.updatedAt)
     return snapshot
   }
   async pickProject() {
@@ -50,12 +69,67 @@ export class WorkspaceService {
     this.changed()
     return chat
   }
+  async createSideChat(parentChatId: unknown) {
+    const id = idSchema.parse(parentChatId)
+    if (this.managing.has(id)) throw new Error('主会话正在更新，请稍后重试。')
+    this.managing.add(id)
+    try {
+      await this.pendingWrites.get(id)
+      const parent = await this.getChat(id)
+      if (parent.parentChatId) throw new Error('侧聊不能作为主会话再次分叉。')
+      if (parent.archived || parent.status !== 'completed' || parent.saveError)
+        throw new Error('请等待主会话完成并保存后再创建侧聊。')
+      const last = parent.messages.at(-1)
+      if (
+        last?.role !== 'assistant' ||
+        !last.parts.some((part) => part.type === 'text' && part.text.trim())
+      )
+        throw new Error('主会话尚无完整回答，不能创建侧聊。')
+      const entries = parent.messages.flatMap((message) => {
+        if (message.role !== 'user' && message.role !== 'assistant') return []
+        const text = message.parts
+          .filter((part) => part.type === 'text')
+          .map((part) => part.text)
+          .join('\n')
+        return text ? [{ role: message.role, text }] : []
+      })
+      const textSnapshot = JSON.stringify(entries)
+      const contextSnapshot =
+        Buffer.byteLength(textSnapshot, 'utf8') <= 64 * 1024 ? textSnapshot : undefined
+      const hasImages = parent.messages.some((message) =>
+        message.parts.some((part) => part.type === 'file' && isImageMediaType(part.mediaType)),
+      )
+      const side = await this.store.createSideChat(id, last.id, contextSnapshot)
+      try {
+        const forked = await this.forkPiSession?.(id, side.id)
+        if (!forked && hasImages)
+          throw new Error(
+            '主会话图片缺少可分叉的 Pi 状态，无法完整继承上下文。请在主会话继续一轮后重新创建侧聊。',
+          )
+        if (!forked && !contextSnapshot)
+          throw new Error('主会话文本快照超过 64 KiB，且无可用 Pi 状态，无法创建侧聊。')
+      } catch (error) {
+        await this.store.manageChat(side.id, { action: 'delete' })
+        throw error
+      }
+      this.changed()
+      return side
+    } finally {
+      this.managing.delete(id)
+    }
+  }
   async getChat(chatId: unknown) {
     const id = idSchema.parse(chatId)
-    const chat = structuredClone(this.live.get(id) ?? await this.store.getChat(id))
-    if (!this.live.has(id) && chat.status === 'running') { chat.status = 'stopped'; chat.error = '上次运行已中断，可继续发送消息。' }
-    try { if (chat.messages.length) chat.messages = await validateChatMessages(chat.messages) }
-    catch (error) { throw new Error('会话消息格式无效，原历史已保留。', { cause: error }) }
+    const chat = structuredClone(this.live.get(id) ?? (await this.store.getChat(id)))
+    if (!this.live.has(id) && chat.status === 'running') {
+      chat.status = 'stopped'
+      chat.error = '上次运行已中断，可继续发送消息。'
+    }
+    try {
+      if (chat.messages.length) chat.messages = await validateChatMessages(chat.messages)
+    } catch (error) {
+      throw new Error('会话消息格式无效，原历史已保留。', { cause: error })
+    }
     return chat
   }
   async setPreferences(input: Partial<WorkspacePreferences>) {
@@ -64,43 +138,77 @@ export class WorkspaceService {
     await this.store.setPreferences(parsed)
     if (parsed.activeChatId) {
       const live = this.live.get(parsed.activeChatId)
-      if (live) { live.unread = false; await this.persist(live.id) }
-      else await this.store.updateChat(parsed.activeChatId, { unread: false })
+      if (live) {
+        live.unread = false
+        await this.persist(live.id)
+      } else await this.store.updateChat(parsed.activeChatId, { unread: false })
     }
     this.changed()
   }
   async manageChat(chatId: unknown, input: unknown) {
     const id = idSchema.parse(chatId)
-    const change = z.discriminatedUnion('action', [
-      z.object({ action: z.literal('rename'), title: z.string().trim().min(1).max(120) }),
-      z.object({ action: z.enum(['archive', 'unarchive', 'delete']) }),
-    ]).parse(input)
-    if (this.managing.has(id)) throw new Error('此会话正在更新，请稍后重试。')
-    this.managing.add(id)
+    const change = z
+      .discriminatedUnion('action', [
+        z.object({ action: z.literal('rename'), title: z.string().trim().min(1).max(120) }),
+        z.object({ action: z.enum(['archive', 'unarchive', 'delete']) }),
+      ])
+      .parse(input)
+    const changeTouchesChildren =
+      change.action === 'archive' || change.action === 'unarchive' || change.action === 'delete'
+    const descendants = changeTouchesChildren
+      ? (await this.store.snapshot()).chats
+          .filter((chat) => chat.parentChatId === id)
+          .map((chat) => chat.id)
+      : []
+    const ids = [id, ...descendants]
+    if (ids.some((chatId) => this.managing.has(chatId)))
+      throw new Error('此会话或侧聊正在更新，请稍后重试。')
+    for (const chatId of ids) this.managing.add(chatId)
     try {
-      const chat = await this.getChat(id)
-      if (chat.status === 'running' || chat.saveError) throw new Error('请先停止生成并保存会话，再进行管理操作。')
-      await this.pendingWrites.get(id)
-      await this.store.manageChat(id, change)
-      this.live.delete(id)
-      this.pendingWrites.delete(id)
-      if ((change.action === 'archive' || change.action === 'delete') && this.viewedChatId === id) this.viewedChatId = null
+      for (const chatId of ids) {
+        await this.pendingWrites.get(chatId)
+        const chat = await this.getChat(chatId)
+        if (chat.status === 'running' || chat.saveError)
+          throw new Error(
+            chatId === id
+              ? '请先停止生成并保存会话，再进行管理操作。'
+              : '请先停止生成并保存侧聊，再管理主会话。',
+          )
+      }
+      const deletedIds = await this.store.manageChat(id, change)
+      for (const chatId of ids) {
+        this.live.delete(chatId)
+        this.pendingWrites.delete(chatId)
+      }
+      if ((change.action === 'archive' || change.action === 'delete') && this.viewedChatId === id)
+        this.viewedChatId = null
       this.changed()
-    } finally { this.managing.delete(id) }
+      return deletedIds
+    } finally {
+      for (const chatId of ids) this.managing.delete(chatId)
+    }
   }
   async beginRun(request: AgentRunRequest) {
     if (this.managing.has(request.chatId)) throw new Error('此会话正在更新，请稍后重试。')
     this.managing.add(request.chatId)
     try {
-    const chat = await this.getChat(request.chatId)
-    if (chat.archived) throw new Error('请先恢复已归档会话。')
-    if (chat.saveError) throw new Error('请先重试保存此会话，再继续生成。')
-    if (chat.status === 'running') throw new Error('此会话已有运行中的任务。')
-    Object.assign(chat, { runId: request.runId, status: 'running', messages: request.messages, error: null, unread: false })
-    const saved = await this.store.updateChat(chat.id, chat)
-    this.live.set(chat.id, saved)
-    this.changed()
-    } finally { this.managing.delete(request.chatId) }
+      const chat = await this.getChat(request.chatId)
+      if (chat.archived) throw new Error('请先恢复已归档会话。')
+      if (chat.saveError) throw new Error('请先重试保存此会话，再继续生成。')
+      if (chat.status === 'running') throw new Error('此会话已有运行中的任务。')
+      Object.assign(chat, {
+        runId: request.runId,
+        status: 'running',
+        messages: request.messages,
+        error: null,
+        unread: false,
+      })
+      const saved = await this.store.updateChat(chat.id, chat)
+      this.live.set(chat.id, saved)
+      this.changed()
+    } finally {
+      this.managing.delete(request.chatId)
+    }
   }
   async updateRun(chatId: string, runId: string, messages: UIMessage[]) {
     const chat = this.live.get(chatId)
@@ -130,10 +238,16 @@ export class WorkspaceService {
       if (!chat) return
       const { messages, runId, status, unread, error } = chat
       try {
-        const saved = await this.store.updateChat(chatId, { messages, runId, status, unread, error }, runId ?? undefined)
+        const saved = await this.store.updateChat(
+          chatId,
+          { messages, runId, status, unread, error },
+          runId ?? undefined,
+        )
         chat.title = saved.title
         delete chat.saveError
-      } catch { chat.saveError = '会话保存失败，输出仍保留在本次应用内；请重试保存。' }
+      } catch {
+        chat.saveError = '会话保存失败，输出仍保留在本次应用内；请重试保存。'
+      }
       this.changed()
     })
     this.pendingWrites.set(chatId, operation)
@@ -143,19 +257,27 @@ export class WorkspaceService {
     const parsed = requestSchema.safeParse(input)
     if (!parsed.success) throw new Error('会话运行输入无效。')
     const chat = await this.getChat(parsed.data.chatId)
-    const project = (await this.snapshot()).projects.find(p => p.id === chat.projectId)
+    const project = (await this.snapshot()).projects.find((p) => p.id === chat.projectId)
     try {
       if (!project || !(await stat(project.rootPath)).isDirectory()) throw new Error()
-    } catch { throw new Error('工作区目录不存在或无法访问；仍可查看历史会话。') }
+    } catch {
+      throw new Error('工作区目录不存在或无法访问；仍可查看历史会话。')
+    }
     try {
       const messages = await validateChatMessages(parsed.data.messages)
       projectWorkspaceMessages(messages, chat.projectId)
       return { ...parsed.data, messages }
-    } catch (error) { throw new Error('会话消息格式无效。', { cause: error }) }
+    } catch (error) {
+      throw new Error('会话消息格式无效。', { cause: error })
+    }
   }
-  async resolveToolContext(chatId: string, signal: AbortSignal, runId = ''): Promise<WorkspaceToolContext> {
+  async resolveToolContext(
+    chatId: string,
+    signal: AbortSignal,
+    runId = '',
+  ): Promise<WorkspaceToolContext> {
     const chat = await this.getChat(idSchema.parse(chatId))
-    const project = (await this.snapshot()).projects.find(item => item.id === chat.projectId)
+    const project = (await this.snapshot()).projects.find((item) => item.id === chat.projectId)
     if (!project) throw new Error('工作区不存在。')
     const scope = await WorkspaceToolScope.create(project.rootPath, signal)
     return { chatId: chat.id, runId, rootPath: scope.rootPath, scope, signal }
@@ -163,7 +285,7 @@ export class WorkspaceService {
 
   async resolveProjectRoot(projectId: unknown): Promise<string> {
     const id = idSchema.parse(projectId)
-    const project = (await this.snapshot()).projects.find(item => item.id === id)
+    const project = (await this.snapshot()).projects.find((item) => item.id === id)
     if (!project) throw new Error('工作区不存在。')
     return project.rootPath
   }

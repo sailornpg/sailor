@@ -14,7 +14,7 @@ export const createProviderForm = (): ProviderForm => ({
   id: '',
   name: '',
   baseUrl: '',
-  protocol: 'openai-completions',
+  protocol: 'openai-responses',
   apiKey: '',
   models: [],
 })

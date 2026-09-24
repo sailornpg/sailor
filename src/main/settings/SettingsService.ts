@@ -50,14 +50,6 @@ interface LegacySettingsFile {
 
 const providerPresets: StoredProvider[] = [
   {
-    id: 'openai',
-    name: 'OpenAI',
-    baseUrl: 'https://api.openai.com/v1',
-    protocol: 'openai-completions',
-    models: [],
-    kind: 'builtin',
-  },
-  {
     id: 'deepseek',
     name: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com/v1',
@@ -183,16 +175,17 @@ export class SettingsService {
       await this.write(settings)
       return toSnapshot(settings)
     })
-    this.operation = result.then(() => undefined, () => undefined)
+    this.operation = result.then(
+      () => undefined,
+      () => undefined,
+    )
     return result
   }
 
   private async read(): Promise<SettingsFile> {
     try {
       const parsed = JSON.parse(await readFile(this.filePath, 'utf8')) as
-        | Partial<SettingsFile>
-        | Partial<Version2SettingsFile>
-        | Partial<LegacySettingsFile>
+        Partial<SettingsFile> | Partial<Version2SettingsFile> | Partial<LegacySettingsFile>
       if (!Array.isArray(parsed.providers)) {
         throw new Error('模型提供商设置格式无效。')
       }
@@ -207,13 +200,21 @@ export class SettingsService {
         return migrated
       }
       if (parsed.version !== 3) throw new Error('不支持此版本的模型提供商设置。')
+      const providers = removeRetiredOpenAiProvider(
+        (parsed.providers as StoredProvider[]).map((provider) => ({
+          ...provider,
+          protocol: normalizeStoredProtocol(
+            (provider as StoredProvider & { protocol?: string }).protocol,
+          ),
+        })),
+      )
       return {
         version: 3,
-        providers: (parsed.providers as StoredProvider[]).map((provider) => ({
-          ...provider,
-          protocol: normalizeStoredProtocol((provider as StoredProvider & { protocol?: string }).protocol),
-        })),
-        activeModel: parsed.activeModel ?? null,
+        providers,
+        activeModel:
+          parsed.activeModel && providers.some(({ id }) => id === parsed.activeModel?.providerId)
+            ? parsed.activeModel
+            : null,
       }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
@@ -241,31 +242,59 @@ function defaultSettings(): SettingsFile {
 }
 
 function migrateSettings(settings: LegacySettingsFile): SettingsFile {
-  return {
-    version: 3,
-    providers: settings.providers.map((provider) => ({
+  const providers = removeRetiredOpenAiProvider(
+    settings.providers.map((provider) => ({
       ...provider,
-      protocol: normalizeStoredProtocol((provider as LegacyProvider & { protocol?: string }).protocol),
+      protocol: normalizeStoredProtocol(
+        (provider as LegacyProvider & { protocol?: string }).protocol,
+      ),
       models: provider.models.map(createEmptyModelConfig),
     })),
-    activeModel: settings.activeModel ?? null,
+  )
+  return {
+    version: 3,
+    providers,
+    activeModel:
+      settings.activeModel && providers.some(({ id }) => id === settings.activeModel?.providerId)
+        ? settings.activeModel
+        : null,
   }
 }
 
 function migrateVersion2Settings(settings: Version2SettingsFile): SettingsFile {
+  const providers = removeRetiredOpenAiProvider(
+    settings.providers.map((provider) => ({
+      ...provider,
+      protocol: normalizeStoredProtocol(
+        (provider as StoredProvider & { protocol?: string }).protocol,
+      ),
+    })),
+  )
   return {
     version: 3,
-    providers: settings.providers.map((provider) => ({
-      ...provider,
-      protocol: normalizeStoredProtocol((provider as StoredProvider & { protocol?: string }).protocol),
-    })),
-    activeModel: settings.activeModel ?? null,
+    providers,
+    activeModel:
+      settings.activeModel && providers.some(({ id }) => id === settings.activeModel?.providerId)
+        ? settings.activeModel
+        : null,
   }
+}
+
+function removeRetiredOpenAiProvider(providers: StoredProvider[]): StoredProvider[] {
+  return providers.filter(
+    (provider) =>
+      !(provider.id === 'openai' && provider.kind === 'builtin' && !provider.encryptedApiKey),
+  )
 }
 
 function normalizeStoredProtocol(protocol: string | undefined): ProviderProtocol {
   if (protocol === 'openai-chat') return 'openai-completions'
-  if (protocol === 'openai-completions' || protocol === 'openai-responses' || protocol === 'anthropic-messages') return protocol
+  if (
+    protocol === 'openai-completions' ||
+    protocol === 'openai-responses' ||
+    protocol === 'anthropic-messages'
+  )
+    return protocol
   throw new Error(`不支持的 API 协议：${protocol ?? '未设置'}`)
 }
 
@@ -299,10 +328,14 @@ function normalizeProvider(input: ProviderInput): ProviderInput {
     throw new Error('API 地址必须使用 HTTP 或 HTTPS。')
   }
 
-  const models = [...new Map(input.models.map((model) => {
-    const normalized = normalizeModel(model)
-    return [normalized.id, normalized]
-  })).values()]
+  const models = [
+    ...new Map(
+      input.models.map((model) => {
+        const normalized = normalizeModel(model)
+        return [normalized.id, normalized]
+      }),
+    ).values(),
+  ]
 
   return {
     id,
@@ -326,7 +359,9 @@ function normalizeModel(model: ModelConfig): ModelConfig {
     name,
     contextWindow,
     maxOutputTokens,
-    reasoningLevels: [...new Set(model.reasoningLevels.map((level) => level.trim()).filter(Boolean))],
+    reasoningLevels: [
+      ...new Set(model.reasoningLevels.map((level) => level.trim()).filter(Boolean)),
+    ],
     vision: Boolean(model.vision),
   }
 }
@@ -341,7 +376,10 @@ function toSnapshot(settings: SettingsFile): SettingsSnapshot {
   return {
     providers: settings.providers.map(({ encryptedApiKey, ...provider }): ProviderSummary => ({
       ...provider,
-      models: provider.models.map((model) => ({ ...model, reasoningLevels: [...model.reasoningLevels] })),
+      models: provider.models.map((model) => ({
+        ...model,
+        reasoningLevels: [...model.reasoningLevels],
+      })),
       hasApiKey: Boolean(encryptedApiKey),
     })),
     activeModel: settings.activeModel,

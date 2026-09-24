@@ -1,40 +1,29 @@
-import type { WorkspaceChat, WorkspacePreferences, WorkspaceSnapshot, ChatManagement } from './workspaces.js'
+import type {
+  WorkspaceChat,
+  WorkspacePreferences,
+  WorkspaceSnapshot,
+  ChatManagement,
+} from './workspaces.js'
 import type { TerminalApi } from './terminal.js'
 import type { UIMessage, UIMessageChunk } from 'ai'
 
 export type ChatId = string
 export type ReasoningEffort =
-  | 'provider-default'
-  | 'none'
-  | 'minimal'
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'xhigh'
+  'provider-default' | 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
 
-const reasoningEffortOrder: ReasoningEffort[] = [
-  'minimal',
-  'low',
-  'medium',
-  'high',
-  'xhigh',
-]
+const reasoningEffortOrder: ReasoningEffort[] = ['minimal', 'low', 'medium', 'high', 'xhigh']
 
 export function getAvailableReasoningEfforts(levels: string[]): ReasoningEffort[] {
   const configured = new Set(levels)
   const supported = reasoningEffortOrder.filter((level) => configured.has(level))
-  return supported.length === 0
-    ? ['provider-default']
-    : ['provider-default', 'none', ...supported]
+  return supported.length === 0 ? ['provider-default'] : ['provider-default', 'none', ...supported]
 }
 
 export function resolveReasoningEffort(
   selected: ReasoningEffort,
   levels: string[],
 ): ReasoningEffort {
-  return getAvailableReasoningEfforts(levels).includes(selected)
-    ? selected
-    : 'provider-default'
+  return getAvailableReasoningEfforts(levels).includes(selected) ? selected : 'provider-default'
 }
 
 export interface ProjectSummary {
@@ -156,9 +145,7 @@ export interface ResolvedModel extends ModelSelection {
   vision?: boolean
 }
 
-export type AgentRunEvent =
-  | { type: 'chunk'; chunk: UIMessageChunk }
-  | { type: 'end' }
+export type AgentRunEvent = { type: 'chunk'; chunk: UIMessageChunk } | { type: 'end' }
 
 export interface SailorApi {
   app: {
@@ -178,6 +165,7 @@ export interface SailorApi {
     retrySave(chatId: string): Promise<void>
     pickProject(): Promise<ProjectSummary | null>
     createChat(projectId: string): Promise<WorkspaceChat>
+    createSideChat(parentChatId: string): Promise<WorkspaceChat>
     getChat(chatId: string): Promise<WorkspaceChat>
     setPreferences(input: Partial<WorkspacePreferences>): Promise<void>
     files: {
@@ -203,6 +191,7 @@ export const IPC = {
   workspaceSnapshot: 'workspace:snapshot',
   workspacePick: 'workspace:pick',
   workspaceCreateChat: 'workspace:create-chat',
+  workspaceCreateSideChat: 'workspace:create-side-chat',
   workspaceGetChat: 'workspace:get-chat',
   workspacePreferences: 'workspace:preferences',
   workspaceFilesList: 'workspace-files:list',

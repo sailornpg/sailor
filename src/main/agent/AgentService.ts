@@ -19,20 +19,32 @@ export class AgentService {
   private readonly completions = new Map<string, Promise<void>>()
   private readonly runner?: AgentRunner
   private readonly workspace?: WorkspaceService
-  constructor(private readonly emit: EventSink, private readonly settings: SettingsService, dependencies: Partial<AgentServiceDependencies> = {}) {
-    this.runner = dependencies.runner ?? (dependencies.piStorageDirectory ? new PiRunner(dependencies.piStorageDirectory) : undefined)
+  constructor(
+    private readonly emit: EventSink,
+    private readonly settings: SettingsService,
+    dependencies: Partial<AgentServiceDependencies> = {},
+  ) {
+    this.runner =
+      dependencies.runner ??
+      (dependencies.piStorageDirectory ? new PiRunner(dependencies.piStorageDirectory) : undefined)
     this.workspace = dependencies.workspace
   }
   async start(input: AgentRunRequest): Promise<void> {
-    if (this.controllers.has(input.runId) || this.chatRuns.has(input.chatId)) throw new Error('此会话已有运行中的任务。')
+    if (this.controllers.has(input.runId) || this.chatRuns.has(input.chatId))
+      throw new Error('此会话已有运行中的任务。')
     const controller = new AbortController()
     let resolveCompletion: () => void = () => {}
-    const completion = new Promise<void>(resolve => { resolveCompletion = resolve })
+    const completion = new Promise<void>((resolve) => {
+      resolveCompletion = resolve
+    })
     this.controllers.set(input.runId, controller)
     this.chatRuns.set(input.chatId, input.runId)
     this.completions.set(input.runId, completion)
     // Snapshot configuration at invocation, before any workspace I/O or UI changes.
-    const modelSnapshot = this.settings.resolveActiveModel().then(value => ({ value }), error => ({ error }))
+    const modelSnapshot = this.settings.resolveActiveModel().then(
+      (value) => ({ value }),
+      (error) => ({ error }),
+    )
     let failure: string | null = null
     try {
       const request = this.workspace ? await this.workspace.validateRequest(input) : input
@@ -45,9 +57,14 @@ export class AgentService {
       const toolContext = this.workspace
         ? await this.workspace.resolveToolContext(request.chatId, controller.signal, request.runId)
         : undefined
+      const chat = this.workspace ? await this.workspace.getChat(request.chatId) : undefined
       if (!this.runner) throw new Error('Pi 会话存储尚未配置。')
       const chunks = this.runner.run({
-        request, config: configuredModel, context: toolContext,
+        request,
+        config: configuredModel,
+        context: toolContext,
+        sideContextSnapshot: chat?.parentChatId ? chat.contextSnapshot : undefined,
+        isSideChat: Boolean(chat?.parentChatId),
         signal: controller.signal,
       })
       const stream = ReadableStream.from(chunks)
@@ -66,11 +83,15 @@ export class AgentService {
           for await (const message of readUIMessageStream({
             message: persistenceMessage,
             stream: persistenceStream,
-            onError: () => { failure ??= '任务流读取失败。' },
+            onError: () => {
+              failure ??= '任务流读取失败。'
+            },
           })) {
             const previous = request.messages.at(-1)
-            const history = previous?.id === message.id ? request.messages.slice(0, -1) : request.messages
-            if (message.id) await workspace.updateRun(request.chatId, request.runId, [...history, message])
+            const history =
+              previous?.id === message.id ? request.messages.slice(0, -1) : request.messages
+            if (message.id)
+              await workspace.updateRun(request.chatId, request.runId, [...history, message])
           }
         }
         await Promise.all([forward(clientStream), save()])
@@ -82,7 +103,12 @@ export class AgentService {
       }
     } finally {
       try {
-        await this.workspace?.finishRun(input.chatId, input.runId, controller.signal.aborted ? 'stopped' : failure ? 'error' : 'completed', failure)
+        await this.workspace?.finishRun(
+          input.chatId,
+          input.runId,
+          controller.signal.aborted ? 'stopped' : failure ? 'error' : 'completed',
+          failure,
+        )
       } finally {
         this.controllers.delete(input.runId)
         this.chatRuns.delete(input.chatId)
@@ -96,7 +122,9 @@ export class AgentService {
     if (!this.runner?.respondToApproval) throw new Error('审批请求不存在或已失效。')
     this.runner.respondToApproval(response)
   }
-  revokeApprovals(chatId: string): void { this.runner?.revokeApprovals?.(chatId) }
+  revokeApprovals(chatId: string): void {
+    this.runner?.revokeApprovals?.(chatId)
+  }
   async deleteChat(chatId: string): Promise<void> {
     if (this.chatRuns.has(chatId)) throw new Error('请先停止会话运行。')
     await this.runner?.deleteChat?.(chatId)
@@ -108,5 +136,7 @@ export class AgentService {
     controller.abort()
     await this.completions.get(runId)
   }
-  abortAll(): void { for (const runId of this.controllers.keys()) void this.abort(runId) }
+  abortAll(): void {
+    for (const runId of this.controllers.keys()) void this.abort(runId)
+  }
 }

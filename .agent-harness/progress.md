@@ -1,30 +1,47 @@
-# Agent Progress
+# Session Progress Log
 
-## Current Active Feature
+## Current State
 
-**feat-precommit-linting** — Pre-commit ESLint and Stylelint
+**Last Updated:** 2026-09-24T07:52:25.974Z
+**Session ID:** [optional]
+**Active Feature:** [none]
 
-Status: `in-progress`
+## Status
 
-## Checklist
+### 已完成
 
-| #   | Action                                                    | Status |
-| --- | --------------------------------------------------------- | ------ |
-| 1   | Configure ESLint and Stylelint; make repository lint pass | done   |
-| 2   | Add staged lint hook, docs, and blocking smoke test       | done   |
+- [ ] No active feature selected
 
-## Execution Log
+### 进行中
 
-- Baseline `./.agent-harness/init.sh`: passed (typecheck and build).
-- Existing Husky/Prettier changes remain uncommitted and in scope for this extension.
-- Checklist #1: ESLint 9 with Babel syntax parsing and Stylelint 17 configured; full `pnpm run lint` passed. `typescript-eslint` was rejected by its TS 7 guard, so TypeScript type checking remains with `typecheck`.
-- Checklist #2: lint-staged runs Prettier then ESLint/Stylelint. Smoke test confirmed both lint errors block the hook, and an unrelated unstaged file stays untouched. Verifier passed hook, typecheck, and build.
+- [ ] Waiting for the next unarchived feature
+  - Details: Select the next unarchived feature from `.agent-harness/feature_list.json`
+  - Blockers: none
 
-## 验证
+### 下一步
 
-- `verify-feature.mjs --item 1`: full lint passed.
-- `verify-feature.mjs --item 2`: hook, typecheck, and build passed.
+1. Select the next unarchived feature from `.agent-harness/feature_list.json`
+2. Update this file when the next active feature starts
 
-## Feature Complete
+## Blockers / Risks
 
-`feat-precommit-linting` is `done` according to the external verifier. No commit was created.
+- [ ] None currently
+
+## Decisions Made
+
+- **Active feature archived**: Reset the root progress panel after archiving the current feature
+  - Context: Historical detail now lives under `.agent-harness/archive/index.json`
+  - Alternatives considered: Keep all historical detail in the root progress file
+
+## Files Modified This Session
+
+- `.agent-harness/progress.md` - reset after archiving the active feature
+- `.agent-harness/archive/index.json` - archive index updated
+
+## Evidence of Completion
+
+- [ ] Archive command executed successfully
+
+## Notes for Next Session
+
+Start the next active feature and replace this placeholder state with real progress notes.

@@ -377,6 +377,27 @@
       "status": "done",
       "archived_at": "2026-09-24T02:44:34.669Z",
       "archive_path": ".agent-harness/archive/fix-terminal-autostart"
+    },
+    {
+      "id": "feat-precommit-formatting",
+      "title": "Pre-commit formatting",
+      "status": "done",
+      "archived_at": "2026-09-24T03:32:00.371Z",
+      "archive_path": ".agent-harness/archive/feat-precommit-formatting"
+    },
+    {
+      "id": "feat-precommit-linting",
+      "title": "Pre-commit ESLint and Stylelint",
+      "status": "done",
+      "archived_at": "2026-09-24T03:32:09.954Z",
+      "archive_path": ".agent-harness/archive/feat-precommit-linting"
+    },
+    {
+      "id": "feat-side-chat-btw",
+      "title": "主会话上下文侧聊",
+      "status": "done",
+      "archived_at": "2026-09-24T07:52:25.974Z",
+      "archive_path": ".agent-harness/archive/feat-side-chat-btw"
     }
   ]
 }
