@@ -156,6 +156,16 @@ The active runtime uses Pi's native tools plus main-process MCP tools. Workspace
 
 ## Pi Harness integration
 
+### Plan-execute、TodoList 与 ask_user
+
+`src/shared/planTodo.ts` 定义计划契约：每个步骤有稳定 `id`、文本、状态（`pending`、`in-progress`、`completed`、`blocked`、`skipped`），计划有单调递增 `revision`。`WorkspaceChat.plan` 与聊天记录一起通过 `WorkspaceStore` 原子保存；`update_plan` 是当前 Pi run 的 host tool，只能通过 main 的 `chatId/runId` 绑定更新。旧 revision、外部 run、重复 ID 和未知状态会被拒绝；相同 ID 的已完成步骤在后续 revision 中保持完成，恢复历史不会重放工具调用。
+
+renderer 使用 assistant-ui registry 的 `elements-todo-list` source component 映射计划状态，空计划和未知/阻塞状态有明确回退。计划摘要从 workspace snapshot 投影到 composer 上方的可折叠浮层，不参与消息流布局；步骤过多时浮层内部滚动。只要计划有待处理、进行中或阻塞步骤就保持显示，运行结束且步骤全部完成或跳过后延迟退场，不另建独立状态源。
+
+`ask_user` 是 main/Pi 注册的 host tool。工具调用创建内存 pending interaction 并阻塞 Promise，问题输入由共享 schema 校验；回答必须匹配 `chatId/runId/toolCallId/interactionId`，一次性消费后 resolve 原 Promise，让同一 Pi turn 继续。`AskUserInteractionStore` 处理回答、拒绝、跳过、取消、过期、重复提交和应用重启失效。renderer 的 `SailorAskUserCard` 只通过 `SailorChatProvider` runtime 回调进入窄 preload IPC，不直接访问 main；卡片支持键盘 radio、自由文本、提交中、防重复和错误/终态展示。
+
+真实本机 bash 执行不属于本 feature。Pi 继续使用 just-bash，不能调用本机 pnpm、Node 或编译器；用户手动终端仍是独立能力。
+
 `src/main/agent/pi/` owns the runtime adapter. `createPiConfiguration` maps saved provider protocol, model ID, context window, vision and reasoning capabilities into an explicit Pi provider named `sailor`. Credentials are supplied through an isolated authentication record, never global `process.env` mutation. `ResolvedModel` now includes optional `contextWindow` and `vision` from the existing settings model. Missing window/output limits use bounded defaults of 128000 / 8192; explicit values remain preferred when the provider exposes them.
 
 `PiRunner` uses Pi's native tools with `permissionMode: allow-reads` and connects the local search MCP tools in main. Native write/edit/bash approvals are registered in main by approval ID, chat ID, run ID, call ID and tool name, expire after five minutes, and are consumed once before continuation. The runtime's saved call is authoritative; renderer responses cannot replace tool parameters. Reboot, cancellation and abandoning a pending turn invalidate approvals. IPC accepts only native write/edit/bash approval names. UI history validates against Pi's exported builtin schemas; retired static tool parts become dynamic history parts with no executor.

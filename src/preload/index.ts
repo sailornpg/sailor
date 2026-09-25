@@ -8,6 +8,7 @@ import {
   type ProviderInput,
   type SailorApi,
   type WriteApprovalResponse,
+  type AskUserInteractionResponse,
   type WorkspaceFilesListInput,
   type WorkspaceFilesReadInput,
 } from '@shared/contracts.js'
@@ -30,6 +31,8 @@ const api: SailorApi = {
     abort: (runId: string) => ipcRenderer.invoke(IPC.agentAbort, runId),
     respondToApproval: (response: WriteApprovalResponse) =>
       ipcRenderer.invoke(IPC.agentRespondToApproval, response),
+    respondToAskUser: (response: AskUserInteractionResponse) =>
+      ipcRenderer.invoke(IPC.agentRespondToAskUser, response),
     revokeApprovals: (chatId: string) => ipcRenderer.invoke(IPC.agentRevokeApprovals, chatId),
     subscribe: (listener) => {
       const handler = (

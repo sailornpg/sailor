@@ -6,8 +6,14 @@ import { useAISDKRuntime } from '@assistant-ui/ai-sdk'
 import { AssistantRuntimeProvider } from '@assistant-ui/react'
 import type { UIMessage } from 'ai'
 import { sailorAttachmentAdapter } from './sailorAttachmentAdapter'
+import { getActiveAgentRunId } from '@/lib/IpcChatTransport'
 
 const SailorChatContext = createContext<UseChatHelpers<UIMessage> | null>(null)
+const SailorChatIdContext = createContext<string | null>(null)
+const SailorAskUserContext = createContext<
+  | ((toolCallId: string, response: import('@shared/askUser').AskUserResponse) => Promise<void>)
+  | null
+>(null)
 
 interface SailorChatProviderProps {
   chat: Chat<UIMessage>
@@ -33,14 +39,48 @@ export function SailorChatProvider({ chat, children }: SailorChatProviderProps) 
       await respondViaAISDK()
     },
   })
+  const respondToAskUser = async (
+    toolCallId: string,
+    response: import('@shared/askUser').AskUserResponse,
+  ) => {
+    const runId = getActiveAgentRunId(chat.id)
+    if (!runId) throw new Error('当前运行已结束，请重新发起问题。')
+    await window.sailor.agent.respondToAskUser({
+      chatId: chat.id,
+      runId,
+      toolCallId,
+      interactionId: toolCallId,
+      response,
+    })
+  }
 
   return (
     <SailorChatContext.Provider value={adapted}>
-      <AssistantRuntimeProvider runtime={runtime}>
-        <WorkspaceContextRenderer />
-        {children}
-      </AssistantRuntimeProvider>
+      <SailorChatIdContext.Provider value={chat.id}>
+        <SailorAskUserContext.Provider value={respondToAskUser}>
+          <AssistantRuntimeProvider runtime={runtime}>
+            <WorkspaceContextRenderer />
+            {children}
+          </AssistantRuntimeProvider>
+        </SailorAskUserContext.Provider>
+      </SailorChatIdContext.Provider>
     </SailorChatContext.Provider>
+  )
+}
+
+export function useSailorChatId(): string {
+  const chatId = useContext(SailorChatIdContext)
+  if (!chatId) throw new Error('useSailorChatId must be used inside SailorChatProvider')
+  return chatId
+}
+
+export function useSailorAskUserResponder() {
+  const responder = useContext(SailorAskUserContext)
+  return (
+    responder ??
+    (async () => {
+      throw new Error('用户问题运行上下文不可用。')
+    })
   )
 }
 

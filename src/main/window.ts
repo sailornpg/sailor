@@ -26,11 +26,13 @@ export function createMainWindow(): BrowserWindow {
     return { action: 'deny' }
   })
 
+  return window
+}
+
+export function loadMainWindow(window: BrowserWindow): void {
   if (process.env.ELECTRON_RENDERER_URL) {
     void window.loadURL(process.env.ELECTRON_RENDERER_URL)
   } else {
     void window.loadFile(join(__dirname, '../renderer/index.html'))
   }
-
-  return window
 }

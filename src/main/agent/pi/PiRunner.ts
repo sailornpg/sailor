@@ -17,6 +17,10 @@ import type {
   ResolvedModel,
   WriteApprovalResponse,
 } from '../../../shared/contracts.js'
+import { AskUserInteractionStore, type AskUserInteractionResponse } from './AskUserInteraction.js'
+import { createAskUserTool } from './askUserTool.js'
+import { createUpdatePlanTool } from './updatePlanTool.js'
+import type { PlanTodoList } from '../../../shared/planTodo.js'
 import {
   isImageMediaType,
   isSupportedImageMediaType,
@@ -51,11 +55,13 @@ export interface PiRunOptions {
   sideContextSnapshot?: string
   isSideChat?: boolean
   signal: AbortSignal
+  updatePlan?: (plan: PlanTodoList) => Promise<void>
 }
 export interface AgentRunner {
   deleteChat?(chatId: string): Promise<void>
   run(options: PiRunOptions): AsyncIterable<UIMessageChunk>
   respondToApproval?(response: WriteApprovalResponse): void
+  respondToAskUser?(response: AskUserInteractionResponse): void
   revokeApprovals?(chatId: string): void
   revokeRun?(runId: string): void
 }
@@ -76,9 +82,11 @@ export class PiRunner implements AgentRunner {
     this.revokeApprovals(chatId)
     this.pendingConfigs.delete(chatId)
     this.pendingSaves.delete(chatId)
+    this.askUsers.cancelChat(chatId)
     await this.storage.delete(chatId)
   }
   private readonly storage: PiStorage
+  private readonly askUsers = new AskUserInteractionStore()
   private readonly approvals = new Map<
     string,
     {
@@ -104,12 +112,16 @@ export class PiRunner implements AgentRunner {
       throw new Error('审批请求不存在、已处理或已失效。')
     record.approved = response.approved
   }
+  respondToAskUser(response: AskUserInteractionResponse): void {
+    this.askUsers.respond(response)
+  }
   revokeApprovals(chatId: string): void {
     for (const [id, record] of this.approvals)
       if (record.chatId === chatId) this.approvals.delete(id)
   }
   revokeRun(runId: string): void {
     for (const [id, record] of this.approvals) if (record.runId === runId) this.approvals.delete(id)
+    this.askUsers.cancelRun(runId)
   }
   private readonly pendingSaves = new Map<
     string,
@@ -264,7 +276,20 @@ export class PiRunner implements AgentRunner {
       model: configured.model,
       skills,
       permissionMode: 'allow-reads',
-      tools: { ...webSearch.tools, ...readDocument },
+      tools: {
+        ...webSearch.tools,
+        ...readDocument,
+        ...createAskUserTool({
+          store: this.askUsers,
+          chatId: request.chatId,
+          runId: request.runId,
+        }),
+        ...(options.updatePlan
+          ? createUpdatePlanTool({
+              updatePlan: (plan) => options.updatePlan!(plan as PlanTodoList),
+            })
+          : {}),
+      },
       ...(options.isSideChat
         ? {
             activeTools: [

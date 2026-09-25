@@ -5,6 +5,7 @@ import type { SettingsService } from '../settings/SettingsService.js'
 import type { WorkspaceService } from '../workspaces/WorkspaceService.js'
 import { getAgentErrorMessage } from './getAgentErrorMessage.js'
 import type { WriteApprovalResponse } from '../../shared/contracts.js'
+import type { AskUserInteractionResponse } from './pi/AskUserInteraction.js'
 
 type EventSink = (runId: string, event: AgentRunEvent) => void
 interface AgentServiceDependencies {
@@ -66,6 +67,11 @@ export class AgentService {
         sideContextSnapshot: chat?.parentChatId ? chat.contextSnapshot : undefined,
         isSideChat: Boolean(chat?.parentChatId),
         signal: controller.signal,
+        ...(this.workspace
+          ? {
+              updatePlan: (plan) => this.workspace!.updatePlan(request.chatId, request.runId, plan),
+            }
+          : {}),
       })
       const stream = ReadableStream.from(chunks)
       const forward = async (chunks: typeof stream) => {
@@ -121,6 +127,10 @@ export class AgentService {
   respondToApproval(response: WriteApprovalResponse): void {
     if (!this.runner?.respondToApproval) throw new Error('审批请求不存在或已失效。')
     this.runner.respondToApproval(response)
+  }
+  respondToAskUser(response: AskUserInteractionResponse): void {
+    if (!this.runner?.respondToAskUser) throw new Error('用户问题不存在或已失效。')
+    this.runner.respondToAskUser(response)
   }
   revokeApprovals(chatId: string): void {
     this.runner?.revokeApprovals?.(chatId)

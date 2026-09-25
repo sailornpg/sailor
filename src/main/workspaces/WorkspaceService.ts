@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { isImageMediaType } from '../../shared/attachments.js'
 import type { AgentRunRequest } from '../../shared/contracts.js'
 import type { WorkspaceChat, WorkspacePreferences, RunStatus } from '../../shared/workspaces.js'
+import { planTodoListSchema, type PlanTodoList } from '../../shared/planTodo.js'
 import type { WorkspaceStore } from './WorkspaceStore.js'
 import { WorkspaceToolScope, type WorkspaceToolContext } from './WorkspaceToolScope.js'
 
@@ -200,6 +201,7 @@ export class WorkspaceService {
         runId: request.runId,
         status: 'running',
         messages: request.messages,
+        plan: undefined,
         error: null,
         unread: false,
       })
@@ -216,6 +218,14 @@ export class WorkspaceService {
     chat.messages = structuredClone(messages)
     chat.updatedAt = Date.now()
     await this.persist(chatId)
+  }
+  async updatePlan(chatId: string, runId: string, input: PlanTodoList): Promise<void> {
+    const plan = planTodoListSchema.parse(input)
+    const chat = this.live.get(chatId)
+    if (!chat || chat.runId !== runId) throw new Error('计划运行已失效。')
+    chat.plan = await this.store.updatePlan(chatId, runId, plan)
+    chat.updatedAt = Date.now()
+    this.changed()
   }
   async finishRun(chatId: string, runId: string, status: RunStatus, error: string | null = null) {
     const chat = this.live.get(chatId)

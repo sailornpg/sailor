@@ -19,7 +19,9 @@ import {
   type ModelSelection,
   type ProviderInput,
   type WriteApprovalResponse,
+  type AskUserInteractionResponse,
 } from '@shared/contracts.js'
+import { askUserInteractionResponseSchema } from '@shared/askUser.js'
 
 const providerInputSchema = z.object({
   id: z.string(),
@@ -173,6 +175,9 @@ export function registerIpc(window: BrowserWindow): () => void {
   ipcMain.handle(IPC.agentRespondToApproval, (_event, response: WriteApprovalResponse) =>
     agent.respondToApproval(writeApprovalResponseSchema.parse(response)),
   )
+  ipcMain.handle(IPC.agentRespondToAskUser, (_event, response: AskUserInteractionResponse) =>
+    agent.respondToAskUser(askUserInteractionResponseSchema.parse(response)),
+  )
   ipcMain.handle(IPC.agentRevokeApprovals, (_event, chatId: string) =>
     agent.revokeApprovals(z.string().min(1).max(200).parse(chatId)),
   )
@@ -232,6 +237,7 @@ export function registerIpc(window: BrowserWindow): () => void {
     ipcMain.removeHandler(IPC.agentStart)
     ipcMain.removeHandler(IPC.agentAbort)
     ipcMain.removeHandler(IPC.agentRespondToApproval)
+    ipcMain.removeHandler(IPC.agentRespondToAskUser)
     ipcMain.removeHandler(IPC.agentRevokeApprovals)
     ipcMain.removeHandler(IPC.settingsProviders)
     ipcMain.removeHandler(IPC.settingsSaveProvider)

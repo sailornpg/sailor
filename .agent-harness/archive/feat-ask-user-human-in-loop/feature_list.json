@@ -1,0 +1,317 @@
+{
+  "features": [
+    {
+      "id": "feat-ask-user-human-in-loop",
+      "name": "Ask User Human-in-the-Loop Interaction",
+      "description": "为 Sailor 接入结构化 ask_user 人机协作能力，并为计划提供可持久化的 TodoList 展示：Agent 可以在执行过程中提出带选项和可选自由文本的问题，用户在聊天消息内完成回答后恢复同一个 Pi 运行；计划步骤拥有稳定 ID、状态和 revision，并沿用 assistant-ui 的工具状态、审批语义与现有 Sailor 视觉规范。真实 bash 执行不纳入本 feature。",
+      "status": "done",
+      "prd_spec": "docs/product-okr.md",
+      "trd_spec": "docs/architecture.md",
+      "checklist": [
+        {
+          "action": "定义并校验 ask_user 的结构化输入、选项、自由文本、跳过、回答结果和终态契约；扩展共享类型时保持现有 write/edit/bash 审批响应向后兼容，并拒绝缺少问题文本、重复选项 ID、非法选项答案和超限文本。",
+          "coverage": "unit",
+          "test": "node --test tests/ask-user-contract.test.ts",
+          "verify": ["node --test tests/ask-user-contract.test.ts", "pnpm run typecheck"],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/ask-user-contract.test.ts",
+            "verifiedAt": "2026-09-24T08:58:21.439Z",
+            "exitCode": 0,
+            "stdout": "✔ accepts a structured question with unique options and bounded freeform input (92.296333ms)\n✔ rejects missing questions, duplicate options, invalid option answers, and oversized text (1.163791ms)\n✔ only permits terminal outcomes with their matching payload (0.757291ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 255.614417",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/ask-user-contract.test.ts",
+              "verifiedAt": "2026-09-24T08:58:21.714Z",
+              "exitCode": 0,
+              "stdout": "✔ accepts a structured question with unique options and bounded freeform input (81.896959ms)\n✔ rejects missing questions, duplicate options, invalid option answers, and oversized text (1.180334ms)\n✔ only permits terminal outcomes with their matching payload (0.908541ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 247.290708",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T08:58:22.570Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/ask-user-contract.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-24T08:58:22.570Z",
+            "exitCode": 0,
+            "stdout": "✔ accepts a structured question with unique options and bounded freeform input (81.896959ms)\n✔ rejects missing questions, duplicate options, invalid option answers, and oversized text (1.180334ms)\n✔ only permits terminal outcomes with their matching payload (0.908541ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 247.290708",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "在 main/Pi 编排层注册 ask_user 的暂停生命周期：发送结构化问题、绑定 chatId/runId/toolCallId、生成可在同一进程续跑的 pending interaction，并区分回答、拒绝、跳过、取消、过期和重复提交；回答后只能续跑原 Pi session，不得重新执行已经完成的工具调用；应用重启后旧问题失效并提示重新发起。",
+          "coverage": "integration",
+          "test": "node --test tests/ask-user-agent.test.ts",
+          "verify": [
+            "node --test tests/ask-user-agent.test.ts tests/pi-agent.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/ask-user-agent.test.ts",
+            "verifiedAt": "2026-09-24T09:19:09.698Z",
+            "exitCode": 0,
+            "stdout": "✔ resolves the same pending interaction once with a validated answer (115.555583ms)\n✔ rejects forged context, expired interactions, cancellation, and restart replay (0.337875ms)\n✔ blocks the Pi host tool until the bound interaction receives an answer (2.705ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 558.054792",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/ask-user-agent.test.ts tests/pi-agent.test.ts",
+              "verifiedAt": "2026-09-24T09:20:38.463Z",
+              "exitCode": 0,
+              "stdout": "✔ resolves the same pending interaction once with a validated answer (122.432583ms)\n✔ rejects forged context, expired interactions, cancellation, and restart replay (0.365334ms)\n✔ blocks the Pi host tool until the bound interaction receives an answer (3.324375ms)\n✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (8765.533291ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (5539.509958ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (6010.339041ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (12114.342959ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (5601.443542ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (7009.438333ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (5261.661917ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (5799.346292ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (11574.949625ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (5785.367416ms)\n✔ 同一会话切换视觉模型后图片实际送达 provider (8546.475833ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (89.041791ms)\n✔ 非图片附件返回明确提示且不发模型请求 (80.111542ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (81.755791ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (94.471958ms)\n✔ 文档附件写入会话 VFS 并在本轮 prompt 中列出绝对路径 (2888.812542ms)\n✔ read_document 读取上传的 xlsx 附件并返回解析结果 (3000.240042ms)\nℹ tests 20\nℹ suites 0\nℹ pass 20\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 88733.955875",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T09:20:39.247Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/ask-user-agent.test.ts tests/pi-agent.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-24T09:20:39.247Z",
+            "exitCode": 0,
+            "stdout": "✔ resolves the same pending interaction once with a validated answer (122.432583ms)\n✔ rejects forged context, expired interactions, cancellation, and restart replay (0.365334ms)\n✔ blocks the Pi host tool until the bound interaction receives an answer (3.324375ms)\n✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (8765.533291ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (5539.509958ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (6010.339041ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (12114.342959ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (5601.443542ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (7009.438333ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (5261.661917ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (5799.346292ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (11574.949625ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (5785.367416ms)\n✔ 同一会话切换视觉模型后图片实际送达 provider (8546.475833ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (89.041791ms)\n✔ 非图片附件返回明确提示且不发模型请求 (80.111542ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (81.755791ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (94.471958ms)\n✔ 文档附件写入会话 VFS 并在本轮 prompt 中列出绝对路径 (2888.812542ms)\n✔ read_document 读取上传的 xlsx 附件并返回解析结果 (3000.240042ms)\nℹ tests 20\nℹ suites 0\nℹ pass 20\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 88733.955875",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "扩展 shared contracts、preload 和 IPC/runtime 适配，使 assistant-ui 的 respondToApproval、resume 或 addResult 能传递 optionId、text、reason 等回答信息；主进程必须校验真实审批记录、运行 ID、工具调用 ID 和一次性消费语义。",
+          "coverage": "integration",
+          "test": "node --test tests/ask-user-ipc.test.ts",
+          "verify": [
+            "node --test tests/ask-user-ipc.test.ts tests/tool-write-approval.test.ts tests/workspace-ipc.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/ask-user-ipc.test.ts",
+            "verifiedAt": "2026-09-24T09:30:08.577Z",
+            "exitCode": 0,
+            "stdout": "✔ exposes a strict shared response contract for the pending ask_user interaction (99.550125ms)\n✔ wires ask_user response through shared IPC, preload, and AgentService (2.287ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 565.953875",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/ask-user-ipc.test.ts tests/tool-write-approval.test.ts tests/workspace-ipc.test.ts",
+              "verifiedAt": "2026-09-24T09:30:10.850Z",
+              "exitCode": 0,
+              "stdout": "✔ exposes a strict shared response contract for the pending ask_user interaction (118.688625ms)\n✔ wires ask_user response through shared IPC, preload, and AgentService (2.75225ms)\n✔ binds a one-shot approval to chat, origin run, resume run, call and exact input (115.425958ms)\n✔ fails closed for tampering, rejection, expiry, duplicate response, revocation and restart replay (418.002708ms)\n✔ uses AI SDK toolApproval to pause before any write executor runs (333.571916ms)\n✔ wires the main approval channel through existing assistant-ui approval controls (0.849833ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (1399.612375ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (359.177209ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (320.368917ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2244.181",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T09:30:11.719Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/ask-user-ipc.test.ts tests/tool-write-approval.test.ts tests/workspace-ipc.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-24T09:30:11.719Z",
+            "exitCode": 0,
+            "stdout": "✔ exposes a strict shared response contract for the pending ask_user interaction (118.688625ms)\n✔ wires ask_user response through shared IPC, preload, and AgentService (2.75225ms)\n✔ binds a one-shot approval to chat, origin run, resume run, call and exact input (115.425958ms)\n✔ fails closed for tampering, rejection, expiry, duplicate response, revocation and restart replay (418.002708ms)\n✔ uses AI SDK toolApproval to pause before any write executor runs (333.571916ms)\n✔ wires the main approval channel through existing assistant-ui approval controls (0.849833ms)\n✔ 取消目录选择无记录，选择后可创建并读取会话 (1399.612375ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (359.177209ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (320.368917ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2244.181",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "定义计划和 todo 步骤的共享契约与持久化边界：步骤拥有稳定 ID、文本、pending/in-progress/completed/blocked/skipped 状态和 revision；计划更新必须绑定 chatId/runId，恢复会话时保留已完成状态，不重放旧工具调用。",
+          "coverage": "integration",
+          "test": "node --test tests/plan-todo.test.ts",
+          "verify": [
+            "node --test tests/plan-todo.test.ts tests/workspace-store.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/plan-todo.test.ts",
+            "verifiedAt": "2026-09-24T09:40:34.716Z",
+            "exitCode": 0,
+            "stdout": "✔ persists stable todo IDs, statuses, revision, and keeps completed steps on updates (420.856375ms)\n✔ rejects stale revisions, foreign runs, duplicate IDs, and unknown states (322.398125ms)\n✔ update_plan host tool persists revisions through the active run callback (410.586416ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1325.953458",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/plan-todo.test.ts tests/workspace-store.test.ts",
+              "verifiedAt": "2026-09-24T09:40:36.662Z",
+              "exitCode": 0,
+              "stdout": "✔ persists stable todo IDs, statuses, revision, and keeps completed steps on updates (405.896417ms)\n✔ rejects stale revisions, foreign runs, duplicate IDs, and unknown states (342.332583ms)\n✔ update_plan host tool persists revisions through the active run callback (510.325042ms)\n✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (395.77925ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (343.413417ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (397.866791ms)\n✔ 损坏和非法外键文件不被覆盖 (331.074417ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (302.913208ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1916.087833",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T09:40:37.440Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/plan-todo.test.ts tests/workspace-store.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-24T09:40:37.440Z",
+            "exitCode": 0,
+            "stdout": "✔ persists stable todo IDs, statuses, revision, and keeps completed steps on updates (405.896417ms)\n✔ rejects stale revisions, foreign runs, duplicate IDs, and unknown states (342.332583ms)\n✔ update_plan host tool persists revisions through the active run callback (510.325042ms)\n✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (395.77925ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (343.413417ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (397.866791ms)\n✔ 损坏和非法外键文件不被覆盖 (331.074417ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (302.913208ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1916.087833",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "接入 assistant-ui 的 elements-todo-list registry，并实现 SailorAskUserCard 与计划 TodoList 展示：在 SailorToolCall 中识别 ask_user，在计划消息或计划区域渲染 TodoList，支持 revision 更新、当前步骤高亮、完成/阻塞状态和未知状态回退；UI 不直接绕过 runtime 调 IPC。",
+          "coverage": "integration",
+          "test": "node --test tests/ask-user-ui.test.ts tests/plan-todo-ui.test.ts",
+          "verify": [
+            "node --test tests/ask-user-ui.test.ts tests/plan-todo-ui.test.ts tests/tool-feedback-ui.test.ts tests/assistant-ui-message-rendering.test.ts",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/ask-user-ui.test.ts tests/plan-todo-ui.test.ts",
+            "verifiedAt": "2026-09-24T09:53:43.823Z",
+            "exitCode": 0,
+            "stdout": "✔ renders ask_user question, options, and freeform control without a default selection (966.205791ms)\n✔ falls back to a readable terminal state for malformed or cancelled questions (0.46175ms)\n✔ maps persisted plan statuses into the official TodoList element and revision (150.236542ms)\n✔ renders a non-card empty state when a plan has no steps (0.359667ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1215.972333",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/ask-user-ui.test.ts tests/plan-todo-ui.test.ts tests/tool-feedback-ui.test.ts tests/assistant-ui-message-rendering.test.ts",
+              "verifiedAt": "2026-09-24T09:53:48.125Z",
+              "exitCode": 0,
+              "stdout": "✔ renders ask_user question, options, and freeform control without a default selection (1794.534041ms)\n✔ falls back to a readable terminal state for malformed or cancelled questions (0.621ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1686.120375ms)\n✔ 生成中指示器改用官方 GenerationLoader 矩阵并由本地时钟驱动 (1.428667ms)\n✔ GenerationLoader 按 tick 点亮三个单元格并随 tick 移动 (391.778458ms)\n✔ maps persisted plan statuses into the official TodoList element and revision (282.256167ms)\n✔ renders a non-card empty state when a plan has no steps (0.31775ms)\n✔ AgentService exposes read tools through its runner, returns structured failure and lets the model recover (2927.938125ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (324.74ms)\n✔ structured tool fallback renders failures as the official ToolError card with recovery (713.451042ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4271.794458",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T09:53:48.973Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T09:54:02.679Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           151.26 kB\n✓ built in 199ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\nout/preload/index.cjs  7.08 kB\n✓ built in 11ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3367 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BeSPjVLT.css                   206.99 kB\n../../out/renderer/assets/ReviewPanel-O5XeI05P.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CzlOvV-g.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Cw7SE-d_.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DEWCr17z.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-Dcxh6K5s.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-s09n3yQJ.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DZhq9HF4.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-CG3paahL.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-OEbbK8D1.js             4,725.90 kB\n../../out/renderer/assets/index-CHKhGob0.js                  6,789.86 kB\n✓ built in 11.94s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\n[plugin vite:reporter] \n(!) /Users/hs/Documents/learning/sailor/src/renderer/src/lib/IpcChatTransport.ts is dynamically imported by /Users/hs/Documents/learning/sailor/src/renderer/src/components/chat/runtime/SailorChatProvider.tsx but also statically imported by /Users/hs/Documents/learning/sailor/src/renderer/src/lib/WorkspaceChats.ts, dynamic import will not move module into another chunk."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/ask-user-ui.test.ts tests/plan-todo-ui.test.ts tests/tool-feedback-ui.test.ts tests/assistant-ui-message-rendering.test.ts && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-24T09:54:02.679Z",
+            "exitCode": 0,
+            "stdout": "✔ renders ask_user question, options, and freeform control without a default selection (1794.534041ms)\n✔ falls back to a readable terminal state for malformed or cancelled questions (0.621ms)\n✔ official tool UI renders structured results and errors without a custom plan view (1686.120375ms)\n✔ 生成中指示器改用官方 GenerationLoader 矩阵并由本地时钟驱动 (1.428667ms)\n✔ GenerationLoader 按 tick 点亮三个单元格并随 tick 移动 (391.778458ms)\n✔ maps persisted plan statuses into the official TodoList element and revision (282.256167ms)\n✔ renders a non-card empty state when a plan has no steps (0.31775ms)\n✔ AgentService exposes read tools through its runner, returns structured failure and lets the model recover (2927.938125ms)\n✔ tool registry preserves call ids, cancellation and error-json model output (324.74ms)\n✔ structured tool fallback renders failures as the official ToolError card with recovery (713.451042ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4271.794458\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           151.26 kB\n✓ built in 199ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\nout/preload/index.cjs  7.08 kB\n✓ built in 11ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3367 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-BeSPjVLT.css                   206.99 kB\n../../out/renderer/assets/ReviewPanel-O5XeI05P.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CzlOvV-g.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Cw7SE-d_.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DEWCr17z.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-Dcxh6K5s.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-s09n3yQJ.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DZhq9HF4.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-CG3paahL.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-OEbbK8D1.js             4,725.90 kB\n../../out/renderer/assets/index-CHKhGob0.js                  6,789.86 kB\n✓ built in 11.94s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\n[plugin vite:reporter] \n(!) /Users/hs/Documents/learning/sailor/src/renderer/src/lib/IpcChatTransport.ts is dynamically imported by /Users/hs/Documents/learning/sailor/src/renderer/src/components/chat/runtime/SailorChatProvider.tsx but also statically imported by /Users/hs/Documents/learning/sailor/src/renderer/src/lib/WorkspaceChats.ts, dynamic import will not move module into another chunk."
+          }
+        },
+        {
+          "action": "覆盖 ask_user 卡片和 TodoList 的真实状态与可访问性：未回答、提交中、已回答、被拒绝、已跳过、已取消、已过期、提交失败、恢复失败、todo 更新和无步骤空态；确保提交按钮防重复、选项无默认误选、键盘与屏幕阅读器语义完整，并在窄窗口和深色主题下不发生文本溢出或遮挡。",
+          "coverage": "manual-exception",
+          "verify": [
+            "test -f .agent-harness/evidence/ask-user-ui-acceptance.md",
+            "pnpm run lint",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "coverage_reason": "键盘焦点、屏幕阅读器标签、深浅主题、窄窗口布局和提交中视觉反馈需要真实 Electron 渲染与人工检查，静态测试不能可靠替代这些验收。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "test -f .agent-harness/evidence/ask-user-ui-acceptance.md",
+              "verifiedAt": "2026-09-24T10:03:24.145Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run lint",
+              "verifiedAt": "2026-09-24T10:03:27.710Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'"
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-24T10:03:28.559Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T10:03:40.566Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           151.26 kB\n✓ built in 193ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\nout/preload/index.cjs  7.08 kB\n✓ built in 13ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3367 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-FESPQS5y.css                   202.18 kB\n../../out/renderer/assets/ReviewPanel-DnoJarwu.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-BPs3hXIH.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-B4Be4sjl.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bor_OJYO.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-DA2MIEwu.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Daa75nPo.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DwlbB7Ti.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DFyhvNOr.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DsXWVnbO.js             4,725.90 kB\n../../out/renderer/assets/index-COcm5AEj.js                  6,789.37 kB\n✓ built in 10.40s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "test -f .agent-harness/evidence/ask-user-ui-acceptance.md && pnpm run lint && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-24T10:03:40.566Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           151.26 kB\n✓ built in 193ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\nout/preload/index.cjs  7.08 kB\n✓ built in 13ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3367 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-FESPQS5y.css                   202.18 kB\n../../out/renderer/assets/ReviewPanel-DnoJarwu.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-BPs3hXIH.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-B4Be4sjl.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bor_OJYO.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-DA2MIEwu.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Daa75nPo.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DwlbB7Ti.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DFyhvNOr.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DsXWVnbO.js             4,725.90 kB\n../../out/renderer/assets/index-COcm5AEj.js                  6,789.37 kB\n✓ built in 10.40s",
+            "stderr": "$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "同步架构与产品文档，记录 ask_user 的数据边界、回答恢复流程、失败与过期语义、TodoList 的步骤状态和持久化 revision，以及未纳入本 feature 的真实 bash 执行范围；运行 feature 级全量验证并保留可复现 evidence。",
+          "coverage": "static",
+          "verify": [
+            "rg -n \"ask_user|human-in-the-loop|HITL|TodoList|todo|真实 bash|plan-execute\" docs/architecture.md docs/product-okr.md README.md",
+            "node ./.agent-harness/scripts/verify-feature.mjs --validate --feature-id feat-ask-user-human-in-loop",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "coverage_reason": "文档同步、feature schema 校验和项目级 verification 是静态/集成 gate，不能通过一个先失败的单元测试表达完整要求。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "rg -n \"ask_user|human-in-the-loop|HITL|TodoList|todo|真实 bash|plan-execute\" docs/architecture.md docs/product-okr.md README.md",
+              "verifiedAt": "2026-09-24T10:07:56.748Z",
+              "exitCode": 0,
+              "stdout": "README.md:24:代码任务可以由 Pi 通过 `update_plan` 创建或更新计划 TodoList。步骤使用稳定 ID 和 `pending`、`in-progress`、`completed`、`blocked`、`skipped` 状态；每次变更递增 revision，并按 chat/run 绑定后持久化到工作区会话。官方 assistant-ui `elements-todo-list` 在聊天区域显示当前步骤、完成进度、阻塞状态和空计划。\nREADME.md:26:执行中需要业务决定时，Pi 调用 `ask_user` 暂停当前 turn。聊天内的卡片显示结构化问题、选项、可选自由文本和跳过入口；回答经过 runtime/preload IPC 绑定原 chat、run 和 tool call 后恢复同一 Pi turn，不会重新执行已完成的工具。回答一次性消费，取消、过期、删除会话和应用重启都会使旧问题失效。真实本机 bash 执行仍未接入；Pi 的 bash 继续使用受审批的 just-bash。\ndocs/product-okr.md:111:- KR1.2：每个代码任务都能生成、更新和持久化 todo/plan；计划步骤拥有稳定 ID 和状态。\ndocs/product-okr.md:180:- 任务计划与 todo 数据结构。\ndocs/product-okr.md:244:计划执行采用 `update_plan` + `ask_user` 两个结构化入口。计划步骤显示在聊天内的 TodoList 中，使用稳定 ID、状态和 revision，并持久化到 chat；用户确认卡片支持选项、自由文本、跳过和提交失败反馈。回答会恢复原运行，旧问题在取消、过期、删除会话或重启后失效。真实本机 bash 仍暂缓，避免把 just-bash 的虚拟执行边界误称为本机验证能力。\ndocs/architecture.md:159:### Plan-execute、TodoList 与 ask_user\ndocs/architecture.md:163:renderer 使用 assistant-ui registry 的 `elements-todo-list` source component 映射计划状态，空计划和未知/阻塞状态有明确回退。计划摘要从 workspace snapshot 投影到 `SailorThread`，不另建独立状态源。\ndocs/architecture.md:165:`ask_user` 是 main/Pi 注册的 host tool。工具调用创建内存 pending interaction 并阻塞 Promise，问题输入由共享 schema 校验；回答必须匹配 `chatId/runId/toolCallId/interactionId`，一次性消费后 resolve 原 Promise，让同一 Pi turn 继续。`AskUserInteractionStore` 处理回答、拒绝、跳过、取消、过期、重复提交和应用重启失效。renderer 的 `SailorAskUserCard` 只通过 `SailorChatProvider` runtime 回调进入窄 preload IPC，不直接访问 main；卡片支持键盘 radio、自由文本、提交中、防重复和错误/终态展示。",
+              "stderr": ""
+            },
+            {
+              "command": "node ./.agent-harness/scripts/verify-feature.mjs --validate --feature-id feat-ask-user-human-in-loop",
+              "verifiedAt": "2026-09-24T10:07:56.784Z",
+              "exitCode": 0,
+              "stdout": "OK: 1 个 feature 通过 checklist schema 校验。",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-24T10:08:11.650Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           151.26 kB\n✓ built in 341ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\nout/preload/index.cjs  7.08 kB\n✓ built in 12ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3367 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-FESPQS5y.css                   202.18 kB\n../../out/renderer/assets/ReviewPanel-DnoJarwu.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-BPs3hXIH.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-B4Be4sjl.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bor_OJYO.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-DA2MIEwu.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Daa75nPo.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DwlbB7Ti.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DFyhvNOr.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DsXWVnbO.js             4,725.90 kB\n../../out/renderer/assets/index-COcm5AEj.js                  6,789.37 kB\n✓ built in 12.84s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "rg -n \"ask_user|human-in-the-loop|HITL|TodoList|todo|真实 bash|plan-execute\" docs/architecture.md docs/product-okr.md README.md && node ./.agent-harness/scripts/verify-feature.mjs --validate --feature-id feat-ask-user-human-in-loop && pnpm run build",
+            "verifiedAt": "2026-09-24T10:08:11.650Z",
+            "exitCode": 0,
+            "stdout": "README.md:24:代码任务可以由 Pi 通过 `update_plan` 创建或更新计划 TodoList。步骤使用稳定 ID 和 `pending`、`in-progress`、`completed`、`blocked`、`skipped` 状态；每次变更递增 revision，并按 chat/run 绑定后持久化到工作区会话。官方 assistant-ui `elements-todo-list` 在聊天区域显示当前步骤、完成进度、阻塞状态和空计划。\nREADME.md:26:执行中需要业务决定时，Pi 调用 `ask_user` 暂停当前 turn。聊天内的卡片显示结构化问题、选项、可选自由文本和跳过入口；回答经过 runtime/preload IPC 绑定原 chat、run 和 tool call 后恢复同一 Pi turn，不会重新执行已完成的工具。回答一次性消费，取消、过期、删除会话和应用重启都会使旧问题失效。真实本机 bash 执行仍未接入；Pi 的 bash 继续使用受审批的 just-bash。\ndocs/product-okr.md:111:- KR1.2：每个代码任务都能生成、更新和持久化 todo/plan；计划步骤拥有稳定 ID 和状态。\ndocs/product-okr.md:180:- 任务计划与 todo 数据结构。\ndocs/product-okr.md:244:计划执行采用 `update_plan` + `ask_user` 两个结构化入口。计划步骤显示在聊天内的 TodoList 中，使用稳定 ID、状态和 revision，并持久化到 chat；用户确认卡片支持选项、自由文本、跳过和提交失败反馈。回答会恢复原运行，旧问题在取消、过期、删除会话或重启后失效。真实本机 bash 仍暂缓，避免把 just-bash 的虚拟执行边界误称为本机验证能力。\ndocs/architecture.md:159:### Plan-execute、TodoList 与 ask_user\ndocs/architecture.md:163:renderer 使用 assistant-ui registry 的 `elements-todo-list` source component 映射计划状态，空计划和未知/阻塞状态有明确回退。计划摘要从 workspace snapshot 投影到 `SailorThread`，不另建独立状态源。\ndocs/architecture.md:165:`ask_user` 是 main/Pi 注册的 host tool。工具调用创建内存 pending interaction 并阻塞 Promise，问题输入由共享 schema 校验；回答必须匹配 `chatId/runId/toolCallId/interactionId`，一次性消费后 resolve 原 Promise，让同一 Pi turn 继续。`AskUserInteractionStore` 处理回答、拒绝、跳过、取消、过期、重复提交和应用重启失效。renderer 的 `SailorAskUserCard` 只通过 `SailorChatProvider` runtime 回调进入窄 preload IPC，不直接访问 main；卡片支持键盘 radio、自由文本、提交中、防重复和错误/终态展示。\nOK: 1 个 feature 通过 checklist schema 校验。\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           151.26 kB\n✓ built in 341ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\nout/preload/index.cjs  7.08 kB\n✓ built in 12ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3367 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-FESPQS5y.css                   202.18 kB\n../../out/renderer/assets/ReviewPanel-DnoJarwu.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-BPs3hXIH.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-B4Be4sjl.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Bor_OJYO.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-DA2MIEwu.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-Daa75nPo.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DwlbB7Ti.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DFyhvNOr.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DsXWVnbO.js             4,725.90 kB\n../../out/renderer/assets/index-COcm5AEj.js                  6,789.37 kB\n✓ built in 12.84s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-24T10:08:11.650Z"
+    }
+  ]
+}

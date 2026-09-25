@@ -33,6 +33,9 @@ import { UNSUPPORTED_ATTACHMENT_MESSAGE } from '@shared/attachments'
 import { useSailorChat } from '../runtime/SailorChatProvider'
 import { SailorComposerContext } from './SailorComposerContext'
 import { stopChatRun } from './composerPolicy'
+import { PlanTodoListView } from '../PlanTodoListView'
+import { SailorAskUserPopover, type SailorAskUserCardProps } from '../tools/SailorAskUserCard'
+import { findPendingAskUser } from './pendingAskUser'
 
 interface SailorComposerProps {
   chatId: string
@@ -72,6 +75,7 @@ export function SailorComposer({
   }, [aui, chatId])
   const { clearError, error, stop, sendMessage } = useSailorChat()
   const runtimeRunning = useAuiState((state) => state.thread.isRunning)
+  const threadMessages = useAuiState((state) => state.thread.messages)
   const references = useWorkspaceContexts(chatId)
   const composerEmpty = useAuiState((state) => state.composer.isEmpty)
   const composerText = useAuiState((state) => state.composer.text)
@@ -153,6 +157,11 @@ export function SailorComposer({
     Boolean(summary?.archived) ||
     (composerEmpty && references.length === 0)
 
+  const pendingAskUser = useMemo<SailorAskUserCardProps | undefined>(
+    () => findPendingAskUser(threadMessages, summary?.status),
+    [summary?.status, threadMessages],
+  )
+
   useEffect(() => {
     registry.reasoning.set(chatId, reasoning)
   }, [chatId, reasoning, registry])
@@ -167,6 +176,8 @@ export function SailorComposer({
 
   return (
     <div className="sailor-composer-stack">
+      <PlanTodoListView plan={summary?.plan} runStatus={summary?.status} runId={summary?.runId} />
+      <SailorAskUserPopover pending={pendingAskUser} />
       {(selectionError || error || summary?.error || attachmentError) && (
         <div className="runtime-error" role="alert">
           {selectionError ?? error?.message ?? summary?.error ?? attachmentError}

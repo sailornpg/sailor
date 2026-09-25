@@ -398,6 +398,13 @@
       "status": "done",
       "archived_at": "2026-09-24T07:52:25.974Z",
       "archive_path": ".agent-harness/archive/feat-side-chat-btw"
+    },
+    {
+      "id": "feat-ask-user-human-in-loop",
+      "title": "Ask User Human-in-the-Loop Interaction",
+      "status": "done",
+      "archived_at": "2026-09-25T02:25:14.686Z",
+      "archive_path": ".agent-harness/archive/feat-ask-user-human-in-loop"
     }
   ]
 }

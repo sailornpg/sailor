@@ -1,91 +1,159 @@
 # Sailor
 
-一个使用 Electron、React、Vercel AI SDK 和 assistant-ui 构建的 Codex 风格桌面编程工作区。
+Sailor 是一个本地优先的 AI 编程工作区。它用 Electron 提供桌面能力，用 React 和 assistant-ui 渲染聊天界面，用 Vercel AI SDK + Harness Pi 驱动模型、工具和会话恢复。
 
-应用品牌使用 Sailor 粒子小船标记；侧栏展示静态点阵版本，新会话欢迎区展示同一船形的动态版本。Electron 窗口、macOS Dock 及 macOS/Windows/Linux 安装包使用与侧栏一致的灰色粒子小船白底图标。
+Sailor 的核心边界是：**模型执行和文件访问只在 Electron main 进程中发生，renderer 只能通过 preload 暴露的类型化 API 访问能力。**
 
-## 本地运行
+## 能力概览
+
+- 按本地目录组织工作区和会话，支持后台运行、取消、归档、恢复、重命名和删除。
+- 配置 DeepSeek 或自定义模型提供商，支持 OpenAI Completions、OpenAI Responses 和 Anthropic Messages。
+- 通过 `/models` 获取模型目录，并维护上下文窗口、最大输出 token、推理等级和视觉能力。
+- 使用 Pi 原生 `read`、`write`、`edit`、`bash`、`grep`、`glob`、`ls` 工具操作当前工作区。
+- 计划 TodoList、`ask_user` 人机协作、工具审批、推理摘要、来源引用和结构化错误反馈。
+- 读取图片及 `xlsx`、`docx`、`pdf`、`csv/tsv`、文本附件。
+- 通过本地 MCP 搜索公共网页，并在消息中展示来源。
+- 右侧面板提供文件浏览、浏览器预览、改动审查、侧边聊天和用户驱动的真实终端。
+- 首页和新会话使用粒子小船动画，并在 WebGL 不可用或用户减少动态效果时回退到静态图形。
+
+## 架构
+
+```text
+React renderer
+  AppShell / workspace sidebar / chat / panels / settings
+        │ typed window.sailor API
+        ▼
+Preload (contextBridge, no Node access)
+        │ validated Electron IPC
+        ▼
+Electron main
+  WorkspaceService + WorkspaceStore
+  SettingsService + safeStorage
+  AgentService + PiRunner
+  TerminalService (node-pty)
+        │
+        ├─ HarnessAgent + AI SDK + Pi
+        │    ├─ Pi native tools + just-bash workspace mount
+        │    ├─ host tools: update_plan / ask_user / read_document
+        │    └─ MCP tools: web_search / fetch_page / research
+        └─ UIMessageChunk stream → renderer
+```
+
+### 进程职责
+
+| 层             | 职责                                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `src/main`     | 窗口生命周期、IPC 注册、模型调用、凭据、工作区持久化、文件工具、MCP、PTY。               |
+| `src/preload`  | 通过 `contextBridge` 暴露最小的 `window.sailor` API；不暴露通用 filesystem 或 Node API。 |
+| `src/renderer` | React 页面、assistant-ui 组件、聊天状态、面板布局、设置和本地 UI 偏好。                  |
+| `src/shared`   | IPC channel、Zod schema、UIMessage、工作区、计划、审批、终端和附件等跨进程契约。         |
+
+### 一次聊天请求
+
+1. `WorkspaceChats` 为每个打开的 `chatId` 保留一个 AI SDK `Chat` 实例。
+2. `IpcChatTransport` 将发送动作转成 preload IPC，并接收 `UIMessageChunk` 流。
+3. `AgentService` 校验 `chatId/runId`、锁定本次模型配置，并协调运行、取消和持久化。
+4. `PiRunner` 创建 Harness Pi 会话，恢复 Pi checkpoint，加载 Skills，并运行原生工具和 host/MCP 工具。
+5. 工具结果和模型输出一边回传 renderer，一边由 main 重建为 `UIMessage` 保存到工作区。
+
+### 目录结构
+
+```text
+src/
+├── main/
+│   ├── agent/       # AgentService、PiRunner、工具、附件和 MCP
+│   ├── ipc/         # IPC handler、输入校验和生命周期清理
+│   ├── settings/    # 提供商设置、模型目录和 safeStorage
+│   ├── terminal/    # node-pty、会话限制、输出缓冲和终端 IPC
+│   └── workspaces/  # 工作区/会话 store、路径策略和文件面板服务
+├── preload/         # window.sailor 类型化桥接
+├── renderer/src/
+│   ├── components/
+│   │   ├── assistant-ui/elements/  # 官方 assistant-ui source components
+│   │   ├── chat/                   # Sailor 聊天 runtime、composer、thread、工具适配
+│   │   ├── layout/                 # 三栏 shell、侧栏和 panel dock
+│   │   ├── panels/                 # 文件、终端、浏览器、审查、侧聊
+│   │   └── settings/               # 模型和外观设置
+│   └── lib/                        # IPC、Chat registry、面板和 UI 状态适配
+└── shared/                         # 跨进程类型和结构化契约
+
+tests/                              # 契约、服务、IPC、runtime 和 UI 测试
+docs/                               # 架构及专项设计文档
+```
+
+## 关键数据和安全边界
+
+- 工作区历史：`app.getPath('userData')/workspaces.json`，包含项目、会话摘要、完整 `UIMessage` parts、计划和运行状态。
+- 模型配置：`app.getPath('userData')/model-providers.json`。API key 使用 Electron `safeStorage` 加密，renderer 只看到 `hasApiKey`。
+- Pi checkpoint：`app.getPath('userData')/pi-sessions/`。它保存 Pi 的恢复元数据和私有虚拟文件，不保存项目文件。
+- 外观、侧栏和面板尺寸等非敏感偏好保存在 renderer 的 versioned `localStorage` 中。
+- 工作区路径由 main 根据持久化的 `chatId → projectId → rootPath` 解析；renderer 不能提交任意执行路径。
+- 文件工具在挂载边界拒绝绝对路径、越界路径、越界符号链接和敏感凭据文件，并限制扫描、搜索、读取和附件大小。
+- Pi 的写入、编辑和 just-bash 每次都需要一次性审批；审批绑定 chat、run、tool call 和原始参数，过期、重复或伪造响应会失败。
+- 右侧终端是用户主动打开的真实本机 PTY。它不向模型暴露，也不把输出写入聊天或磁盘；项目目录只是工作目录，不是沙盒。
+- renderer 使用 `contextIsolation: true`、`nodeIntegration: false` 和 `sandbox: true`。
+
+## 当前范围
+
+已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、Pi 原生工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。
+
+暂不实现：云端沙盒、远程工作区同步、自动发现项目目录、全局聊天搜索、聊天跨工作区移动、Git diff 收集，以及应用重启后自动续接正在生成的流。
+
+更完整的进程边界、持久化契约、面板 scope 和运行时细节见 [`docs/architecture.md`](docs/architecture.md)。
+
+## 本地开发
+
+项目使用 `pnpm`（`pnpm@11.1.2`）。
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-从侧栏打开**设置 → 模型**，填写提供商地址和密钥，然后点击**获取可用模型**。应用会从兼容接口的 `/models` 获取模型目录；加入需要使用的模型后，可分别维护显示名称、上下文窗口、最大输出 token、推理等级和视觉能力，再从任务输入区的简洁菜单选择模型。输入区右侧的上下文圆环可悬浮或聚焦查看最近一次有效统计的输入、输出 token 与窗口比例；历史消息没有统计时显示暂无用量，自动压缩后的占用以下次调用为准。
+第一次启动后：
 
-设置弹窗的**外观**页支持跟随系统、浅色和深色主题，以及默认、蓝色、绿色和紫色强调色。选择会立即应用，并保存在本机的非敏感 renderer 偏好中；跟随系统会响应操作系统外观变化，恢复默认会回到跟随系统和默认强调色。
+1. 侧栏点击“添加工作区”，选择一个本地项目目录。
+2. 打开“设置 → 模型”，填写提供商地址和密钥。
+3. 点击“获取可用模型”，选择模型并保存。
+4. 在工作区中新建会话即可开始对话。
 
-应用预置 DeepSeek，也支持自定义提供商。API 协议可选择 OpenAI Completions、OpenAI Responses 或 Anthropic Messages。凭据通过 Electron 原生安全存储加密，保存后不会返回渲染进程；编辑时密钥留空会继续使用已保存的密钥。
-
-## Pi 编程运行时
-
-在已完成且保存的主会话输入 `/btw` 可打开独立侧聊，输入 `/btw 问题` 会同时在侧聊提问。侧聊只在右侧面板显示，创建时复制主会话已保存的 Pi 上下文（包括图片），后续对话保存在自己的 Pi 会话中，不写回主会话。旧会话若没有 Pi 状态，仅能使用文本快照；包含图片时会提示无法完整继承。侧聊可以读取当前工作区，但不提供写入、编辑和 bash 工具。关闭面板不会删除侧聊；主会话归档、恢复或删除时，其侧聊会一同处理。
-
-也可以选中主会话中的一段消息文字，选择“在侧边聊天中提问”。引用会出现在新侧聊的输入区，可先移除或直接输入问题；发送后的侧聊消息保留引用，主会话历史不变。
-
-聊天主运行链路使用 AI SDK `HarnessAgent` + Pi，复用 Pi 的原生会话、自动上下文压缩和 Skills。自定义 Provider 的地址、密钥与模型列表继续在设置中管理，支持 OpenAI Completions、Responses 和 Anthropic Messages；模型未提供上下文窗口或最大输出 token 时，Pi 使用 128000 / 8192 的默认值管理上下文；填写模型真实值可获得更准确的压缩时机。
-
-编程任务通过 Pi 自带的 `read`、`write`、`edit`、`bash`、`grep`、`glob`、`ls` 操作所选本地目录。just-bash 的 ReadWriteFs 将项目挂载到内部工作目录，修改直接落盘；会话状态单独保存，无需云沙盒账户或费用。读操作自动执行，写入、编辑和 bash 每次需要批准。bash 是 JavaScript 实现的 shell，不是本机终端，不能运行任意 pnpm、Node 或编译器。
-
-原生 `write` 使用 Pi 的覆盖语义，`edit` 使用精确文本替换，不再提供旧工具的 expectedHash 和原子补丁保证。敏感凭据路径和符号链接仍在挂载层拒绝。旧工具仅保留历史显示与测试夹具，不再向模型注册。
-工作区 `.agents/skills/<name>/SKILL.md` 与 `.pi/skills/<name>/SKILL.md` 会被加载，frontmatter 需包含合法的 `name` 和 `description`。Pi 按需读取正文和文本附件；最多加载 32 个 Skill、每个 64 个文件、单文件 64 KiB、总量 1 MiB、附件子目录最多 4 层。符号链接、敏感文件、二进制和超限文件会被跳过。不自动执行 Skill 脚本或加载用户全局 Pi 扩展。
-
-每个 chat 的原生状态独立保存在用户数据目录 `pi-sessions/`，与界面聊天历史分开保存。重新打开应用不会自动发起模型调用或执行工具；下一次发送消息时恢复。待审批操作在重启后失效，需要发送新消息重新请求。旧聊天首次继续时只将文本历史导入 Pi（最多 64 KiB），历史工具调用不会重放。Pi 状态保存失败会中止本轮并报错，进程内保留待保存状态，下一次运行先重试保存。
-
-会话右侧提供官方 Conversation Map 摘要导航：每轮对话一个刻度，悬浮查看提问与回复摘录，点击定位原消息；方向键、Home、End 可移动焦点，Enter 可跳转。摘要直接来自当前会话内容。
-
-## 工作区与会话
-
-侧栏点击 **添加工作区** 选择本地目录，再从目录旁的 **+** 新建会话。相同真实目录（含符号链接）会复用已有工作区；悬浮目录名可查看完整路径。
-
-每个会话独立运行：可以在多个会话中同时发送任务，切换会话或折叠工作区不会暂停生成。侧栏显示运行中、后台完成未读和失败状态，停止按钮只停止对应会话。同一会话一次运行一个任务；模型和推理设置在该次调用开始时固定。
-
-每个工作区使用官方 ThreadList 展示任务。会话右侧的更多菜单支持重命名、归档和删除；已归档列表可以展开并恢复会话。手动标题不会被后续消息覆盖。删除需要确认，会移除聊天记录和原生 Pi 会话检查点，不删除工作区文件。运行中或保存失败的会话需先停止并保存后再管理。
-
-目录、完整聊天历史、最近活动会话和折叠偏好保存在 Electron 用户数据目录的 `workspaces.json` 中，重启后恢复。中断的生成不会自动恢复。保存失败时输出暂留在应用内，点击 **重试保存**；重试成功前请勿退出应用。目录失效时仍能读历史，但无法启动新运行。
-
-设置仅保留**模型**与**外观**，统一使用 assistant-ui 设计语言和共享控件。提供商采用平面列表与分区表单，保存操作固定在底部。Web 搜索与旧本机执行功能（含配置入口、IPC 和执行端）已删除；旧配置中的相应字段会被忽略，保存时不再写入。历史搜索来源与命令结果仍可查看，不会重放。Pi 工作区内需逐次审批的 `bash` 保持可用。
-
-## 终端面板
-
-右侧面板中的**终端**是用户手动操作的本机交互终端：初始目录就是该工作区的项目根目录，切换会话、切换或关闭面板、隐藏右栏、切换工作区都不会结束进程（关闭面板只隐藏）。可以用 `⌘`` 打开：如果这个工作区还没有终端，打开时会直接启动一个并进入运行中；面板顶部是一排会话 tab 与「+」——点「+」再新建一个独立终端，点 tab 切换（每个 tab 左侧的状态点表示运行或已退出），点 tab 上的 ✕ 关闭并终止该 shell。每个工作区最多同时打开 4 个终端。
-
-终端以当前用户权限运行，项目目录只是工作目录，不是沙盒：里面的 `pnpm`、`git`、编辑器等本机程序和普通终端一样可用。它完全由你手动驱动——AI 不会注册终端工具、看不到终端输出，也不会把输出自动发给模型；输出不落盘、不自动复制到剪贴板。Pi 的 just-bash 与逐次审批边界保持不变。
-
-终端依赖 `node-pty`（主进程真实 PTY）与 `@xterm/xterm`（渲染）。`pnpm install` 会执行 `postinstall` 补上 node-pty 预编译 `spawn-helper` 的执行权限；应用退出时会先向 shell 进程组发 `SIGHUP`，随后强制结束残留进程，但自行脱离进程组的后台守护进程不在保证范围内。首版在 macOS 上验收。
-
-## 常用命令
+### 常用命令
 
 ```bash
-pnpm dev        # Electron 开发模式
-pnpm typecheck  # 主进程、preload 和渲染进程类型检查
-pnpm build      # 生产构建
-pnpm preview    # 预览生产构建
+pnpm dev          # Electron 开发模式
+pnpm build        # typecheck + electron-vite production build
+pnpm preview      # 预览生产构建
+pnpm typecheck    # 主进程、preload、renderer 类型检查
+pnpm lint         # ESLint + Stylelint
+pnpm lint:js      # 只检查 JS/TS
+pnpm lint:css     # 只检查 CSS
 ```
 
-## 提交前格式化
-
-`pnpm install` 会通过 Husky 安装 `pre-commit` hook。提交时，lint-staged 仅处理已暂存文件：Prettier 先格式化受支持文件，然后 ESLint 校验 JS/TS，Stylelint 校验 CSS/SCSS；校验失败会阻止提交。格式化结果会重新暂存，未暂存文件不会被纳入提交。`pnpm-lock.yaml` 不交给 Prettier 处理。hook 不运行类型检查或构建，这两项仍由项目验证流程执行。
-
-本地可运行 `pnpm exec prettier --write <文件>` 格式化指定文件。首次接入没有批量重排现有源码；以后某个文件进入提交时才会按 `.prettierrc.json` 的规则格式化。
-
-全仓库校验运行 `pnpm run lint`，也可分别运行 `pnpm run lint:js` 和 `pnpm run lint:css`。TypeScript 7 目前不受 `typescript-eslint` 支持，因此 ESLint 使用 Babel 解析 TS/TSX 并检查基础规则；类型语义仍由 `pnpm run typecheck` 校验。Stylelint 识别 Tailwind 4 的自定义 at-rules；现有样式表中的重复选择器及特异性顺序暂不设为提交阻断项。
-
-### AI SDK DevTools（本地调试）
-
-开发时可用 AI SDK DevTools 查看 HarnessAgent 的模型调用、工具调用、耗时和 token 用量。需要分别启动查看器和 Sailor：
+标准启动和验证入口是：
 
 ```bash
-pnpm devtools                 # 查看器：http://localhost:4983
-SAILOR_DEVTOOLS=1 pnpm dev   # 开启 Harness telemetry 后启动应用
+./.agent-harness/init.sh
 ```
 
-记录写入项目根目录的 `.devtools/`，只用于本地调试，默认关闭。请求输入可能包含图片内容；不要在共享环境或生产环境开启。
+测试文件使用 Node test runner，可按模块运行，例如：
 
-进程边界和当前实现范围见 [docs/architecture.md](docs/architecture.md)。
+```bash
+node --test tests/workspace-store.test.ts tests/pi-agent.test.ts
+```
 
-## 首页粒子小船
+本地调试 AI SDK telemetry：
 
-无活动会话的首页和新会话空白欢迎区通过按需加载的 R3F 9.8.0 / Three.js 0.186.0 展示粒子小船。665 颗粒子按等距行列排列，边缘沿直线收齐；鼠标靠近时局部撑开，移开后平滑复位。船帆内部波纹从左边缘进入并持续从左向右传播，三条边固定；页面隐藏时暂停渲染，像素比上限为 1.5。深浅主题跟随现有设置；减少动态效果或 WebGL 不可用时使用静态粒子船形，目录选择和会话创建流程保持原样。
+```bash
+pnpm devtools                 # http://localhost:4983
+SAILOR_DEVTOOLS=1 pnpm dev   # 启用 Harness telemetry
+```
 
-新会话首次提交消息时，小船粒子约 800ms 内散开，融入聊天区域的规则点阵背景；欢迎语淡出，同一 Composer 延迟约 80ms 后用 570ms 动画移到底部。背景横竖间距为 20 CSS px、点径约 1.6 CSS px，固定于聊天容器，落定后停止持续渲染。历史会话直接显示背景，模型请求不等待转场。减少动态效果或 WebGL 失败时使用静态回退。
+telemetry 默认关闭，记录写入 `.devtools/`；不要在共享环境或生产环境开启。
+
+## 相关文档
+
+- [`docs/architecture.md`](docs/architecture.md)：完整架构、数据契约和运行时边界。
+- [`docs/panels.md`](docs/panels.md)：右侧面板宿主、scope 和布局模型。
+- [`docs/file-system-panel.md`](docs/file-system-panel.md)：文件树和只读预览。
+- [`docs/side-chat.md`](docs/side-chat.md)：侧边聊天生命周期和上下文继承。
+- [`CLAUDE.md`](CLAUDE.md)：项目级协作、验证和安全约定。

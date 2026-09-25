@@ -6,6 +6,9 @@ import type {
 } from './workspaces.js'
 import type { TerminalApi } from './terminal.js'
 import type { UIMessage, UIMessageChunk } from 'ai'
+import type { AskUserInteractionResponse } from './askUser.js'
+
+export type { AskUserInteractionResponse }
 
 export type ChatId = string
 export type ReasoningEffort =
@@ -53,6 +56,8 @@ export interface WriteApprovalResponse {
   toolName: string
   approved: boolean
   reason?: string
+  optionId?: string
+  text?: string
 }
 
 export type ProviderProtocol = 'openai-completions' | 'openai-responses' | 'anthropic-messages'
@@ -155,6 +160,7 @@ export interface SailorApi {
     start(request: AgentRunRequest): Promise<void>
     abort(runId: string): Promise<void>
     respondToApproval(response: WriteApprovalResponse): Promise<void>
+    respondToAskUser(response: AskUserInteractionResponse): Promise<void>
     revokeApprovals(chatId: ChatId): Promise<void>
     subscribe(listener: (runId: string, event: AgentRunEvent) => void): () => void
   }
@@ -200,6 +206,7 @@ export const IPC = {
   agentStart: 'agent:start',
   agentAbort: 'agent:abort',
   agentRespondToApproval: 'agent:respond-to-approval',
+  agentRespondToAskUser: 'agent:respond-to-ask-user',
   agentRevokeApprovals: 'agent:revoke-approvals',
   agentEvent: 'agent:event',
   settingsProviders: 'settings:providers',

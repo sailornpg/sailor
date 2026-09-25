@@ -1,14 +1,22 @@
 import { isToolUIPart, type ChatTransport, type UIMessage, type UIMessageChunk } from 'ai'
 import type { AgentRunRequest, ReasoningEffort } from '@shared/contracts'
 
+const activeRunIds = new Map<string, string>()
+
+export function getActiveAgentRunId(chatId: string): string | undefined {
+  return activeRunIds.get(chatId)
+}
+
 export function createAgentRunRequest(input: AgentRunRequest): AgentRunRequest {
   return input
 }
 
 function resumesToolApproval(messages: UIMessage[]): boolean {
   const message = messages.at(-1)
-  return message?.role === 'assistant'
-    && message.parts.some(part => isToolUIPart(part) && part.state === 'approval-responded')
+  return (
+    message?.role === 'assistant' &&
+    message.parts.some((part) => isToolUIPart(part) && part.state === 'approval-responded')
+  )
 }
 
 export class IpcChatTransport implements ChatTransport<UIMessage> {
@@ -26,6 +34,7 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
     ReadableStream<UIMessageChunk>
   > {
     const runId = crypto.randomUUID()
+    activeRunIds.set(chatId, runId)
     const reasoning = this.getReasoning()
     let unsubscribe: (() => void) | undefined
     let abortHandler: (() => void) | undefined
@@ -44,6 +53,7 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
           if (finished) return
           finished = true
           cleanup()
+          if (activeRunIds.get(chatId) === runId) activeRunIds.delete(chatId)
           controller.close()
         }
 
@@ -68,22 +78,24 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
         void (async () => {
           if (!resumesToolApproval(messages)) await window.sailor.agent.revokeApprovals(chatId)
           if (finished || abortSignal?.aborted) return
-          await window.sailor.agent.start(createAgentRunRequest({
+          await window.sailor.agent.start(
+            createAgentRunRequest({
               chatId,
               messages,
               reasoning,
               runId,
-            }))
-        })()
-          .catch((error: unknown) => {
-            if (finished) return
-            finished = true
-            cleanup()
-            controller.error(error)
-          })
+            }),
+          )
+        })().catch((error: unknown) => {
+          if (finished) return
+          finished = true
+          cleanup()
+          controller.error(error)
+        })
       },
       cancel() {
         if (!finished) void window.sailor.agent.abort(runId)
+        if (activeRunIds.get(chatId) === runId) activeRunIds.delete(chatId)
         finished = true
         cleanup()
       },

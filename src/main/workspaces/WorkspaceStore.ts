@@ -3,6 +3,7 @@ import { mkdir, readFile, realpath, rename, stat, writeFile, rm } from 'node:fs/
 import { basename, dirname } from 'node:path'
 import { z } from 'zod'
 import type { UIMessage } from 'ai'
+import { mergePlanTodoList, planTodoListSchema, type PlanTodoList } from '../../shared/planTodo.js'
 import type {
   WorkspaceChat,
   WorkspacePreferences,
@@ -29,6 +30,7 @@ const chatSchema = z.object({
   parentChatId: z.string().optional(),
   forkMessageId: z.string().optional(),
   contextSnapshot: z.string().optional(),
+  plan: planTodoListSchema.optional(),
   unread: z.boolean(),
   error: z.string().nullable(),
   messages: z.array(messageSchema),
@@ -137,7 +139,9 @@ export class WorkspaceStore {
   }
   updateChat(
     id: string,
-    patch: Partial<Pick<WorkspaceChat, 'messages' | 'runId' | 'status' | 'unread' | 'error'>>,
+    patch: Partial<
+      Pick<WorkspaceChat, 'messages' | 'runId' | 'status' | 'unread' | 'error' | 'plan'>
+    >,
     expectedRunId?: string,
   ): Promise<WorkspaceChat> {
     const captured = structuredClone(patch)
@@ -163,6 +167,18 @@ export class WorkspaceStore {
         chat.updatedAt = Date.now()
       }
       return chat
+    })
+  }
+  updatePlan(id: string, runId: string, input: PlanTodoList): Promise<PlanTodoList> {
+    const next = planTodoListSchema.parse(input)
+    return this.mutate((state) => {
+      const chat = state.chats.find((candidate) => candidate.id === id)
+      if (!chat) throw new Error('会话不存在。')
+      if (chat.runId !== runId || chat.status !== 'running') throw new Error('计划运行已失效。')
+      const merged = mergePlanTodoList(chat.plan, next)
+      chat.plan = merged
+      chat.updatedAt = Date.now()
+      return merged
     })
   }
   manageChat(id: string, input: ChatManagement): Promise<string[]> {
