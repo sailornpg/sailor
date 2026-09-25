@@ -58,9 +58,25 @@ test('renders a non-card empty state when a plan has no steps', () => {
   const markup = renderToStaticMarkup(
     React.createElement(view.PlanTodoListView, {
       plan: { revision: 1, steps: [] },
+      runStatus: 'running',
     }),
   )
   assert.match(markup, /计划暂无步骤/)
+})
+
+test('does not flash a completed plan when entering a finished session', () => {
+  const markup = renderToStaticMarkup(
+    React.createElement(view.PlanTodoListView, {
+      plan: {
+        revision: 2,
+        steps: [{ id: 'done', title: '已完成任务', status: 'completed' }],
+      },
+      runStatus: 'completed',
+      runId: 'run-finished',
+    }),
+  )
+  assert.doesNotMatch(markup, /已完成任务/)
+  assert.doesNotMatch(markup, /sailor-plan-todo-popover/)
 })
 
 test('keeps the expanded plan surface in layout so it cannot cover messages', async () => {

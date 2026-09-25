@@ -197,11 +197,14 @@ export class WorkspaceService {
       if (chat.archived) throw new Error('请先恢复已归档会话。')
       if (chat.saveError) throw new Error('请先重试保存此会话，再继续生成。')
       if (chat.status === 'running') throw new Error('此会话已有运行中的任务。')
+      // Approval continuations use a fresh transport runId but resume the same
+      // user task. Only a new user prompt starts a new plan lifecycle.
+      const continuation = request.messages.at(-1)?.role === 'assistant'
       Object.assign(chat, {
         runId: request.runId,
         status: 'running',
         messages: request.messages,
-        plan: undefined,
+        plan: continuation ? chat.plan : undefined,
         error: null,
         unread: false,
       })

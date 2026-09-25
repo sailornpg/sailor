@@ -217,6 +217,93 @@ test('Pi 拒绝审批不会写文件，重启不能重用旧审批', { timeout: 
   assert.equal((await f.store.getChat(f.chat.id)).status, 'completed', JSON.stringify(f.events))
 })
 
+for (const approved of [true, false]) {
+  test(
+    `计划在连续两次${approved ? '允许' : '拒绝'}工具审批续跑时始终保留`,
+    { timeout: 40000 },
+    async (t) => {
+      const f = await fixture(t)
+      const agent = f.createAgent()
+      const plan = {
+        revision: 1,
+        steps: [{ id: 'work', title: '执行任务', status: 'in-progress' }],
+      }
+      f.replies.push(
+        { tool: 'update_plan', id: 'plan-1', input: plan },
+        { tool: 'write', id: 'write-first', input: { file_path: 'plan.txt', content: 'first' } },
+      )
+      await agent.start(await f.request('创建计划并执行两个需要审批的步骤'))
+      assert.deepEqual((await f.workspace.getChat(f.chat.id)).plan, plan)
+
+      const resumedPlans: unknown[] = []
+      const beginRun = f.workspace.beginRun.bind(f.workspace)
+      f.workspace.beginRun = async (request: unknown) => {
+        await beginRun(request)
+        const snapshot = await f.workspace.snapshot()
+        resumedPlans.push(snapshot.chats.find((chat: any) => chat.id === f.chat.id)?.plan)
+      }
+      for (const revision of [2, 3]) {
+        const approval = f.events.findLast(
+          (event) => event.chunk?.type === 'tool-approval-request',
+        )?.chunk
+        assert.ok(approval)
+        agent.respondToApproval({
+          chatId: f.chat.id,
+          toolCallId: approval.toolCallId,
+          toolName: 'write',
+          approvalId: approval.approvalId,
+          approved,
+        })
+        const history = (await f.store.getChat(f.chat.id)).messages
+        const part = history
+          .at(-1)
+          .parts.find((part: any) => part.toolCallId === approval.toolCallId)
+        part.state = 'approval-responded'
+        part.approval = { ...part.approval, approved }
+        f.replies.push({
+          tool: 'update_plan',
+          id: `plan-${revision}`,
+          input: {
+            ...plan,
+            revision,
+            steps: [{ ...plan.steps[0], status: revision === 3 ? 'completed' : 'in-progress' }],
+          },
+        })
+        f.replies.push(
+          revision === 2
+            ? {
+                tool: 'write',
+                id: 'write-second',
+                input: { file_path: 'plan.txt', content: 'second' },
+              }
+            : { text: '任务完成' },
+        )
+        await agent.start({
+          chatId: f.chat.id,
+          runId: crypto.randomUUID(),
+          reasoning: 'provider-default',
+          messages: history,
+        })
+        assert.equal(
+          (await f.workspace.getChat(f.chat.id)).status,
+          'completed',
+          JSON.stringify(f.events.filter((event) => event.chunk?.type === 'error')),
+        )
+      }
+      assert.deepEqual(
+        resumedPlans,
+        [plan, { ...plan, revision: 2 }],
+        '审批恢复后的第一个工作区快照必须保留计划，不能先清空再等待模型重新 update_plan',
+      )
+      assert.equal((await f.store.getChat(f.chat.id)).plan?.revision, 3)
+      if (approved) assert.equal(await readFile(join(f.root, 'project/plan.txt'), 'utf8'), 'second')
+      else await assert.rejects(readFile(join(f.root, 'project/plan.txt')))
+      await agent.start(await f.request('新的独立任务'))
+      assert.equal((await f.workspace.getChat(f.chat.id)).plan, undefined)
+    },
+  )
+}
+
 test('停止 Pi 后不继续输出，下一轮可恢复对话', { timeout: 30000 }, async (t) => {
   const f = await fixture(t)
   let aborted = false

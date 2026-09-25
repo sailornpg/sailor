@@ -1,0 +1,111 @@
+{
+  "features": [
+    {
+      "id": "fix-todo-approval-lifecycle",
+      "name": "审批续跑期间 TodoList 持续显示",
+      "description": "修复审批续跑清空计划，以及计划显示、完成退场和历史恢复的生命周期；沿用现有 IPC 与持久化 schema。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "主进程在审批续跑中保留计划，连续允许和拒绝后均可继续更新；新用户任务才重置计划",
+          "coverage": "integration",
+          "test": "node --test --test-name-pattern='计划在连续两次' tests/pi-agent.test.ts",
+          "verify": "node --test tests/plan-todo.test.ts tests/workspace-chat-lifecycle.test.ts",
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test --test-name-pattern='计划在连续两次' tests/pi-agent.test.ts",
+            "verifiedAt": "2026-09-25T03:49:41.344Z",
+            "exitCode": 0,
+            "stdout": "✔ 计划在连续两次允许工具审批续跑时始终保留 (14707.928875ms)\n✔ 计划在连续两次拒绝工具审批续跑时始终保留 (12960.807542ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 28092.147",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node --test tests/plan-todo.test.ts tests/workspace-chat-lifecycle.test.ts",
+            "verifiedAt": "2026-09-25T03:49:49.495Z",
+            "exitCode": 0,
+            "stdout": "✔ persists stable todo IDs, statuses, revision, and keeps completed steps on updates (104.97875ms)\n✔ rejects stale revisions, foreign runs, duplicate IDs, and unknown states (363.122917ms)\n✔ update_plan host tool persists revisions through the active run callback (465.387125ms)\n✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (2453.567291ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (491.718625ms)\n✔ 停止等待运行落盘后即可立即管理会话 (508.116125ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (559.700292ms)\n✔ renderer 实例跨视图保留，快速切换只采用最后一次选择 (319.446542ms)\n✔ 计划投影跨会话切换保留同一运行的最后有效快照，新运行会清除旧计划 (317.207583ms)\n✔ 取消后的未完成工具 parts 保留历史且可安全续聊 (584.205292ms)\n✔ 恢复中断运行不自动调用模型，运行前异常仍释放会话锁 (738.508792ms)\n✔ 切换视图不等待偏好写盘，偏好失败不会阻止访问其他会话 (501.912875ms)\n✔ 已删除工具的成功历史可恢复且不会重新执行 (581.901791ms)\n✔ 新一轮运行开始时清除上一轮的计划投影 (500.2125ms)\n✔ 当前 host 工具 update_plan 和 ask_user 的历史可恢复并可管理 (320.800875ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8120.54925",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node --test tests/plan-todo.test.ts tests/workspace-chat-lifecycle.test.ts",
+            "verifiedAt": "2026-09-25T03:49:49.495Z",
+            "exitCode": 0,
+            "stdout": "✔ persists stable todo IDs, statuses, revision, and keeps completed steps on updates (104.97875ms)\n✔ rejects stale revisions, foreign runs, duplicate IDs, and unknown states (363.122917ms)\n✔ update_plan host tool persists revisions through the active run callback (465.387125ms)\n✔ 同/跨工作区并行，切换不终止，后台保存完整输出和未读状态 (2453.567291ms)\n✔ 同会话重复提交被拒绝；停止一个不会停止另一个并保留部分输出 (491.718625ms)\n✔ 停止等待运行落盘后即可立即管理会话 (508.116125ms)\n✔ 保存失败保留内存消息与错误，可重试且不影响另一会话 (559.700292ms)\n✔ renderer 实例跨视图保留，快速切换只采用最后一次选择 (319.446542ms)\n✔ 计划投影跨会话切换保留同一运行的最后有效快照，新运行会清除旧计划 (317.207583ms)\n✔ 取消后的未完成工具 parts 保留历史且可安全续聊 (584.205292ms)\n✔ 恢复中断运行不自动调用模型，运行前异常仍释放会话锁 (738.508792ms)\n✔ 切换视图不等待偏好写盘，偏好失败不会阻止访问其他会话 (501.912875ms)\n✔ 已删除工具的成功历史可恢复且不会重新执行 (581.901791ms)\n✔ 新一轮运行开始时清除上一轮的计划投影 (500.2125ms)\n✔ 当前 host 工具 update_plan 和 ask_user 的历史可恢复并可管理 (320.800875ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8120.54925",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "验证真实 React 挂载期间审批续跑和会话切换不会闪烁；完成只退场一次，恢复历史不重放",
+          "coverage": "e2e",
+          "test": "node tests/plan-todo-electron.test.mjs",
+          "verify": "node --test tests/plan-todo-ui.test.ts",
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/plan-todo-electron.test.mjs",
+            "verifiedAt": "2026-09-25T03:50:26.937Z",
+            "exitCode": 0,
+            "stdout": "PASS 审批等待和新 runId 续跑始终保留同一个 DOM\nPASS 步骤全完成但仍在等待权限时不退场\nPASS 完成延迟退场仅执行一次，快照刷新不重放\nPASS 切回运行中会话恢复计划，已完成历史不闪现\nPASS 新用户任务清空旧计划，完成与新计划连续更新\nPASS 只有当前消息的待审批状态延长计划展示\nPASS 主题、窄窗口、滚动和折叠",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node --test tests/plan-todo-ui.test.ts",
+            "verifiedAt": "2026-09-25T03:50:27.641Z",
+            "exitCode": 0,
+            "stdout": "✔ maps persisted plan statuses into the official TodoList element and revision (149.582791ms)\n✔ renders a non-card empty state when a plan has no steps (0.856792ms)\n✔ does not flash a completed plan when entering a finished session (0.294292ms)\n✔ keeps the expanded plan surface in layout so it cannot cover messages (1.900292ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 674.710333",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node --test tests/plan-todo-ui.test.ts",
+            "verifiedAt": "2026-09-25T03:50:27.641Z",
+            "exitCode": 0,
+            "stdout": "✔ maps persisted plan statuses into the official TodoList element and revision (149.582791ms)\n✔ renders a non-card empty state when a plan has no steps (0.856792ms)\n✔ does not flash a completed plan when entering a finished session (0.294292ms)\n✔ keeps the expanded plan surface in layout so it cannot cover messages (1.900292ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 674.710333",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "记录根因、视觉检查和回归证据，并通过构建与 lint",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "文档与完整构建 gate，由前两项行为测试保证修复有效",
+          "verify": [
+            "pnpm run build",
+            "pnpm run lint",
+            "test -s .agent-harness/evidence/todo-approval-lifecycle.md"
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-25T03:51:31.052Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           152.56 kB\n✓ built in 197ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.67 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3369 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CzTTRy5i.css                   204.27 kB\n../../out/renderer/assets/ReviewPanel-CLrIpf2N.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-1zFlsQrQ.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DAFiLaVi.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DUjr0nwQ.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene--Vx9n_E0.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DHUeTPVL.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-ChU-2QCX.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BzTqF2Mw.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-EaRFLlJn.js             4,725.90 kB\n../../out/renderer/assets/index-B10ZxrFe.js                  6,801.10 kB\n✓ built in 9.96s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            },
+            {
+              "command": "pnpm run lint",
+              "verifiedAt": "2026-09-25T03:51:34.527Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'"
+            },
+            {
+              "command": "test -s .agent-harness/evidence/todo-approval-lifecycle.md",
+              "verifiedAt": "2026-09-25T03:51:34.529Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run build && pnpm run lint && test -s .agent-harness/evidence/todo-approval-lifecycle.md",
+            "verifiedAt": "2026-09-25T03:51:34.529Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           152.56 kB\n✓ built in 197ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.67 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3369 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CzTTRy5i.css                   204.27 kB\n../../out/renderer/assets/ReviewPanel-CLrIpf2N.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-1zFlsQrQ.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DAFiLaVi.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DUjr0nwQ.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene--Vx9n_E0.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DHUeTPVL.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-ChU-2QCX.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BzTqF2Mw.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-EaRFLlJn.js             4,725.90 kB\n../../out/renderer/assets/index-B10ZxrFe.js                  6,801.10 kB\n✓ built in 9.96s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\n$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'"
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-25T03:51:34.530Z"
+    }
+  ]
+}

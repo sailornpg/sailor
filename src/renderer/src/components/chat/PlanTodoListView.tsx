@@ -10,6 +10,7 @@ interface PlanTodoListViewProps {
   plan?: PlanTodoList
   runStatus?: RunStatus
   runId?: string | null
+  waitingForApproval?: boolean
 }
 
 function toTodoItems(plan: PlanTodoList): TodoItem[] {
@@ -52,7 +53,25 @@ function hasUnfinishedSteps(plan: PlanTodoList | undefined): boolean {
   )
 }
 
-export function PlanTodoListView({ plan, runStatus, runId }: PlanTodoListViewProps) {
+function isTerminalRunStatus(runStatus: RunStatus | undefined): boolean {
+  return runStatus === 'completed' || runStatus === 'stopped' || runStatus === 'error'
+}
+
+function shouldDisplayInitially(
+  plan: PlanTodoList | undefined,
+  runStatus: RunStatus | undefined,
+  waitingForApproval: boolean,
+) {
+  if (!plan) return false
+  return hasUnfinishedSteps(plan) || runStatus === 'running' || waitingForApproval
+}
+
+export function PlanTodoListView({
+  plan,
+  runStatus,
+  runId,
+  waitingForApproval = false,
+}: PlanTodoListViewProps) {
   const [expanded, setExpanded] = useState(true)
   const contentId = `sailor-plan-todo-content-${useId().replaceAll(':', '')}`
   const [displayPlan, setDisplayPlan] = useState(plan)
@@ -69,9 +88,10 @@ export function PlanTodoListView({ plan, runStatus, runId }: PlanTodoListViewPro
   const displayedSignatureRef = useRef(displayPlan ? JSON.stringify(displayPlan) : '')
   const runIdRef = useRef(runId)
   const items = displayPlan ? toTodoItems(displayPlan) : []
-  const [mounted, setMounted] = useState(() => Boolean(displayPlan))
-  const [closing, setClosing] = useState(() => Boolean(displayPlan))
-  const mountedRef = useRef(Boolean(displayPlan))
+  const initiallyVisible = shouldDisplayInitially(displayPlan, runStatus, waitingForApproval)
+  const [mounted, setMounted] = useState(initiallyVisible)
+  const [closing, setClosing] = useState(false)
+  const mountedRef = useRef(initiallyVisible)
   const closeTimerRef = useRef<number | undefined>(undefined)
   const removeTimerRef = useRef<number | undefined>(undefined)
   const enterFrameRef = useRef<number | undefined>(undefined)
@@ -97,7 +117,12 @@ export function PlanTodoListView({ plan, runStatus, runId }: PlanTodoListViewPro
   }
 
   const dismissWithAnimation = () => {
-    if (!mountedRef.current || closeTimerRef.current !== undefined) return
+    if (
+      !mountedRef.current ||
+      closeTimerRef.current !== undefined ||
+      removeTimerRef.current !== undefined
+    )
+      return
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = undefined
       setClosing(true)
@@ -110,24 +135,27 @@ export function PlanTodoListView({ plan, runStatus, runId }: PlanTodoListViewPro
   }
 
   useEffect(() => {
-    const runChanged = runIdRef.current !== runId
+    // `undefined` means the summary is temporarily unavailable during a chat
+    // switch. It must not be treated as a new run and clear the visible plan.
+    const runChanged =
+      runId !== undefined && runIdRef.current !== undefined && runIdRef.current !== runId
     const incoming = incomingPlanRef.current
-    const incomingHasUnfinishedSteps = hasUnfinishedSteps(incoming.plan)
     if (runChanged) {
       runIdRef.current = runId
       clearTimers()
       displayedSignatureRef.current = incoming.signature
       displayPlanRef.current = incoming.plan
       setDisplayPlan(incoming.plan)
-      if (!incoming.plan) {
+      if (!shouldDisplayInitially(incoming.plan, runStatus, waitingForApproval)) {
         mountedRef.current = false
         setMounted(false)
         setClosing(false)
       } else {
         mountWithAnimation()
+        setClosing(false)
       }
-      return clearTimers
     }
+    if (runId !== undefined) runIdRef.current = runId
 
     // Keep the last plan mounted during a same-run snapshot gap. This avoids
     // an unmount/remount flash while workspace persistence catches up.
@@ -137,20 +165,30 @@ export function PlanTodoListView({ plan, runStatus, runId }: PlanTodoListViewPro
       setDisplayPlan(incoming.plan)
     }
 
-    if ((incoming.plan && incomingHasUnfinishedSteps) || runStatus === 'running') {
+    const currentPlan = incoming.plan ?? displayPlanRef.current
+    const currentHasUnfinishedSteps = hasUnfinishedSteps(currentPlan)
+    if (
+      currentPlan &&
+      (currentHasUnfinishedSteps || runStatus === 'running' || waitingForApproval)
+    ) {
       clearTimers()
-      if (incoming.plan) mountWithAnimation()
+      if (currentPlan !== displayPlanRef.current) {
+        displayPlanRef.current = currentPlan
+        setDisplayPlan(currentPlan)
+      }
+      mountWithAnimation()
       setClosing(false)
-    } else if (incoming.plan || displayPlanRef.current) {
-      // A completed/stopped snapshot may briefly omit plan while the final
-      // workspace write is settling. Keep the visible plan and use the same
-      // delayed exit as a completed plan.
+    } else if (currentPlan && isTerminalRunStatus(runStatus)) {
+      // Only an explicit terminal status starts the exit animation. A missing
+      // plan or status is a snapshot gap, not evidence that the run finished.
       setClosing(false)
       dismissWithAnimation()
+    } else if (!currentPlan) {
+      clearTimers()
     }
 
     return clearTimers
-  }, [runId, runStatus, plan ? JSON.stringify(plan) : ''])
+  }, [runId, runStatus, waitingForApproval, plan ? JSON.stringify(plan) : ''])
 
   if (!displayPlan || !mounted) return null
   return (

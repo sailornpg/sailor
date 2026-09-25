@@ -424,8 +424,25 @@ export class PiRunner implements AgentRunner {
         onError: createAgentErrorFormatter('agent 运行失败。'),
       })
       const calls = new Map<string, { toolCallId: string; toolName: string; input: unknown }>()
+      const deniedCalls = new Set(
+        request.messages
+          .at(-1)
+          ?.parts.flatMap((part) =>
+            'toolCallId' in part &&
+            part.state === 'approval-responded' &&
+            part.approval.approved === false
+              ? [part.toolCallId]
+              : [],
+          ),
+      )
       for await (const chunk of stream) {
         if (signal.aborted) break
+        // Pi reports execution-denied as a tool result. The UI stream must keep
+        // the denial state; output-available + approved:false is invalid history.
+        if (chunk.type === 'tool-output-available' && deniedCalls.has(chunk.toolCallId)) {
+          yield { type: 'tool-output-denied', toolCallId: chunk.toolCallId }
+          continue
+        }
         if (chunk.type === 'tool-input-available')
           calls.set(chunk.toolCallId, {
             toolCallId: chunk.toolCallId,

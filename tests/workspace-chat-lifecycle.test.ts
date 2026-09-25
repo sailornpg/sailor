@@ -213,6 +213,24 @@ test('renderer 实例跨视图保留，快速切换只采用最后一次选择',
   assert.equal(await chats.get('b'), instance)
 })
 
+test('计划投影跨会话切换保留同一运行的最后有效快照，新运行会清除旧计划', async (t) => {
+  const { vite } = await fixture(t)
+  const { WorkspaceChats } = await vite.ssrLoadModule('/src/renderer/src/lib/WorkspaceChats.ts')
+  const chats = new WorkspaceChats({
+    getChat: async (id: string) => ({ id, messages: [] }),
+    setPreferences: async () => {},
+  })
+  const plan = {
+    revision: 2,
+    steps: [{ id: 'inspect', title: '检查现状', status: 'in-progress' as const }],
+  }
+  chats.rememberPlanSnapshots([{ id: 'a', runId: 'run-a', plan } as any])
+  chats.rememberPlanSnapshots([{ id: 'a', runId: 'run-a' } as any])
+  assert.deepEqual(chats.getStablePlan({ id: 'a', runId: 'run-a' } as any), plan)
+  chats.rememberPlanSnapshots([{ id: 'a', runId: 'run-b' } as any])
+  assert.equal(chats.getStablePlan({ id: 'a', runId: 'run-b' } as any), undefined)
+})
+
 test('取消后的未完成工具 parts 保留历史且可安全续聊', async (t) => {
   const { agent, workspace, store, a, request } = await fixture(t)
   const history = [

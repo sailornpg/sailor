@@ -57,6 +57,7 @@ export function AppShell() {
     const version = ++refreshVersion.current
     const next = await window.sailor.workspaces.snapshot()
     if (version === refreshVersion.current) {
+      chatRegistry.rememberPlanSnapshots(next.chats)
       setSnapshot(next)
       setLoading(false)
     }

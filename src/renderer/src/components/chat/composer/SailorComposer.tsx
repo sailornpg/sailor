@@ -36,6 +36,7 @@ import { stopChatRun } from './composerPolicy'
 import { PlanTodoListView } from '../PlanTodoListView'
 import { SailorAskUserPopover, type SailorAskUserCardProps } from '../tools/SailorAskUserCard'
 import { findPendingAskUser } from './pendingAskUser'
+import { hasPendingToolApproval } from './pendingToolApproval'
 
 interface SailorComposerProps {
   chatId: string
@@ -73,7 +74,7 @@ export function SailorComposer({
     const quote = sideChatQuoteDrafts.take(chatId)
     if (quote) aui.composer.setQuote(quote)
   }, [aui, chatId])
-  const { clearError, error, stop, sendMessage } = useSailorChat()
+  const { clearError, error, stop, sendMessage, messages } = useSailorChat()
   const runtimeRunning = useAuiState((state) => state.thread.isRunning)
   const threadMessages = useAuiState((state) => state.thread.messages)
   const references = useWorkspaceContexts(chatId)
@@ -176,7 +177,12 @@ export function SailorComposer({
 
   return (
     <div className="sailor-composer-stack">
-      <PlanTodoListView plan={summary?.plan} runStatus={summary?.status} runId={summary?.runId} />
+      <PlanTodoListView
+        plan={registry.getStablePlan(summary)}
+        runStatus={runBusy ? 'running' : summary?.status}
+        runId={summary?.runId}
+        waitingForApproval={hasPendingToolApproval(messages)}
+      />
       <SailorAskUserPopover pending={pendingAskUser} />
       {(selectionError || error || summary?.error || attachmentError) && (
         <div className="runtime-error" role="alert">
