@@ -3,10 +3,13 @@ import { sendWithWorkspaceContexts } from './sendWithWorkspaceContexts'
 import { createContext, useContext, type ReactNode } from 'react'
 import { useChat, type Chat, type UseChatHelpers } from '@ai-sdk/react'
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk'
-import { AssistantRuntimeProvider } from '@assistant-ui/react'
+import { AssistantRuntimeProvider, AuiConfig, Tools } from '@assistant-ui/react'
 import type { UIMessage } from 'ai'
 import { sailorAttachmentAdapter } from './sailorAttachmentAdapter'
 import { getActiveAgentRunId } from '@/lib/IpcChatTransport'
+import { sailorToolkit } from '../tools/sailorToolkit'
+
+const sailorConfig = AuiConfig({ tools: Tools({ toolkit: sailorToolkit }) })
 
 const SailorChatContext = createContext<UseChatHelpers<UIMessage> | null>(null)
 const SailorChatIdContext = createContext<string | null>(null)
@@ -58,7 +61,7 @@ export function SailorChatProvider({ chat, children }: SailorChatProviderProps) 
     <SailorChatContext.Provider value={adapted}>
       <SailorChatIdContext.Provider value={chat.id}>
         <SailorAskUserContext.Provider value={respondToAskUser}>
-          <AssistantRuntimeProvider runtime={runtime}>
+          <AssistantRuntimeProvider runtime={runtime} config={sailorConfig}>
             <WorkspaceContextRenderer />
             {children}
           </AssistantRuntimeProvider>

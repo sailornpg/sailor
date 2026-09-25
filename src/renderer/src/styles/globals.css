@@ -2202,13 +2202,13 @@ kbd {
 }
 
 /* Shared divider surface for docks, sidebars and the file split view. */
-.pane-resizer-shared {
+.pane-resizer {
   background: transparent;
 }
-.pane-resizer-shared[data-orientation='horizontal'] {
+.pane-resizer[data-orientation='horizontal'] {
   cursor: row-resize;
 }
-.pane-resizer-shared[data-orientation='vertical'] {
+.pane-resizer[data-orientation='vertical'] {
   cursor: col-resize;
 }
 .file-split-pane > .pane-resizer {
@@ -2374,28 +2374,28 @@ kbd {
 }
 
 /* Keep the resize affordance discoverable without introducing a colored hover border. */
-.pane-resizer-shared::before {
+.pane-resizer::before {
   content: '';
   position: absolute;
   background: var(--border);
   opacity: 0.72;
   pointer-events: none;
 }
-.pane-resizer-shared[data-orientation='vertical']::before {
+.pane-resizer[data-orientation='vertical']::before {
   top: 0;
   bottom: 0;
   left: 50%;
   width: 1px;
   transform: translateX(-50%);
 }
-.pane-resizer-shared[data-orientation='horizontal']::before {
+.pane-resizer[data-orientation='horizontal']::before {
   left: 0;
   right: 0;
   top: 50%;
   height: 1px;
   transform: translateY(-50%);
 }
-.pane-resizer-shared .pane-resizer-grip {
+.pane-resizer .pane-resizer-grip {
   opacity: 0.72;
 }
 .file-code-preview {
@@ -2418,16 +2418,16 @@ kbd {
 }
 
 /* Aside adapters keep the shared divider attached to the pane edge. */
-.pane-resizer-side-left {
+.pane-resizer[data-side='left'] {
   right: 0;
   left: auto;
 }
-.pane-resizer-side-right {
+.pane-resizer[data-side='right'] {
   left: 0;
   right: auto;
 }
 /* The visible divider belongs to the file split only; aside resizers keep the shared grip. */
-.pane-resizer-shared::before {
+.pane-resizer::before {
   display: none;
 }
 .file-split-pane > .pane-resizer::before {
@@ -2559,13 +2559,13 @@ kbd {
 }
 
 /* Resize grip is a hover/focus affordance; the file split boundary remains visible. */
-.pane-resizer-shared .pane-resizer-grip {
+.pane-resizer .pane-resizer-grip {
   opacity: 0;
 }
-.pane-resizer-shared:hover .pane-resizer-grip,
-.pane-resizer-shared[data-dragging='true'] .pane-resizer-grip,
-.pane-resizer-shared:focus-visible .pane-resizer-grip,
-.pane-resizer-shared[data-forced-hover='true'] .pane-resizer-grip {
+.pane-resizer:hover .pane-resizer-grip,
+.pane-resizer[data-dragging='true'] .pane-resizer-grip,
+.pane-resizer:focus-visible .pane-resizer-grip,
+.pane-resizer[data-forced-hover='true'] .pane-resizer-grip {
   opacity: 1;
 }
 

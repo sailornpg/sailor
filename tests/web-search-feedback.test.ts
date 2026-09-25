@@ -9,7 +9,12 @@ import { createServer } from 'vite'
 async function load(modulePath: string) {
   const vite = await createServer({
     logLevel: 'silent',
-    resolve: { alias: { '@': resolve(process.cwd(), 'src/renderer/src'), '@shared': resolve(process.cwd(), 'src/shared') } },
+    resolve: {
+      alias: {
+        '@': resolve(process.cwd(), 'src/renderer/src'),
+        '@shared': resolve(process.cwd(), 'src/shared'),
+      },
+    },
     server: { middlewareMode: true },
   })
   try {
@@ -42,14 +47,23 @@ const success = {
 test('projects web search lifecycle and validated real sources', async () => {
   const { projectWebSearchFeedback } = await load('/src/renderer/src/lib/webSearchFeedback.ts')
   const running = projectWebSearchFeedback({
-    toolName: 'web_search', args: { query: 'Sailor docs' }, status: 'running', result: undefined,
+    toolName: 'web_search',
+    args: { query: 'Sailor docs' },
+    status: 'running',
+    result: undefined,
   })
   const completed = projectWebSearchFeedback({
-    toolName: 'web_search', args: { query: 'Sailor docs' }, status: 'complete', result: success,
+    toolName: 'web_search',
+    args: { query: 'Sailor docs' },
+    status: 'complete',
+    result: success,
   })
 
   assert.deepEqual(running, {
-    phase: 'running', query: 'Sailor docs', summary: '正在搜索 Web', sources: [],
+    phase: 'running',
+    query: 'Sailor docs',
+    summary: '正在搜索 Web',
+    sources: [],
   })
   assert.equal(completed.phase, 'succeeded')
   assert.equal(completed.sources[0]?.sourceId, source.sourceId)
@@ -69,14 +83,24 @@ test('projects empty/error results visibly and rejects fake links', async () => 
       ok: false,
       summary: 'Web 搜索没有结果',
       error: {
-        code: 'EMPTY_RESULTS', message: '没有找到相关 Web 来源。', retryable: false,
+        code: 'EMPTY_RESULTS',
+        message: '没有找到相关 Web 来源。',
+        retryable: false,
         recovery: [{ action: 'retry', reason: '调整关键词' }],
       },
     },
   })
   const tampered = projectWebSearchFeedback({
-    toolName: 'web_search', args: { query: 'bad' }, status: 'complete',
-    result: { ...success, data: { query: 'bad', sources: [{ ...source, sourceId: 'invented', url: 'javascript:alert(1)' }] } },
+    toolName: 'web_search',
+    args: { query: 'bad' },
+    status: 'complete',
+    result: {
+      ...success,
+      data: {
+        query: 'bad',
+        sources: [{ ...source, sourceId: 'invented', url: 'javascript:alert(1)' }],
+      },
+    },
   })
 
   assert.equal(failed.phase, 'failed')
@@ -86,22 +110,29 @@ test('projects empty/error results visibly and rejects fake links', async () => 
 })
 
 test('renders official WebSearch, Sources and ToolFallback composition', async () => {
-  const { StructuredToolFallback } = await load('/src/renderer/src/components/chat/tools/StructuredToolFallback.tsx')
-  const markup = renderToStaticMarkup(React.createElement(StructuredToolFallback, {
-    toolName: 'web_search',
-    toolCallId: 'call-search',
-    args: { query: 'Sailor docs' },
-    argsText: '{"query":"Sailor docs"}',
-    result: success,
-    status: { type: 'complete' },
-  }))
-  const threadSource = await readFile('src/renderer/src/components/assistant-ui/elements/thread.aui.tsx', 'utf8')
+  const { StructuredToolFallback } = await load(
+    '/src/renderer/src/components/chat/tools/StructuredToolFallback.tsx',
+  )
+  const markup = renderToStaticMarkup(
+    React.createElement(StructuredToolFallback, {
+      toolName: 'web_search',
+      toolCallId: 'call-search',
+      args: { query: 'Sailor docs' },
+      argsText: '{"query":"Sailor docs"}',
+      result: success,
+      status: { type: 'complete' },
+    }),
+  )
+  const threadSource = await readFile(
+    'src/renderer/src/components/assistant-ui/elements/thread.aui.tsx',
+    'utf8',
+  )
 
   assert.match(markup, /data-slot="web-search"/)
   assert.match(markup, /Sailor docs/)
   assert.match(markup, /example\.com/)
   assert.match(markup, /href="https:\/\/example\.com\/docs"/)
   assert.doesNotMatch(markup, /Search result summary only/)
-  assert.match(threadSource, /case "source":/)
+  assert.match(threadSource, /case ['"]source['"]:/)
   assert.match(threadSource, /<Sources/)
 })

@@ -28,14 +28,14 @@ disable-model-invocation: true
 
 每个 feature 条目必须符合以下结构：
 
-| 字段             | 类型     | 必填 | 说明                                                             |
-| ---------------- | -------- | ---- | ---------------------------------------------------------------- |
-| `id`             | string   | 是   | 唯一标识，格式 `以当前任务的摘要英文来作为表示`，不重复          |
-| `name`           | string   | 是   | 简短名称                                                         |
-| `description`    | string   | 是   | 这个 feature 做什么                                              |
-| `status`         | enum     | 是   | `not-started` / `in-progress` / `blocked` / `done` / `cancelled` |
-| `checklist`      | array    | 是   | 可验证的交付清单（见下方）                                       |
-| `dependencies`   | string[] | 否   | 必须先完成的 feature IDs                                         |
+| 字段             | 类型               | 必填 | 说明                                                             |
+| ---------------- | ------------------ | ---- | ---------------------------------------------------------------- |
+| `id`             | string             | 是   | 唯一标识，格式 `以当前任务的摘要英文来作为表示`，不重复          |
+| `name`           | string             | 是   | 简短名称                                                         |
+| `description`    | string             | 是   | 这个 feature 做什么                                              |
+| `status`         | enum               | 是   | `not-started` / `in-progress` / `blocked` / `done` / `cancelled` |
+| `checklist`      | array              | 是   | 可验证的交付清单（见下方）                                       |
+| `dependencies`   | string[]           | 否   | 必须先完成的 feature IDs                                         |
 | `prd_spec`       | string 或 string[] | 否   | 产品需求文档路径，可传多个                                       |
 | `trd_spec`       | string 或 string[] | 否   | 技术文档路径，可传多个                                           |
 | `interface_spec` | string 或 string[] | 否   | 接口文档路径，可传多个                                           |
@@ -47,15 +47,15 @@ disable-model-invocation: true
 
 每个 checklist item 必须描述工作、测试覆盖和最终验证 gate：
 
-| 字段              | 类型                 | 必填                               | 说明                                                        |
-| ----------------- | -------------------- | ---------------------------------- | ----------------------------------------------------------- |
-| `action`          | string               | 是                                 | **行为描述**：告诉 agent 做什么                             |
-| `coverage`        | enum                 | 是                                 | `unit` / `integration` / `e2e` / `static` / `manual-exception` |
-| `test`            | string               | `coverage: "unit"` 时必填          | 聚焦测试命令；TDD Red/Green 阶段使用                        |
-| `verify`          | string 或 string[]   | 是                                 | 最终验证 gate；可组合 grep、lint、build、全量测试等         |
-| `tdd`             | boolean              | 否                                 | 按下方「TDD 判定」评估后填写；不填默认 `true`              |
-| `coverage_reason` | string               | 条件必填                           | `static`、`manual-exception` 或 `tdd: false` 时说明原因     |
-| `status`          | enum                 | 是                                 | **当前状态**：`not-started` / `done`                        |
+| 字段              | 类型               | 必填                      | 说明                                                           |
+| ----------------- | ------------------ | ------------------------- | -------------------------------------------------------------- |
+| `action`          | string             | 是                        | **行为描述**：告诉 agent 做什么                                |
+| `coverage`        | enum               | 是                        | `unit` / `integration` / `e2e` / `static` / `manual-exception` |
+| `test`            | string             | `coverage: "unit"` 时必填 | 聚焦测试命令；TDD Red/Green 阶段使用                           |
+| `verify`          | string 或 string[] | 是                        | 最终验证 gate；可组合 grep、lint、build、全量测试等            |
+| `tdd`             | boolean            | 否                        | 按下方「TDD 判定」评估后填写；不填默认 `true`                  |
+| `coverage_reason` | string             | 条件必填                  | `static`、`manual-exception` 或 `tdd: false` 时说明原因        |
+| `status`          | enum               | 是                        | **当前状态**：`not-started` / `done`                           |
 
 缺少必要字段时，这个 checklist item 不完整，不允许创建。
 
@@ -106,6 +106,18 @@ disable-model-invocation: true
 
 `verify` 可以是单条命令，也可以是命令数组。推荐数组，因为 verifier 能逐条记录 evidence 并精确指出失败步骤。
 
+## Electron 冒烟创建门槛（强制）
+
+凡是会改变应用运行时行为、页面交互、IPC、持久化、模型流或桌面能力的 feature，**创建时**必须在 checklist 中登记至少一个专用 Electron 冒烟项，不能等实现完成后再补：
+
+- `coverage` 必须为 `e2e`；
+- `action` 必须说明真实 Electron 场景和用户可观察结果；
+- `test` 必须明确可执行的测试路径，例如 `node tests/<feature>-electron.test.mjs`；测试文件尚不存在时，也必须先登记预计路径；
+- `verify` 必须包含该冒烟命令或等价的可执行 gate，并记录退出码和结果 evidence；
+- 冒烟项应覆盖本 feature 的核心功能路径，而不是只运行无关的通用 smoke。
+
+只有纯文档、设计或静态 harness 条目可以不登记 Electron 冒烟；这类 feature 必须使用 `coverage: "static"` 或 `manual-exception`，并在 `coverage_reason` 中明确说明没有可运行功能，因此不适用 Electron smoke。
+
 ## 粒度控制
 
 每个 feature 的范围应当是"一次会话能完成"的大小。
@@ -127,6 +139,7 @@ disable-model-invocation: true
    - `checklist`：逐项确认 action、coverage、test、verify、coverage_reason，status 一律设为 `not-started`；`tdd` 按「TDD 判定」**逐项评估**后填写，不要整份 checklist 一个值套到底
    - `dependencies`：是否依赖其他 feature
    - `prd_spec` / `trd_spec` / `interface_spec` / `test_case_spec`：是否有相关文档（一个字段有多篇文档时用数组）
+   - Electron 冒烟：运行时 feature 必须提供专用测试路径和核心交互断言；纯文档/设计 feature 记录不适用原因
 4. 自动生成下一个 `id`（根据当前feature进行简要命名，如 `feat-add-upload-dialog`）。
 5. `status` 默认设为 `not-started`。
 6. 将新条目追加到 `.agent-harness/feature_list.json` 的 `features` 数组末尾。
@@ -138,6 +151,8 @@ disable-model-invocation: true
 - `id` 不能与已有条目重复。
 - 新 feature 的 `status` 只能是 `not-started`，不允许创建时就标记为其他状态。
 - `checklist` 不能为空，至少包含一项。
+- 有运行时行为的 feature 必须至少包含一个 `coverage: "e2e"` 的 Electron 冒烟 checklist 项，并提供明确的 `test` 与 `verify` 命令。
+- 纯文档/设计 feature 不适用 Electron 冒烟时，必须在 `coverage_reason` 中说明原因。
 - 每个 checklist item 的 `action`、`coverage`、`verify`、`status` 字段全部必填。
 - `coverage: "unit"` 必须提供可执行 `test`。
 - `tdd: false`、`coverage: "static"` 或 `coverage: "manual-exception"` 必须提供 `coverage_reason`。

@@ -6,8 +6,9 @@ import type {
 } from './workspaces.js'
 import type { TerminalApi } from './terminal.js'
 import type { UIMessage, UIMessageChunk } from 'ai'
-import type { AskUserInteractionResponse } from './askUser.js'
+import { askUserInteractionResponseSchema, type AskUserInteractionResponse } from './askUser.js'
 
+export { askUserInteractionResponseSchema }
 export type { AskUserInteractionResponse }
 
 export type ChatId = string

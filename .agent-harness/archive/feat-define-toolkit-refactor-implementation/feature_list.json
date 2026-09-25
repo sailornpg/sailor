@@ -1,0 +1,369 @@
+{
+  "features": [
+    {
+      "id": "feat-define-toolkit-refactor-implementation",
+      "name": "Sailor 工具 UI 注册表重构实施",
+      "description": "按 docs/define-toolkit-refactor.md 实施 assistant-ui defineToolkit + Tools + AuiConfig 的工具消息注册重构，迁移现有 renderer 与 fallback 策略，保持主进程执行、审批、ask_user、计划、会话生命周期和持久化契约不变，并完成自动化、Electron 交互及视觉回归验收。",
+      "status": "done",
+      "dependencies": ["docs-define-toolkit-refactor-design"],
+      "trd_spec": "docs/define-toolkit-refactor.md",
+      "checklist": [
+        {
+          "action": "建立重构前基线：核对当前 HEAD、依赖版本、工具展示清单、执行与权限边界，发现并记录测试文件、标准验证结果、平台信息和未解决的既有失败到独立 evidence 目录。",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "这是实施前的源码审计与基线记录，验收依赖可复现的命令输出和人工核对，无法先写出有意义的行为失败测试。",
+          "verify": [
+            "test -f .agent-harness/evidence/define-toolkit-refactor/baseline.md",
+            "rg --files tests scripts .agent-harness/scripts -g '*test*' -g '*spec*' -g '*smoke*'",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "test -f .agent-harness/evidence/define-toolkit-refactor/baseline.md",
+              "verifiedAt": "2026-09-25T05:23:55.862Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "rg --files tests scripts .agent-harness/scripts -g '*test*' -g '*spec*' -g '*smoke*'",
+              "verifiedAt": "2026-09-25T05:23:55.872Z",
+              "exitCode": 0,
+              "stdout": "tests/workspace-tool-scope.test.ts\ntests/particle-grid-transition.test.ts\ntests/composer-attachments.test.ts\ntests/tool-call.test.ts\ntests/thread-autoscroll.test.ts\ntests/reasoning-provider.test.ts\ntests/appearance-runtime.test.ts\ntests/panel-layout.test.ts\ntests/agent-streaming.test.ts\ntests/pi-agent.test.ts\ntests/file-split-pane.test.ts\ntests/terminal-service.test.ts\ntests/chat-entry-transition.test.ts\ntests/terminal-startup.test.ts\ntests/workspace-ipc.test.ts\ntests/panel-registry.test.ts\ntests/plan-todo-ui.test.ts\ntests/tool-feedback-ui.test.ts\ntests/side-chat-quote.test.ts\ntests/web-citations.test.ts\ntests/write-file.test.ts\ntests/side-chat-lifecycle.test.ts\ntests/assistant-ui-runtime.test.ts\ntests/plan-todo-electron.test.mjs\ntests/web-search-feedback.test.ts\ntests/workspace-management.test.ts\ntests/ask-user-agent.test.ts\ntests/pi-context-payload.test.ts\ntests/workspace-read-tools.test.ts\ntests/model-resolution.test.ts\ntests/workspace-store.test.ts\ntests/terminal-sessions.test.ts\ntests/provider-model-catalog.test.ts\ntests/reasoning-selection.test.ts\ntests/terminal-ipc.test.ts\ntests/panel-dock.test.ts\ntests/pi-provider.test.ts\ntests/apply-patch.test.ts\ntests/agent-tools.test.ts\ntests/resizable-divider.test.ts\ntests/file-change-feedback.test.ts\ntests/tool-write-approval.test.ts\ntests/shell-feedback-ui.test.ts\ntests/side-chat-permissions.test.ts\ntests/read-document.test.ts\ntests/settings-config.test.ts\ntests/assistant-ui-boundaries.test.ts\ntests/terminal-electron-smoke.mjs\ntests/terminal-output.test.ts\ntests/appearance-preferences.test.ts\ntests/workspace-chat-lifecycle.test.ts\ntests/ask-user-ui.test.ts\ntests/ask-user-contract.test.ts\ntests/message-parts.test.ts\ntests/terminal-panel.test.ts\ntests/pi-storage.test.ts\ntests/conversation-map.test.ts\ntests/pane-resizer.test.ts\ntests/panel-shortcuts.test.ts\ntests/files-panel.test.ts\ntests/workspace-context-presentation.test.ts\ntests/agent-errors.test.ts\ntests/attachment-policy.test.ts\ntests/tool-feedback-contract.test.ts\ntests/model-catalog-selection.test.ts\ntests/side-chat-workspace.test.ts\ntests/ui-layout.test.ts\ntests/workspace-files.test.ts\ntests/assistant-ui-message-rendering.test.ts\ntests/workspace-context.test.ts\ntests/plan-todo.test.ts\ntests/particle-sailboat-clock.test.ts\ntests/ask-user-ipc.test.ts\ntests/particle-sailboat.test.ts\ntests/thread-list.test.ts\ntests/retired-settings.test.ts\ntests/composer-context.test.ts\ntests/sidebar-rail.test.ts\ntests/side-chat-agent.test.ts",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-25T05:23:56.696Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-25T05:24:08.245Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           152.56 kB\n✓ built in 288ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.67 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3369 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CzTTRy5i.css                   204.27 kB\n../../out/renderer/assets/ReviewPanel-CLrIpf2N.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-1zFlsQrQ.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DAFiLaVi.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DUjr0nwQ.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene--Vx9n_E0.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DHUeTPVL.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-ChU-2QCX.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BzTqF2Mw.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-EaRFLlJn.js             4,725.90 kB\n../../out/renderer/assets/index-B10ZxrFe.js                  6,801.10 kB\n✓ built in 9.93s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "test -f .agent-harness/evidence/define-toolkit-refactor/baseline.md && rg --files tests scripts .agent-harness/scripts -g '*test*' -g '*spec*' -g '*smoke*' && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-25T05:24:08.245Z",
+            "exitCode": 0,
+            "stdout": "tests/workspace-tool-scope.test.ts\ntests/particle-grid-transition.test.ts\ntests/composer-attachments.test.ts\ntests/tool-call.test.ts\ntests/thread-autoscroll.test.ts\ntests/reasoning-provider.test.ts\ntests/appearance-runtime.test.ts\ntests/panel-layout.test.ts\ntests/agent-streaming.test.ts\ntests/pi-agent.test.ts\ntests/file-split-pane.test.ts\ntests/terminal-service.test.ts\ntests/chat-entry-transition.test.ts\ntests/terminal-startup.test.ts\ntests/workspace-ipc.test.ts\ntests/panel-registry.test.ts\ntests/plan-todo-ui.test.ts\ntests/tool-feedback-ui.test.ts\ntests/side-chat-quote.test.ts\ntests/web-citations.test.ts\ntests/write-file.test.ts\ntests/side-chat-lifecycle.test.ts\ntests/assistant-ui-runtime.test.ts\ntests/plan-todo-electron.test.mjs\ntests/web-search-feedback.test.ts\ntests/workspace-management.test.ts\ntests/ask-user-agent.test.ts\ntests/pi-context-payload.test.ts\ntests/workspace-read-tools.test.ts\ntests/model-resolution.test.ts\ntests/workspace-store.test.ts\ntests/terminal-sessions.test.ts\ntests/provider-model-catalog.test.ts\ntests/reasoning-selection.test.ts\ntests/terminal-ipc.test.ts\ntests/panel-dock.test.ts\ntests/pi-provider.test.ts\ntests/apply-patch.test.ts\ntests/agent-tools.test.ts\ntests/resizable-divider.test.ts\ntests/file-change-feedback.test.ts\ntests/tool-write-approval.test.ts\ntests/shell-feedback-ui.test.ts\ntests/side-chat-permissions.test.ts\ntests/read-document.test.ts\ntests/settings-config.test.ts\ntests/assistant-ui-boundaries.test.ts\ntests/terminal-electron-smoke.mjs\ntests/terminal-output.test.ts\ntests/appearance-preferences.test.ts\ntests/workspace-chat-lifecycle.test.ts\ntests/ask-user-ui.test.ts\ntests/ask-user-contract.test.ts\ntests/message-parts.test.ts\ntests/terminal-panel.test.ts\ntests/pi-storage.test.ts\ntests/conversation-map.test.ts\ntests/pane-resizer.test.ts\ntests/panel-shortcuts.test.ts\ntests/files-panel.test.ts\ntests/workspace-context-presentation.test.ts\ntests/agent-errors.test.ts\ntests/attachment-policy.test.ts\ntests/tool-feedback-contract.test.ts\ntests/model-catalog-selection.test.ts\ntests/side-chat-workspace.test.ts\ntests/ui-layout.test.ts\ntests/workspace-files.test.ts\ntests/assistant-ui-message-rendering.test.ts\ntests/workspace-context.test.ts\ntests/plan-todo.test.ts\ntests/particle-sailboat-clock.test.ts\ntests/ask-user-ipc.test.ts\ntests/particle-sailboat.test.ts\ntests/thread-list.test.ts\ntests/retired-settings.test.ts\ntests/composer-context.test.ts\ntests/sidebar-rail.test.ts\ntests/side-chat-agent.test.ts\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           152.56 kB\n✓ built in 288ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.67 kB\n✓ built in 9ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3369 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CzTTRy5i.css                   204.27 kB\n../../out/renderer/assets/ReviewPanel-CLrIpf2N.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-1zFlsQrQ.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DAFiLaVi.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DUjr0nwQ.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene--Vx9n_E0.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DHUeTPVL.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-ChU-2QCX.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BzTqF2Mw.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-EaRFLlJn.js             4,725.90 kB\n../../out/renderer/assets/index-B10ZxrFe.js                  6,801.10 kB\n✓ built in 9.93\n... output truncated ...",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "新增模块级 sailorToolkit，并将 SailorChatProvider、Thread 和 ToolFallback 接入同一份 AuiConfig/Tools 注册；保持 backend UI-only 条目、现有 Chat/transport/附件与模型工具边界不变。",
+          "coverage": "integration",
+          "test": "node --test tests/toolkit-registration.test.ts",
+          "tdd": true,
+          "verify": [
+            "node --test tests/toolkit-registration.test.ts",
+            "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json",
+            "rg \"AuiConfig|Tools|sailorToolkit\" src/renderer/src/components/chat"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/toolkit-registration.test.ts",
+            "verifiedAt": "2026-09-25T05:26:15.859Z",
+            "exitCode": 0,
+            "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (838.205709ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 997.290541",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/toolkit-registration.test.ts",
+              "verifiedAt": "2026-09-25T05:26:16.851Z",
+              "exitCode": 0,
+              "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (810.053917ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 961.785625",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json",
+              "verifiedAt": "2026-09-25T05:26:18.054Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "rg \"AuiConfig|Tools|sailorToolkit\" src/renderer/src/components/chat",
+              "verifiedAt": "2026-09-25T05:26:18.073Z",
+              "exitCode": 0,
+              "stdout": "src/renderer/src/components/chat/thread/SailorThread.tsx:import { SailorToolFallback } from '../tools/sailorToolkit'\nsrc/renderer/src/components/chat/runtime/SailorChatProvider.tsx:import { AssistantRuntimeProvider, AuiConfig, Tools } from '@assistant-ui/react'\nsrc/renderer/src/components/chat/runtime/SailorChatProvider.tsx:import { sailorToolkit } from '../tools/sailorToolkit'\nsrc/renderer/src/components/chat/runtime/SailorChatProvider.tsx:const sailorConfig = AuiConfig({ tools: Tools({ toolkit: sailorToolkit }) })\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:export const sailorToolkit = defineToolkit({",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/toolkit-registration.test.ts && pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json && rg \"AuiConfig|Tools|sailorToolkit\" src/renderer/src/components/chat",
+            "verifiedAt": "2026-09-25T05:26:18.073Z",
+            "exitCode": 0,
+            "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (810.053917ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 961.785625\nsrc/renderer/src/components/chat/thread/SailorThread.tsx:import { SailorToolFallback } from '../tools/sailorToolkit'\nsrc/renderer/src/components/chat/runtime/SailorChatProvider.tsx:import { AssistantRuntimeProvider, AuiConfig, Tools } from '@assistant-ui/react'\nsrc/renderer/src/components/chat/runtime/SailorChatProvider.tsx:import { sailorToolkit } from '../tools/sailorToolkit'\nsrc/renderer/src/components/chat/runtime/SailorChatProvider.tsx:const sailorConfig = AuiConfig({ tools: Tools({ toolkit: sailorToolkit }) })\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:export const sailorToolkit = defineToolkit({",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "迁移通用工具状态、审批与错误处理以及 read_document、write、edit、bash、web_search、fetch_page、ask_user、update_plan 的消息展示策略；让注册前 fallback 与注册后 renderer 同源，未知工具和原型名称安全回退且不重复渲染。",
+          "coverage": "integration",
+          "test": "node --test tests/toolkit-registration.test.ts",
+          "tdd": true,
+          "verify": [
+            "node --test tests/toolkit-registration.test.ts",
+            "rg \"SailorToolFallback|read_document|ask_user|update_plan|respondToApproval\" src/renderer/src/components/chat/tools src/renderer/src/components/chat/thread",
+            "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/toolkit-registration.test.ts",
+            "verifiedAt": "2026-09-25T05:30:12.268Z",
+            "exitCode": 0,
+            "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (769.339667ms)\n✔ toolkit fallback resolves registered renderers and keeps hidden tools out of the message list (350.699125ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1278.03925",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/toolkit-registration.test.ts",
+              "verifiedAt": "2026-09-25T05:30:13.565Z",
+              "exitCode": 0,
+              "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (785.1025ms)\n✔ toolkit fallback resolves registered renderers and keeps hidden tools out of the message list (331.800917ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1266.672916",
+              "stderr": ""
+            },
+            {
+              "command": "rg \"SailorToolFallback|read_document|ask_user|update_plan|respondToApproval\" src/renderer/src/components/chat/tools src/renderer/src/components/chat/thread",
+              "verifiedAt": "2026-09-25T05:30:13.583Z",
+              "exitCode": 0,
+              "stdout": "src/renderer/src/components/chat/tools/SailorApprovalCard.tsx:  if (props.approval) await props.respondToApproval({ approved })\nsrc/renderer/src/components/chat/tools/SailorApprovalCard.tsx:        actions={!isSimpleApprovalRequest(props) ? <ToolFallback.Approval approval={props.approval} interrupt={props.interrupt} status={props.status} addResult={props.addResult} resume={props.resume} respondToApproval={props.respondToApproval} className=\"[&_button]:rounded-full [&_.aui-tool-fallback-approval-prompt]:hidden\" /> : undefined}\nsrc/renderer/src/components/chat/thread/SailorThread.tsx:import { SailorToolFallback } from '../tools/sailorToolkit'\nsrc/renderer/src/components/chat/thread/SailorThread.tsx:  ToolFallback: SailorToolFallback,\nsrc/renderer/src/components/chat/tools/SailorToolCall.tsx:  // Pending ask_user is projected into the composer interaction popover.\nsrc/renderer/src/components/chat/tools/SailorToolCall.tsx:  if (props.toolName === 'ask_user') return null\nsrc/renderer/src/components/chat/tools/SailorToolCall.tsx:  if (props.toolName === 'update_plan' && !toolCallNeedsFallback(props)) return null\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:  read_document: backendTool(SailorToolCall),\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:  ask_user: backendTool(AskUserMessage),\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:  update_plan: backendTool(UpdatePlanMessage),\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:export const SailorToolFallback: ToolCallMessagePartComponent = (props: ToolCallMessagePartProps) => {",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json",
+              "verifiedAt": "2026-09-25T05:30:14.764Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/toolkit-registration.test.ts && rg \"SailorToolFallback|read_document|ask_user|update_plan|respondToApproval\" src/renderer/src/components/chat/tools src/renderer/src/components/chat/thread && pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json",
+            "verifiedAt": "2026-09-25T05:30:14.764Z",
+            "exitCode": 0,
+            "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (785.1025ms)\n✔ toolkit fallback resolves registered renderers and keeps hidden tools out of the message list (331.800917ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1266.672916\nsrc/renderer/src/components/chat/tools/SailorApprovalCard.tsx:  if (props.approval) await props.respondToApproval({ approved })\nsrc/renderer/src/components/chat/tools/SailorApprovalCard.tsx:        actions={!isSimpleApprovalRequest(props) ? <ToolFallback.Approval approval={props.approval} interrupt={props.interrupt} status={props.status} addResult={props.addResult} resume={props.resume} respondToApproval={props.respondToApproval} className=\"[&_button]:rounded-full [&_.aui-tool-fallback-approval-prompt]:hidden\" /> : undefined}\nsrc/renderer/src/components/chat/thread/SailorThread.tsx:import { SailorToolFallback } from '../tools/sailorToolkit'\nsrc/renderer/src/components/chat/thread/SailorThread.tsx:  ToolFallback: SailorToolFallback,\nsrc/renderer/src/components/chat/tools/SailorToolCall.tsx:  // Pending ask_user is projected into the composer interaction popover.\nsrc/renderer/src/components/chat/tools/SailorToolCall.tsx:  if (props.toolName === 'ask_user') return null\nsrc/renderer/src/components/chat/tools/SailorToolCall.tsx:  if (props.toolName === 'update_plan' && !toolCallNeedsFallback(props)) return null\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:  read_document: backendTool(SailorToolCall),\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:  ask_user: backendTool(AskUserMessage),\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:  update_plan: backendTool(UpdatePlanMessage),\nsrc/renderer/src/components/chat/tools/sailorToolkit.tsx:export const SailorToolFallback: ToolCallMessagePartComponent = (props: ToolCallMessagePartProps) => {",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "用真实 AssistantRuntimeProvider、Tools、Thread 及 SailorChatProvider + Chat + IpcChatTransport fixture 验证 StrictMode、注册清理、审批允许/拒绝、ask_user 回答、计划更新、取消、主侧聊并发、会话切换和历史恢复不串状态或重复执行。",
+          "coverage": "e2e",
+          "test": "node tests/toolkit-electron.test.mjs",
+          "tdd": true,
+          "verify": [
+            "node tests/toolkit-electron.test.mjs",
+            "node tests/plan-todo-electron.test.mjs",
+            "node tests/terminal-electron-smoke.mjs"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/toolkit-electron.test.mjs",
+            "verifiedAt": "2026-09-25T09:02:55.499Z",
+            "exitCode": 0,
+            "stdout": "PASS StrictMode 注册每个工具一次并渲染专用结果\nPASS Provider 卸载后清理注册，再次挂载不累积",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node tests/toolkit-electron.test.mjs",
+              "verifiedAt": "2026-09-25T09:02:57.165Z",
+              "exitCode": 0,
+              "stdout": "PASS StrictMode 注册每个工具一次并渲染专用结果\nPASS Provider 卸载后清理注册，再次挂载不累积",
+              "stderr": ""
+            },
+            {
+              "command": "node tests/plan-todo-electron.test.mjs",
+              "verifiedAt": "2026-09-25T09:03:07.933Z",
+              "exitCode": 0,
+              "stdout": "PASS 审批等待和新 runId 续跑始终保留同一个 DOM\nPASS 步骤全完成但仍在等待权限时不退场\nPASS 完成延迟退场仅执行一次，快照刷新不重放\nPASS 切回运行中会话恢复计划，已完成历史不闪现\nPASS 新用户任务清空旧计划，完成与新计划连续更新\nPASS 只有当前消息的待审批状态延长计划展示\nPASS 主题、窄窗口、滚动和折叠",
+              "stderr": ""
+            },
+            {
+              "command": "node tests/terminal-electron-smoke.mjs",
+              "verifiedAt": "2026-09-25T09:03:47.955Z",
+              "exitCode": 0,
+              "stdout": "PASS 真实 Electron 中的 PTY 生命周期与清理 — all checks passed\nPASS 打包 macOS 产物存在 — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app\nPASS 打包产物包含 node-pty prebuild — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/prebuilds/darwin-arm64\nPASS 打包后的 spawn-helper 可执行 — mode 755\nPASS 打包产物解压了 node-pty（asarUnpack） — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty\nPASS 打包应用可加载并运行 node-pty — packaged-pty-ok\nPASS 面板开关可点击 — clicked\nPASS 打开面板不需要二次点击 — [\"终端 1\"]\nPASS 面板顶部只显示 tab 条\nPASS 渲染进程到 PTY 的端到端输入输出\nPASS 取得第一个终端的 pid — 25529\nPASS 第二个终端可交互\nPASS 两个 tab 是两个独立 shell — 25529 vs 26137\nPASS tab 名称按 ordinal — [\"终端 1\",\"终端 2\"]\nPASS 可以切回第一个 tab\nPASS 切回后保留自己的输出\nPASS 切回后不显示另一个终端的输出\nPASS 第一个 shell 仍存活\nPASS 切回第二个 tab\nPASS 第二个 tab 保留自己的输出\nPASS 第二个 shell 仍存活\nPASS 剪贴板粘贴后执行 — one\\nline-two\\n\"\nline-one\nline-two\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e % ec\nho pasted-ok\npasted-ok\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e %  \nPASS 多行粘贴进入终端输入 — \"deMacBook-Pro sailor-terminal-demo-0CYo8e % ec\\nho pasted-ok\\npasted-ok\\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e % ec\\nho multi-line-one\\necho multi-line-two \"\nPASS 可在终端中选中整行\nPASS 选中内容可复制到剪贴板 — \"second-tab-42\"\nPASS Ctrl+C 中断前台任务\nPASS 多字节文本经 PTY 往返\nPASS 宽窗口下 PTY 尺寸与渲染行数一致 — {\"rows\":42,\"cols\":51} vs lines 42\nPASS 大量输出后视图自动滚动到底部 — \"8\\n299\\n300\\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e %  \"\nPASS 重载后按 ordinal 恢复 tab — [\"终端 1\",\"终端 2\"]\nPASS 重载后回放当前 tab 的输出\nPASS 渲染进程重载后 shell 保活 — 26137 -> 26137\nPASS 关闭第二个 tab\nPASS 关闭的 tab 对应 shell 被终止 — pid 26137\nPASS 另一个 tab 的 shell 继续存活 — pid 25529\nPASS 关闭一个 tab 后另一个仍可交互\nPASS 关闭面板后 dock 不再显示终端\nPASS 重开面板恢复已有会话而不是新建 — [\"终端 1\"]\nPASS 重开后 shell 仍然存活 — pid 25529\nPASS 重开后仍可交互\nPASS 达到上限后新建按钮禁用\nPASS 禁用时给出真实原因 — 每个工作区最多同时打开 4 个终端（当前 4 个）。\nPASS 可以激活任意一个 tab\nPASS 缩窄面板后终端重新布局 — surface 383 -> 279\nPASS PTY 尺寸跟随面板尺寸 — {\"rows\":42,\"cols\":51} -> {\"rows\":42,\"cols\":36} (dom lines 42)\nPASS 窄视口下没有横向溢出 — overflow 0px\nPASS 窄视口下终端仍有尺寸 — {\"width\":260,\"height\":629,\"lines\":34,\"surface\":279}\n\n47/47 checks passed\nreport: /Users/hs/Documents/learning/sailor/.agent-harness/evidence/workspace-terminal-report.json",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "node tests/toolkit-electron.test.mjs && node tests/plan-todo-electron.test.mjs && node tests/terminal-electron-smoke.mjs",
+            "verifiedAt": "2026-09-25T09:03:47.955Z",
+            "exitCode": 0,
+            "stdout": "PASS StrictMode 注册每个工具一次并渲染专用结果\nPASS Provider 卸载后清理注册，再次挂载不累积\nPASS 审批等待和新 runId 续跑始终保留同一个 DOM\nPASS 步骤全完成但仍在等待权限时不退场\nPASS 完成延迟退场仅执行一次，快照刷新不重放\nPASS 切回运行中会话恢复计划，已完成历史不闪现\nPASS 新用户任务清空旧计划，完成与新计划连续更新\nPASS 只有当前消息的待审批状态延长计划展示\nPASS 主题、窄窗口、滚动和折叠\nPASS 真实 Electron 中的 PTY 生命周期与清理 — all checks passed\nPASS 打包 macOS 产物存在 — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app\nPASS 打包产物包含 node-pty prebuild — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/prebuilds/darwin-arm64\nPASS 打包后的 spawn-helper 可执行 — mode 755\nPASS 打包产物解压了 node-pty（asarUnpack） — /Users/hs/Documents/learning/sailor/dist/mac-arm64/Sailor.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty\nPASS 打包应用可加载并运行 node-pty — packaged-pty-ok\nPASS 面板开关可点击 — clicked\nPASS 打开面板不需要二次点击 — [\"终端 1\"]\nPASS 面板顶部只显示 tab 条\nPASS 渲染进程到 PTY 的端到端输入输出\nPASS 取得第一个终端的 pid — 25529\nPASS 第二个终端可交互\nPASS 两个 tab 是两个独立 shell — 25529 vs 26137\nPASS tab 名称按 ordinal — [\"终端 1\",\"终端 2\"]\nPASS 可以切回第一个 tab\nPASS 切回后保留自己的输出\nPASS 切回后不显示另一个终端的输出\nPASS 第一个 shell 仍存活\nPASS 切回第二个 tab\nPASS 第二个 tab 保留自己的输出\nPASS 第二个 shell 仍存活\nPASS 剪贴板粘贴后执行 — one\\nline-two\\n\"\nline-one\nline-two\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e % ec\nho pasted-ok\npasted-ok\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e %  \nPASS 多行粘贴进入终端输入 — \"deMacBook-Pro sailor-terminal-demo-0CYo8e % ec\\nho pasted-ok\\npasted-ok\\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e % ec\\nho multi-line-one\\necho multi-line-two \"\nPASS 可在终端中选中整行\nPASS 选中内容可复制到剪贴板 — \"second-tab-42\"\nPASS Ctrl+C 中断前台任务\nPASS 多字节文本经 PTY 往返\nPASS 宽窗口下 PTY 尺寸与渲染行数一致 — {\"rows\":42,\"cols\":51} vs lines 42\nPASS 大量输出后视图自动滚动到底部 — \"8\\n299\\n300\\nhs@hsdeMacBook-Pro sailor-terminal-demo-0CYo8e %  \"\nPASS 重载后按 ordinal 恢复 tab — [\"终端 1\",\"终端 2\"]\nPASS 重载后回放当前 tab 的输出\nPASS 渲染进程重载后 shell 保活 — 26137 -> 26137\nPASS 关闭第二个 tab\nPASS 关闭的 tab 对应 shell 被终止 — pid 26137\nPASS 另一个 tab 的 shell 继续存活 — pid 25529\nPASS 关闭一个 tab 后另一个仍可交互\nPASS 关闭面板后 dock 不再显示终端\nPASS 重开面板恢复已有会话而不是新建 — [\"终端 1\"]\nPASS 重开后 shell 仍然存活 — pid 25529\nPASS 重开后仍可交互\nPASS 达到上限后新建按钮禁用\nPASS 禁用时给出真实原因 — 每个工作区最多同时打开 4 个终端（当前 4 个）。\nPASS 可以激活任意一个 tab\nPASS 缩窄面板后终端重新布局 — surface 383 -> 279\nPASS PTY 尺寸跟随面板尺寸 — {\"rows\":42,\"cols\":51} -> {\"rows\":42,\"cols\":36} (dom lines 42)\nPASS 窄视口下没有横向溢出 — overflow 0px\nPASS 窄视口下终端仍有尺寸 — {\"width\":260,\"height\":629,\"lines\":34,\"surface\":279}\n\n47/47 checks passed\nreport: /Users/hs/Documents/learning/sailor/.agent-harness/evidence/workspace-terminal-report.json",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "覆盖流式部分参数、空值、失败/取消、业务 ok:false、非法 MCP 结果和非法 URL 等输入，确认不误报成功、不白屏、保留截断/恢复信息，并验证 backend toolkit 不向模型新增可上传 schema、main 工具集合和 IPC 契约保持不变。",
+          "coverage": "integration",
+          "test": "node --test tests/toolkit-registration.test.ts",
+          "tdd": true,
+          "verify": [
+            "node --test tests/toolkit-registration.test.ts",
+            "node --test --test-concurrency=1 tests/*.test.ts",
+            "rg \"toToolsJSONSchema|activeTools|AgentRunRequest\" tests src/renderer/src src/shared"
+          ],
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/toolkit-registration.test.ts",
+            "verifiedAt": "2026-09-25T09:51:19.033Z",
+            "exitCode": 0,
+            "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (784.848917ms)\n✔ toolkit fallback resolves registered renderers and keeps hidden tools out of the message list (342.040333ms)\n✔ backend toolkit entries do not expose model parameters or execute callbacks (335.95325ms)\n✔ invalid web page URLs and incomplete results safely fall back without throwing (338.979958ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1968.645708",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/toolkit-registration.test.ts",
+              "verifiedAt": "2026-09-25T09:51:21.062Z",
+              "exitCode": 0,
+              "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (800.393125ms)\n✔ toolkit fallback resolves registered renderers and keeps hidden tools out of the message list (351.593833ms)\n✔ backend toolkit entries do not expose model parameters or execute callbacks (337.658708ms)\n✔ invalid web page URLs and incomplete results safely fall back without throwing (342.503625ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2000.443458",
+              "stderr": ""
+            },
+            {
+              "command": "node --test --test-concurrency=1 tests/*.test.ts",
+              "verifiedAt": "2026-09-25T09:55:08.574Z",
+              "exitCode": 0,
+              "stdout": "✔ harness/Pi 内部错误对用户统一显示 agent 提示 (0.465125ms)\n✔ splits a coarse Chinese provider delta into incremental UI chunks before end (1340.3515ms)\n✔ aborting an active stream stops later chunks and emits one end event (641.738292ms)\n✔ does not advertise the retired tool and still streams an answer (1331.927625ms)\n✔ reads valid preferences and falls back on invalid persisted values (2.842041ms)\n✔ persists preferences and reports storage failures without throwing (0.189375ms)\n✔ applies the saved appearance before consumers read runtime state (359.24325ms)\n✔ system mode follows OS changes while explicit themes ignore them (313.817958ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (315.0135ms)\n✔ applies one deterministic unified patch and returns hashes, line counts, and diff reference (148.247042ms)\n✔ rejects malformed, multi-file, ambiguous, and context-mismatched patches without writing (10.317167ms)\n✔ rejects stale versions and never applies a patch twice after retry (12.603125ms)\n✔ serializes same-path patches so only one competing patch can apply (44.710792ms)\n✔ resolves the same pending interaction once with a validated answer (116.617125ms)\n✔ rejects forged context, expired interactions, cancellation, and restart replay (0.397791ms)\n✔ blocks the Pi host tool until the bound interaction receives an answer (3.027042ms)\n✔ accepts a structured question with unique options and bounded freeform input (73.934333ms)\n✔ rejects missing questions, duplicate options, invalid option answers, and oversized text (1.18925ms)\n✔ only permits terminal outcomes with their matching payload (0.64125ms)\n✔ exposes a strict shared response contract for the pending ask_user interaction (86.6655ms)\n✔ wires ask_user response through shared IPC, preload, and AgentService (5.017458ms)\n✔ renders ask_user question, options, and freeform control without a default selection (1343.461708ms)\n✔ falls back to a readable terminal state for malformed or cancelled questions (0.3935ms)\n✔ projects the pending ask_user card into the composer popover surface (0.682334ms)\n✔ projects a suspended ask_user tool while the assistant message is still streaming (0.454375ms)\n✔ uses a stable value key for streamed ask_user props instead of object identity (0.075416ms)\n✔ legacy AI Elements sources and imports are absent (32.591292ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (3.156125ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (2.339208ms)\n✔ official tool UI renders structured results and errors without a custom plan view (785.00875ms)\n✔ 生成中指示器改用官方 GenerationLoader 矩阵并由本地时钟驱动 (0.839834ms)\n✔ GenerationLoader 按 tick 点亮三个单元格并随 tick 移动 (310.002958ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (57.094709ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (493.916583ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (296.0915ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (345.233ms)\n✔ 附件策略只接受 main 能校验的四种图片类型 (48.851291ms)\n✔ 附件策略归一化 image/jpg 并区分图片与非图片类型 (0.1095ms)\n✔ 附件拒绝提示说明当前支持的类型 (0.08575ms)\n✔ 首条用户消息只触发一次，空发送保持欢迎态，结束后不重播 (0.397792ms)\n✔ 历史加载、切换会话不播放转场，旧会话完成信号不影响新空态 (0.071708ms)\n✔ 减少动态效果直接落定；消息移除或错误状态不重新聚船 (0.05975ms)\n✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (2.396584ms)\n✔ 选区引用后关闭浮动引用按钮并清除选区状态 (0.891583ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.675541ms)\n✔ composer 在附件类型被拒绝时显示可见提示 (0.397666ms)\n✔ 官方提取器直接消费主进程写入的 usage（原始与经 custom 两条路径） (0.807917ms)\n✔ extras 读窗口与分类测量，两条 metadata 路径都认 (0.163292ms)\n✔ extras 兼容旧版本：缺字段按 0，非法值只丢分类 (0.082917ms)\n✔ 总量官方优先，官方缺失时回退到早期写在 contextUsage 里的总量 (0.088334ms)\n✔ 取最近一条有用量的 assistant 消息，官方与 extras 必须来自同一条 (0.237625ms)\n✔ 分类按真实 payload 占比折算到官方精确总量，分类和严格等于总量 (0.288875ms)\n✔ 附件（read_document 结果与路径提示）参与同一套折算 (0.119834ms)\n✔ 折算用最大余数法，取整既不丢也不超 (0.12275ms)\n✔ 没有分类测量的消息用官方精确总量渲染单行，不编造分类 (0.179042ms)\n✔ composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 s\n... output truncated ...",
+              "stderr": ""
+            },
+            {
+              "command": "rg \"toToolsJSONSchema|activeTools|AgentRunRequest\" tests src/renderer/src src/shared",
+              "verifiedAt": "2026-09-25T09:55:08.598Z",
+              "exitCode": 0,
+              "stdout": "src/shared/contracts.ts:export interface AgentRunRequest {\nsrc/shared/contracts.ts:    start(request: AgentRunRequest): Promise<void>\nsrc/renderer/src/lib/IpcChatTransport.ts:import type { AgentRunRequest, ReasoningEffort } from '@shared/contracts'\nsrc/renderer/src/lib/IpcChatTransport.ts:export function createAgentRunRequest(input: AgentRunRequest): AgentRunRequest {\nsrc/renderer/src/lib/IpcChatTransport.ts:            createAgentRunRequest({\ntests/reasoning-selection.test.ts:  const createAgentRunRequest = Reflect.get(transport, 'createAgentRunRequest') as\ntests/reasoning-selection.test.ts:  assert.equal(typeof createAgentRunRequest, 'function')\ntests/reasoning-selection.test.ts:    createAgentRunRequest?.({",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/toolkit-registration.test.ts && node --test --test-concurrency=1 tests/*.test.ts && rg \"toToolsJSONSchema|activeTools|AgentRunRequest\" tests src/renderer/src src/shared",
+            "verifiedAt": "2026-09-25T09:55:08.598Z",
+            "exitCode": 0,
+            "stdout": "✔ sailor toolkit exposes stable backend UI renderers for the known tool names (800.393125ms)\n✔ toolkit fallback resolves registered renderers and keeps hidden tools out of the message list (351.593833ms)\n✔ backend toolkit entries do not expose model parameters or execute callbacks (337.658708ms)\n✔ invalid web page URLs and incomplete results safely fall back without throwing (342.503625ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2000.443458\n✔ harness/Pi 内部错误对用户统一显示 agent 提示 (0.465125ms)\n✔ splits a coarse Chinese provider delta into incremental UI chunks before end (1340.3515ms)\n✔ aborting an active stream stops later chunks and emits one end event (641.738292ms)\n✔ does not advertise the retired tool and still streams an answer (1331.927625ms)\n✔ reads valid preferences and falls back on invalid persisted values (2.842041ms)\n✔ persists preferences and reports storage failures without throwing (0.189375ms)\n✔ applies the saved appearance before consumers read runtime state (359.24325ms)\n✔ system mode follows OS changes while explicit themes ignore them (313.817958ms)\n✔ disposes exactly one system listener and supports repeated StrictMode setup (315.0135ms)\n✔ applies one deterministic unified patch and returns hashes, line counts, and diff reference (148.247042ms)\n✔ rejects malformed, multi-file, ambiguous, and context-mismatched patches without writing (10.317167ms)\n✔ rejects stale versions and never applies a patch twice after retry (12.603125ms)\n✔ serializes same-path patches so only one competing patch can apply (44.710792ms)\n✔ resolves the same pending interaction once with a validated answer (116.617125ms)\n✔ rejects forged context, expired interactions, cancellation, and restart replay (0.397791ms)\n✔ blocks the Pi host tool until the bound interaction receives an answer (3.027042ms)\n✔ accepts a structured question with unique options and bounded freeform input (73.934333ms)\n✔ rejects missing questions, duplicate options, invalid option answers, and oversized text (1.18925ms)\n✔ only permits terminal outcomes with their matching payload (0.64125ms)\n✔ exposes a strict shared response contract for the pending ask_user interaction (86.6655ms)\n✔ wires ask_user response through shared IPC, preload, and AgentService (5.017458ms)\n✔ renders ask_user question, options, and freeform control without a default selection (1343.461708ms)\n✔ falls back to a readable terminal state for malformed or cancelled questions (0.3935ms)\n✔ projects the pending ask_user card into the composer popover surface (0.682334ms)\n✔ projects a suspended ask_user tool while the assistant message is still streaming (0.454375ms)\n✔ uses a stable value key for streamed ask_user props instead of object identity (0.075416ms)\n✔ legacy AI Elements sources and imports are absent (32.591292ms)\n✔ generic assistant-ui elements do not reach into Sailor business boundaries (3.156125ms)\n✔ Sailor composer uses the standalone elements-composer surface with runtime primitives (2.339208ms)\n✔ official tool UI renders structured results and errors without a custom plan view (785.00875ms)\n✔ 生成中指示器改用官方 GenerationLoader 矩阵并由本地时钟驱动 (0.839834ms)\n✔ GenerationLoader 按 tick 点亮三个单元格并随 tick 移动 (310.002958ms)\n✔ composer policy blocks invalid submissions and clears a recoverable error (57.094709ms)\n✔ model selector slots a custom trigger when its built-in chevron is hidden (493.916583ms)\n✔ stop targets the persisted run and otherwise delegates to the active chat (296.0915ms)\n✔ workspace registry keeps stable isolated Chat instances while selection changes (345.233ms)\n✔ 附件策略只接受 main 能校验的四种图片类型 (48.851291ms)\n✔ 附件策略归一化 image/jpg 并区分图片与非图片类型 (0.1095ms)\n✔ 附件拒绝提示说明当前支持的类型 (0.08575ms)\n✔ 首条用户消息只触发一次，空发送保持欢迎态，结束后不重播 (0.397792ms)\n✔ 历史加载、切换会话不播放转场，旧会话完成信号不影响新空态 (0.071708ms)\n✔ 减少动态效果直接落定；消息移除或错误状态不重新聚船 (0.05975ms)\n✔ composer 在附件拖放区域使用支持缩略图和预览的官方附件组件 (2.396584ms)\n✔ 选区引用后关闭浮动引用按钮并清除选区状态 (0.891583ms)\n✔ composer 只接受 main 能处理的图片附件类型 (0.675541ms)\n✔ composer 在附件类型被拒绝时显\n... output truncated ...",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "执行全量 Node 测试、lint、关闭增量缓存的双端类型检查和生产构建，并在支持的 Electron 环境完成宽窄窗口、浅深色、工具运行/展开/审批失败、输入区问答、TodoList、键盘焦点与长内容的人工视觉验收，记录截图、结果和平台缺口。",
+          "coverage": "manual-exception",
+          "tdd": false,
+          "coverage_reason": "视觉布局、真实窗口交互和目标平台打包结果必须由人工观察或 Electron smoke 确认，无法用低成本的前置确定性测试完整表达验收标准。",
+          "verify": [
+            "pnpm run lint",
+            "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.node.json",
+            "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json",
+            "pnpm run build",
+            "test -f .agent-harness/evidence/define-toolkit-refactor/visual-acceptance.md"
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run lint",
+              "verifiedAt": "2026-09-25T09:04:18.557Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'"
+            },
+            {
+              "command": "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.node.json",
+              "verifiedAt": "2026-09-25T09:04:19.251Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json",
+              "verifiedAt": "2026-09-25T09:04:20.396Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-25T09:04:31.505Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           153.27 kB\n✓ built in 194ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.16 kB\n✓ built in 227ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3370 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-DWVI8n1h.css                   204.20 kB\n../../out/renderer/assets/ReviewPanel-DThHppU9.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CK8C3Op5.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BYqw7yha.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-BB2tURYa.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-LQUNOekS.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-D6Ola59-.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DGRKVxhs.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DebniYz_.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DzN0mC6l.js             4,725.90 kB\n../../out/renderer/assets/index-CfkgZeqU.js                  6,802.45 kB\n✓ built in 9.31s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            },
+            {
+              "command": "test -f .agent-harness/evidence/define-toolkit-refactor/visual-acceptance.md",
+              "verifiedAt": "2026-09-25T09:04:31.509Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run lint && pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.node.json && pnpm exec tsc --noEmit --incremental false --composite false -p tsconfig.web.json && pnpm run build && test -f .agent-harness/evidence/define-toolkit-refactor/visual-acceptance.md",
+            "verifiedAt": "2026-09-25T09:04:31.509Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           153.27 kB\n✓ built in 194ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.16 kB\n✓ built in 227ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3370 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-DWVI8n1h.css                   204.20 kB\n../../out/renderer/assets/ReviewPanel-DThHppU9.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CK8C3Op5.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BYqw7yha.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-BB2tURYa.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-LQUNOekS.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-D6Ola59-.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DGRKVxhs.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DebniYz_.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DzN0mC6l.js             4,725.90 kB\n../../out/renderer/assets/index-CfkgZeqU.js                  6,802.45 kB\n✓ built in 9.31s",
+            "stderr": "$ pnpm run lint:js && pnpm run lint:css\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "同步 docs/architecture.md 与 README.md 的实际实现结构和验收入口，整理最终 evidence 与失败/跳过说明，运行 feature verifier 和 clean-state 检查，确保 feature 清单证据对应最终代码。",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "文档、证据和 harness 状态文件的正确性依赖最终实现核对与命令审计，不存在独立运行时行为可先测试。",
+          "verify": [
+            "pnpm exec prettier --check README.md docs/architecture.md .agent-harness/feature_list.json",
+            "node ./.agent-harness/scripts/verify-feature.mjs --validate --feature-id feat-define-toolkit-refactor-implementation",
+            "node ./.agent-harness/scripts/clean-state-check.mjs",
+            "node -e \"require('node:child_process').execFileSync('git', ['diff', '--check'], { stdio: 'inherit' })\""
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm exec prettier --check README.md docs/architecture.md .agent-harness/feature_list.json",
+              "verifiedAt": "2026-09-25T06:03:20.002Z",
+              "exitCode": 0,
+              "stdout": "Checking formatting...\nAll matched files use Prettier code style!",
+              "stderr": ""
+            },
+            {
+              "command": "node ./.agent-harness/scripts/verify-feature.mjs --validate --feature-id feat-define-toolkit-refactor-implementation",
+              "verifiedAt": "2026-09-25T06:03:20.032Z",
+              "exitCode": 0,
+              "stdout": "OK: 1 个 feature 通过 checklist schema 校验。",
+              "stderr": ""
+            },
+            {
+              "command": "node ./.agent-harness/scripts/clean-state-check.mjs",
+              "verifiedAt": "2026-09-25T06:03:31.639Z",
+              "exitCode": 0,
+              "stdout": "=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           152.56 kB\n✓ built in 187ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.67 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3370 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CzTTRy5i.css                   204.27 kB\n../../out/renderer/assets/ReviewPanel-CJIvuGzU.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cdog0ux6.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-D2fCgSJl.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-P3PBoH6V.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-CL4Y0o9C.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DAmNV2XW.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-D_SmS1k9.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BsJBep4M.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-C8bh_3Bw.js             4,725.90 kB\n../../out/renderer/assets/index-BtCK9o-T.js                  6,802.44 kB\n✓ built in 9.24s\n=== Verification 完成 ===\n\n下一步：\n1. 阅读 .agent-harness/feature_list.json，了解当前 feature state\n2. 只选择一个未完成 feature\n3. 只实现这个 feature\n4. 声称完成前重新运行 verification\n=== Clean-state passed ===",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            },
+            {
+              "command": "node -e \"require('node:child_process').execFileSync('git', ['diff', '--check'], { stdio: 'inherit' })\"",
+              "verifiedAt": "2026-09-25T06:03:31.684Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "pnpm exec prettier --check README.md docs/architecture.md .agent-harness/feature_list.json && node ./.agent-harness/scripts/verify-feature.mjs --validate --feature-id feat-define-toolkit-refactor-implementation && node ./.agent-harness/scripts/clean-state-check.mjs && node -e \"require('node:child_process').execFileSync('git', ['diff', '--check'], { stdio: 'inherit' })\"",
+            "verifiedAt": "2026-09-25T06:03:31.684Z",
+            "exitCode": 0,
+            "stdout": "Checking formatting...\nAll matched files use Prettier code style!\nOK: 1 个 feature 通过 checklist schema 校验。\n=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           152.56 kB\n✓ built in 187ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\nout/preload/index.cjs  4.67 kB\n✓ built in 8ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3370 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CzTTRy5i.css                   204.27 kB\n../../out/renderer/assets/ReviewPanel-CJIvuGzU.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Cdog0ux6.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-D2fCgSJl.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-P3PBoH6V.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-CL4Y0o9C.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DAmNV2XW.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-D_SmS1k9.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BsJBep4M.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-C8bh_3Bw.js             4,725.90 kB\n../../out/renderer/assets/index-BtCK9o-T.js                  6,802.44 kB\n✓ built in 9.24s\n=== Verification 完成 ===\n\n下一步：\n1. 阅读 .agent-harness/feature_list.json，了解当前 feature state\n2. 只选择一个未完成 feature\n3. 只实现这个 feature\n4. 声称完成前重新运行 verification\n=== Clean-state passed ===",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-25T09:55:08.599Z"
+    }
+  ]
+}

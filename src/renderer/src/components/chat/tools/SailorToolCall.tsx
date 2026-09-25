@@ -44,15 +44,12 @@ export const SailorToolCall: ToolCallMessagePartComponent = (props) => {
         : props.status
     return <StructuredToolFallback {...props} status={status} />
   }
+  const args =
+    props.args && typeof props.args === 'object' ? (props.args as Record<string, unknown>) : {}
   const query =
-    [
-      props.args.file_path,
-      props.args.path,
-      props.args.command,
-      props.args.pattern,
-      props.args.query,
-    ].find((value): value is string => typeof value === 'string' && value.length > 0) ??
-    props.toolName
+    [args.file_path, args.path, args.command, args.pattern, args.query].find(
+      (value): value is string => typeof value === 'string' && value.length > 0,
+    ) ?? props.toolName
   return (
     <ToolCall
       label={props.toolName}

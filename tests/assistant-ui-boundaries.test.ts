@@ -9,10 +9,12 @@ const legacyElementsRoot = join(rendererRoot, 'components/ai-elements')
 
 async function filesUnder(root: string): Promise<string[]> {
   const entries = await readdir(root, { withFileTypes: true })
-  const nested = await Promise.all(entries.map(async (entry) => {
-    const path = join(root, entry.name)
-    return entry.isDirectory() ? filesUnder(path) : [path]
-  }))
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(root, entry.name)
+      return entry.isDirectory() ? filesUnder(path) : [path]
+    }),
+  )
   return nested.flat()
 }
 
@@ -28,7 +30,13 @@ test('legacy AI Elements sources and imports are absent', async () => {
 
 test('generic assistant-ui elements do not reach into Sailor business boundaries', async () => {
   const files = (await filesUnder(assistantElementsRoot)).filter((file) => /\.(ts|tsx)$/.test(file))
-  const forbidden = ['window.sailor', '@/lib/WorkspaceChats', '@shared/', 'src/main', '@/components/chat/']
+  const forbidden = [
+    'window.sailor',
+    '@/lib/WorkspaceChats',
+    '@shared/',
+    'src/main',
+    '@/components/chat/',
+  ]
   const offenders: string[] = []
   for (const file of files) {
     const source = await readFile(file, 'utf8')
@@ -43,7 +51,10 @@ test('Sailor composer uses the standalone elements-composer surface with runtime
   const composer = await readFile(composerPath, 'utf8')
   const styles = await readFile(stylesPath, 'utf8')
 
-  assert.match(composer, /ComposerBar[\s\S]*ComposerModelTrigger[\s\S]*ComposerSend[\s\S]*from ['"]@\/components\/assistant-ui\/elements\/composer['"]/)
+  assert.match(
+    composer,
+    /ComposerBar[\s\S]*ComposerModelTrigger[\s\S]*ComposerSend[\s\S]*from ['"]@\/components\/assistant-ui\/elements\/composer['"]/,
+  )
   assert.match(composer, /<ComposerPrimitive\.Root/)
   assert.match(composer, /<ComposerBar/)
   assert.match(composer, /<ComposerModelTrigger/)

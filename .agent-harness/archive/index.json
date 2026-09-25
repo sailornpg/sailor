@@ -412,6 +412,13 @@
       "status": "done",
       "archived_at": "2026-09-25T04:30:11.639Z",
       "archive_path": ".agent-harness/archive/fix-todo-approval-lifecycle"
+    },
+    {
+      "id": "feat-define-toolkit-refactor-implementation",
+      "title": "Sailor 工具 UI 注册表重构实施",
+      "status": "done",
+      "archived_at": "2026-09-25T11:54:26.418Z",
+      "archive_path": ".agent-harness/archive/feat-define-toolkit-refactor-implementation"
     }
   ]
 }

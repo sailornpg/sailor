@@ -195,7 +195,9 @@
 ### Working Rules
 
 - **One feature at a time**：从 `.agent-harness/feature_list.json` 中只选择一个未完成 feature。
+- **Feature creation smoke gate**：通过 `/harness-feature` 创建会改变运行时行为、页面交互、IPC、持久化、模型流或桌面能力的 feature 时，checklist 必须同时登记一个专用 `coverage: "e2e"` Electron 冒烟项，包含明确的测试路径、核心交互断言和可执行 verify 命令。不能创建后等实现完成再补；纯文档/设计 feature 必须在 `coverage_reason` 中说明不适用原因。
 - **Verification required**：没有通过 `/harness-verify` 或 `.agent-harness/scripts/verify-feature.mjs` 记录 evidence，不要声称完成。
+- **Electron smoke required**：每个实现 feature 在声称完成前至少运行一次 Electron 冒烟测试。优先运行该 feature 专用的 `tests/*electron*.mjs`；没有专用测试时运行 `node tests/terminal-electron-smoke.mjs`，并把命令、退出码和结果记录到 feature evidence。未运行或运行失败时，不得将 feature 标记为完成。
 - **Update artifacts**：结束 session 前，更新 `.agent-harness/progress.md` 和 `.agent-harness/feature_list.json`。
 - **External state transition**：不要手工把 checklist item 或 feature 改成 done；状态转移由 `.agent-harness/scripts/verify-feature.mjs` 根据 verify 退出码完成。
 - **Keep root state light**：`.agent-harness/feature_list.json` 和 `.agent-harness/progress.md` 只保留当前/未归档状态，不把完整历史持续堆在根文件里。

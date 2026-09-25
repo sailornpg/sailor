@@ -29,8 +29,6 @@ import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-ic
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/assistant-ui/elements/skeleton'
 import { cn } from '@/lib/utils'
-import { ChatEntryContext } from '@/components/chat/thread/ChatEntryContext'
-import { WorkspaceContextMessage } from '@/components/chat/thread/WorkspaceContextMessage'
 import {
   ActionBarMorePrimitive,
   ActionBarPrimitive,
@@ -38,6 +36,7 @@ import {
   type AssistantState,
   BranchPickerPrimitive,
   ComposerPrimitive,
+  type DataMessagePartProps,
   ErrorPrimitive,
   groupPartByType,
   MessagePrimitive,
@@ -78,6 +77,8 @@ import {
   type FC,
   type PropsWithChildren,
   type ReactNode,
+  type CSSProperties,
+  type RefObject,
 } from 'react'
 
 export type ThreadGroupPart = MessagePrimitive.GroupedParts.GroupPart
@@ -100,6 +101,7 @@ export type ThreadComponents = {
   ToolGroup?: ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>> | undefined
   ReasoningGroup?: ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>> | undefined
   TaskGroup?: ComponentType<{ group: ThreadGroupPart }> | undefined
+  WorkspaceContext?: ComponentType<DataMessagePartProps> | undefined
 }
 
 const messageGroupBy = groupPartByType({
@@ -128,6 +130,14 @@ const taskAwareGroupBy = (
 export type ThreadProps = {
   components?: ThreadComponents | undefined
   autoFocus?: boolean | undefined
+  entry?: ThreadEntryLayout | null | undefined
+}
+
+export type ThreadEntryLayout = {
+  phase: 'welcome' | 'transition' | 'chat'
+  welcomeRef: RefObject<HTMLDivElement | null>
+  footerRef: RefObject<HTMLDivElement | null>
+  welcomeStyle?: CSSProperties
 }
 
 const EMPTY_COMPONENTS: ThreadComponents = {}
@@ -167,21 +177,25 @@ const ThreadHistorySkeleton: FC = () => (
   </div>
 )
 
-export const Thread: FC<ThreadProps> = ({ components = EMPTY_COMPONENTS, autoFocus = true }) => {
+export const Thread: FC<ThreadProps> = ({
+  components = EMPTY_COMPONENTS,
+  autoFocus = true,
+  entry = null,
+}) => {
   const isEmpty = useAuiState(isNewChatView)
 
   return (
     <ThreadComponentsContext.Provider value={components}>
-      <ThreadRoot isEmpty={isEmpty} autoFocus={autoFocus} />
+      <ThreadRoot isEmpty={isEmpty} autoFocus={autoFocus} entry={entry} />
     </ThreadComponentsContext.Provider>
   )
 }
 
-const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
+const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryLayout | null }> = ({
   isEmpty: runtimeEmpty,
   autoFocus,
+  entry,
 }) => {
-  const entry = useContext(ChatEntryContext)
   const isEmpty = entry ? entry.phase === 'welcome' : runtimeEmpty
   const {
     Welcome = ThreadWelcome,
@@ -776,6 +790,7 @@ const UserMessagePartGroup: FC<PropsWithChildren> = ({ children }) => (
 const ContextPartGroup: FC<PropsWithChildren> = ({ children }) => <>{children}</>
 
 const UserMessage: FC = () => {
+  const { WorkspaceContext: workspaceContext } = useContext(ThreadComponentsContext)
   return (
     <MessagePrimitive.Root
       data-slot="aui_user-message-root"
@@ -803,7 +818,7 @@ const UserMessage: FC = () => {
         <MessagePrimitive.Unstable_PartsGrouped
           groupingFunction={contextGrouping}
           components={{
-            data: { by_name: { 'workspace-context': WorkspaceContextMessage } },
+            data: { by_name: { 'workspace-context': workspaceContext } },
             Group: ContextPartGroup,
           }}
         />
@@ -814,7 +829,7 @@ const UserMessage: FC = () => {
         components={{
           File: UserFilePart,
           Image: UserImagePart,
-          data: { by_name: { 'workspace-context': WorkspaceContextMessage } },
+          data: { by_name: { 'workspace-context': workspaceContext } },
           Group: UserMessagePartGroup,
         }}
       />

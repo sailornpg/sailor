@@ -136,6 +136,26 @@ test('projects a suspended ask_user tool while the assistant message is still st
     ),
     undefined,
   )
+  assert.equal(
+    pending.findPendingAskUser(
+      [
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'tool-call',
+              toolName: 'ask_user',
+              toolCallId: 'stale',
+              args: { question: '上一轮问题' },
+            },
+          ],
+        },
+        { role: 'user', content: [{ type: 'text' }] },
+      ],
+      'running',
+    ),
+    undefined,
+  )
 })
 
 test('uses a stable value key for streamed ask_user props instead of object identity', () => {

@@ -36,24 +36,22 @@ export function findPendingAskUser(
   runStatus: RunStatus | undefined,
 ): SailorAskUserCardProps | undefined {
   if (runStatus !== 'running') return undefined
-  for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex -= 1) {
-    const message = messages[messageIndex]
-    if (message.role !== 'assistant') continue
-    for (let partIndex = (message.content?.length ?? 0) - 1; partIndex >= 0; partIndex -= 1) {
-      const part = message.content?.[partIndex]
-      if (
-        part?.type !== 'tool-call' ||
-        part.toolName !== 'ask_user' ||
-        !part.toolCallId ||
-        part.args === undefined ||
-        part.result !== undefined ||
-        part.isError ||
-        part.status?.type === 'complete' ||
-        part.status?.type === 'incomplete'
-      )
-        continue
-      return { toolCallId: part.toolCallId, args: part.args }
-    }
+  const message = messages.at(-1)
+  if (message?.role !== 'assistant') return undefined
+  for (let partIndex = (message.content?.length ?? 0) - 1; partIndex >= 0; partIndex -= 1) {
+    const part = message.content?.[partIndex]
+    if (
+      part?.type !== 'tool-call' ||
+      part.toolName !== 'ask_user' ||
+      !part.toolCallId ||
+      part.args === undefined ||
+      part.result !== undefined ||
+      part.isError ||
+      part.status?.type === 'complete' ||
+      part.status?.type === 'incomplete'
+    )
+      continue
+    return { toolCallId: part.toolCallId, args: part.args }
   }
   return undefined
 }

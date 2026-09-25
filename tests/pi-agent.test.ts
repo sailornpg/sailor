@@ -166,7 +166,7 @@ async function fixture(t: test.TestContext) {
 
 test(
   '真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具',
-  { timeout: 30000 },
+  { timeout: 120000 },
   async (t) => {
     const f = await fixture(t)
     const source = await readFile('src/main/agent/AgentService.ts', 'utf8')

@@ -8,7 +8,9 @@ import type { WorkspaceChats } from '@/lib/WorkspaceChats'
 import type { ModelSelection, ProjectSummary, SettingsSnapshot } from '@shared/contracts'
 import type { WorkspaceChatSummary } from '@shared/workspaces'
 import { SailorComposer } from '../composer/SailorComposer'
-import { SailorToolCall, SailorToolCalls } from '../tools/SailorToolCall'
+import { SailorToolCalls } from '../tools/SailorToolCall'
+import { SailorToolFallback } from '../tools/sailorToolkit'
+import { WorkspaceContextMessage } from './WorkspaceContextMessage'
 import { SelectionQuoteToolbar } from './SelectionQuoteToolbar'
 import type { MessageQuote } from '@shared/messageQuote'
 
@@ -56,8 +58,9 @@ const THREAD_COMPONENTS: ThreadComponents = {
   ViewportNavigation: SailorConversationMap,
   Welcome: SailorWelcome,
   Composer: SailorComposerSlot,
-  ToolFallback: SailorToolCall,
+  ToolFallback: SailorToolFallback,
   ToolGroup: SailorToolCalls,
+  WorkspaceContext: WorkspaceContextMessage,
 }
 
 export function SailorThread(props: SailorThreadProps): ReactNode {
@@ -91,7 +94,7 @@ function SailorThreadView(props: SailorThreadProps): ReactNode {
             footer={entry.layout.footerRef}
             host={entry.host}
           >
-            <Thread autoFocus={false} components={THREAD_COMPONENTS} />
+            <Thread autoFocus={false} components={THREAD_COMPONENTS} entry={entry.layout} />
           </ComposerTransition>
           {props.onOpenSideChat && (
             <SelectionQuoteToolbar root={entry.host} onOpenSideChat={props.onOpenSideChat} />

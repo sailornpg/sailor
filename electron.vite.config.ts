@@ -13,8 +13,10 @@ export default defineConfig({
     },
   },
   preload: {
-    plugins: [externalizeDepsPlugin()],
     build: {
+      externalizeDeps: {
+        exclude: ['zod'],
+      },
       rollupOptions: {
         output: {
           entryFileNames: '[name].cjs',

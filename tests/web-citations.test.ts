@@ -171,10 +171,16 @@ test('URL 归一化容忍 www、协议、末尾斜杠与追踪参数，并拒绝
   assert.equal(citationForUrl(citations, 'https://bbc.com/zhongwen/simp?from=share')?.number, 1)
   assert.equal(citationForUrl(citations, 'https://example.com/other'), undefined)
 
-  assert.equal(isBareUrlText('https://www.bbc.com/zhongwen/simp', 'https://bbc.com/zhongwen/simp'), true)
+  assert.equal(
+    isBareUrlText('https://www.bbc.com/zhongwen/simp', 'https://bbc.com/zhongwen/simp'),
+    true,
+  )
   assert.equal(isBareUrlText('bbc.com/zhongwen/simp', 'https://www.bbc.com/zhongwen/simp'), true)
   assert.equal(isBareUrlText('BBC 中文报道', 'https://www.bbc.com/zhongwen/simp'), false)
-  assert.equal(isBareUrlText('https://example.com/other', 'https://www.bbc.com/zhongwen/simp'), false)
+  assert.equal(
+    isBareUrlText('https://example.com/other', 'https://www.bbc.com/zhongwen/simp'),
+    false,
+  )
   assert.equal(isBareUrlText('', 'https://www.bbc.com/zhongwen/simp'), false)
 })
 
@@ -245,7 +251,11 @@ test('只有答案正文收集引用，推理文本不受影响', async () => {
     'utf8',
   )
 
-  assert.match(thread, /case "text":\s*return <AssistantAnswerText \/>;/, '答案正文必须走引用收集')
+  assert.match(
+    thread,
+    /case ['"]text['"]:\s*return <AssistantAnswerText \/>;?/,
+    '答案正文必须走引用收集',
+  )
   assert.match(thread, /collectWebCitations\(content\)/)
   assert.match(thread, /<MarkdownText citations=\{citations\} \/>/)
   assert.match(reasoning, /<MarkdownText \/>/, '推理文本不传 citations')

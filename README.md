@@ -156,4 +156,5 @@ telemetry 默认关闭，记录写入 `.devtools/`；不要在共享环境或生
 - [`docs/panels.md`](docs/panels.md)：右侧面板宿主、scope 和布局模型。
 - [`docs/file-system-panel.md`](docs/file-system-panel.md)：文件树和只读预览。
 - [`docs/side-chat.md`](docs/side-chat.md)：侧边聊天生命周期和上下文继承。
+- [`docs/define-toolkit-refactor.md`](docs/define-toolkit-refactor.md)：工具 UI 注册表重构方案、风险与全量回归计划；当前实施仍有全量测试和 packaged Electron CDP 视觉验收 blocker。
 - [`CLAUDE.md`](CLAUDE.md)：项目级协作、验证和安全约定。
