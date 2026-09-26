@@ -94,3 +94,11 @@
 - **[架构决策]** 运行时 UI 注册表应保持单一稳定实例，并由生命周期负责注册和清理；StrictMode、卸载、重新挂载都要验证不会累积注册或重复渲染。（来源：模块级 toolkit 与 Provider/Thread 注册清理）
 - **[流程问题]** 真实 Electron 验收应在 feature checklist 创建时登记专用 smoke 路径；遇到打包或 CDP 环境阻塞时要单独记录 blocker，不能用通用 Node 测试替代桌面证据。（来源：toolkit Electron fixture、packaged smoke 超时与后续复验）
 - **[技术踩坑]** 涉及流式回答的 UI 查询只能绑定当前消息或当前运行上下文，不能从历史消息回扫并复用旧交互标识。（来源：旧 ask_user 卡片携带新 runId 提交导致 pending interaction 不存在）
+
+### feat-composer-thinking-menu-polish / feat-composer-thinking-menu-minimal — Composer thinking 菜单视觉与滚动优化 + 极简化（2026-09-26）
+
+- **[技术踩坑]** 浮层里「长列表 + 常驻操作区」的布局，滚动容器必须只包住列表本身，操作区放在滚动容器之外；否则列表滚动会把操作区一起滚走，出现「列表越长、关键控件越不可见」的问题。改这类浮层时先确认滚动边界落在哪个元素上。（来源：统一模型/thinking 菜单把模型列表做成独立滚动区、thinking 控制区固定可见）
+
+### feat-composer-default-permission-unified-thinking — Composer 默认工作区执行与统一 thinking 选择（2026-09-26）
+
+- **[架构决策]** 引入分档策略（权限档、粒度档、自动化档等）时，「新对象默认档」和「旧数据缺失字段的迁移档」都属于产品决策，要在 spec 阶段就和用户确认，不要自行选最保守值；否则下一轮迭代很可能整体反转默认，连带改掉持久化回退、运行上下文和 UI 文案。（来源：工作区权限默认档先定为「只读」，下一个 feature 立即改为「默认执行」）

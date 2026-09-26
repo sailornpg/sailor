@@ -419,6 +419,48 @@
       "status": "done",
       "archived_at": "2026-09-25T11:54:26.418Z",
       "archive_path": ".agent-harness/archive/feat-define-toolkit-refactor-implementation"
+    },
+    {
+      "id": "feat-thinking-slider-shadcn-compact",
+      "title": "Thinking slider 改用 shadcn 并紧凑化",
+      "status": "done",
+      "archived_at": "2026-09-26T13:48:00.608Z",
+      "archive_path": ".agent-harness/archive/feat-thinking-slider-shadcn-compact"
+    },
+    {
+      "id": "feat-composer-thinking-workspace-permissions",
+      "title": "Composer 思考等级与工作区权限",
+      "status": "done",
+      "archived_at": "2026-09-26T13:54:28.094Z",
+      "archive_path": ".agent-harness/archive/feat-composer-thinking-workspace-permissions"
+    },
+    {
+      "id": "feat-composer-default-permission-unified-thinking",
+      "title": "Composer 默认工作区执行与统一 thinking 选择",
+      "status": "done",
+      "archived_at": "2026-09-26T13:54:28.189Z",
+      "archive_path": ".agent-harness/archive/feat-composer-default-permission-unified-thinking"
+    },
+    {
+      "id": "feat-composer-thinking-menu-polish",
+      "title": "Composer thinking 菜单视觉与滚动优化",
+      "status": "done",
+      "archived_at": "2026-09-26T13:54:28.326Z",
+      "archive_path": ".agent-harness/archive/feat-composer-thinking-menu-polish"
+    },
+    {
+      "id": "feat-composer-thinking-menu-minimal",
+      "title": "Composer thinking 菜单极简化",
+      "status": "done",
+      "archived_at": "2026-09-26T13:54:28.494Z",
+      "archive_path": ".agent-harness/archive/feat-composer-thinking-menu-minimal"
+    },
+    {
+      "id": "feat-thinking-slider-ticks-minimal",
+      "title": "Thinking slider 无边框刻度样式",
+      "status": "done",
+      "archived_at": "2026-09-26T13:54:28.587Z",
+      "archive_path": ".agent-harness/archive/feat-thinking-slider-ticks-minimal"
     }
   ]
 }

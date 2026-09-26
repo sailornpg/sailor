@@ -1,0 +1,129 @@
+{
+  "features": [
+    {
+      "id": "feat-thinking-slider-shadcn-compact",
+      "name": "Thinking slider 改用 shadcn 并紧凑化",
+      "description": "使用 shadcn Slider 与项目内 Radix 依赖，缩小思考等级控件，并为八个离散等级显示与滑块行程对齐的刻度。",
+      "status": "done",
+      "trd_spec": "docs/composer-thinking-and-workspace-permissions.md",
+      "checklist": [
+        {
+          "action": "新增 shadcn 风格 Slider primitive，并将 composer thinking range 改为紧凑 Slider；八个等级各有一个与 thumb 行程端点对齐的刻度，保留主题、键盘和禁用行为。",
+          "coverage": "integration",
+          "test": "node --test tests/reasoning-selection.test.ts",
+          "verify": [
+            "node --test tests/reasoning-selection.test.ts",
+            "pnpm run lint:js",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/reasoning-selection.test.ts",
+            "verifiedAt": "2026-09-26T05:14:42.579Z",
+            "exitCode": 0,
+            "stdout": "✔ exposes the fixed Pi thinking levels in stable UI order (410.811916ms)\n✔ maps provider-default to omitted Pi thinking level and preserves explicit levels (331.452334ms)\n✔ creates an agent request carrying the selected thinking level (308.104667ms)\n✔ does not expose legacy reasoning level editing in settings (1.109125ms)\n✔ composer uses menu controls for thinking and workspace permissions (0.669292ms)\n✔ composer combines thinking level with the model menu and keeps a separate permission trigger (0.441958ms)\n✔ composer keeps the thinking footer outside the model list scroll container (0.721917ms)\n✔ thinking slider uses the shadcn primitive and renders all eight aligned levels (319.263917ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1541.279583",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/reasoning-selection.test.ts",
+              "verifiedAt": "2026-09-26T05:14:44.135Z",
+              "exitCode": 0,
+              "stdout": "✔ exposes the fixed Pi thinking levels in stable UI order (410.727833ms)\n✔ maps provider-default to omitted Pi thinking level and preserves explicit levels (305.690667ms)\n✔ creates an agent request carrying the selected thinking level (325.528375ms)\n✔ does not expose legacy reasoning level editing in settings (0.535167ms)\n✔ composer uses menu controls for thinking and workspace permissions (0.399416ms)\n✔ composer combines thinking level with the model menu and keeps a separate permission trigger (0.341ms)\n✔ composer keeps the thinking footer outside the model list scroll container (0.56025ms)\n✔ thinking slider uses the shadcn primitive and renders all eight aligned levels (318.1275ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1523.065792",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run lint:js",
+              "verifiedAt": "2026-09-26T05:14:46.720Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs"
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-26T05:14:47.459Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/reasoning-selection.test.ts && pnpm run lint:js && pnpm run typecheck",
+            "verifiedAt": "2026-09-26T05:14:47.459Z",
+            "exitCode": 0,
+            "stdout": "✔ exposes the fixed Pi thinking levels in stable UI order (410.727833ms)\n✔ maps provider-default to omitted Pi thinking level and preserves explicit levels (305.690667ms)\n✔ creates an agent request carrying the selected thinking level (325.528375ms)\n✔ does not expose legacy reasoning level editing in settings (0.535167ms)\n✔ composer uses menu controls for thinking and workspace permissions (0.399416ms)\n✔ composer combines thinking level with the model menu and keeps a separate permission trigger (0.341ms)\n✔ composer keeps the thinking footer outside the model list scroll container (0.56025ms)\n✔ thinking slider uses the shadcn primitive and renders all eight aligned levels (318.1275ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1523.065792",
+            "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "更新 Electron smoke，以生产 Slider 组件渲染八个刻度并验证尺寸、刻度均匀对齐、鼠标拖动、键盘步进、焦点、主题和菜单状态。",
+          "coverage": "e2e",
+          "test": "node tests/composer-thinking-permissions-electron.test.mjs",
+          "verify": [
+            "node tests/composer-thinking-permissions-electron.test.mjs",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "status": "done",
+          "coverage_reason": "该项只构建并执行独立 Electron 冒烟 fixture 来验证 checklist #1 的生产 UI；浏览器特有的指针、焦点和 computed geometry 不适合 SSR 单测验证。",
+          "testEvidence": {
+            "command": "node tests/composer-thinking-permissions-electron.test.mjs",
+            "verifiedAt": "2026-09-26T07:22:08.480Z",
+            "exitCode": 0,
+            "stdout": "PASS composer thinking/permission Electron smoke",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node tests/composer-thinking-permissions-electron.test.mjs",
+              "verifiedAt": "2026-09-26T07:22:10.227Z",
+              "exitCode": 0,
+              "stdout": "PASS composer thinking/permission Electron smoke",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-26T07:39:17.657Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           154.99 kB\n✓ built in 160ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.29 kB\n✓ built in 192ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3372 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-DKaXI8tU.css                   206.77 kB\n../../out/renderer/assets/ReviewPanel-4PsmimK1.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-DOkAaBvD.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Bxw7NpGe.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-CwnML_ZO.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-D8zfUYxX.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-g8pBbD6G.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-CFJTV-A-.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-D5Xd98Q2.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel--bqlWf-Y.js             4,725.90 kB\n../../out/renderer/assets/index-BH5OW8ra.js                  6,838.12 kB\n✓ built in 17m 6s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node tests/composer-thinking-permissions-electron.test.mjs && pnpm run build",
+            "verifiedAt": "2026-09-26T07:39:17.657Z",
+            "exitCode": 0,
+            "stdout": "PASS composer thinking/permission Electron smoke\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 44 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           154.99 kB\n✓ built in 160ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.29 kB\n✓ built in 192ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3372 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-DKaXI8tU.css                   206.77 kB\n../../out/renderer/assets/ReviewPanel-4PsmimK1.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-DOkAaBvD.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Bxw7NpGe.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-CwnML_ZO.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-D8zfUYxX.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-g8pBbD6G.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-CFJTV-A-.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-D5Xd98Q2.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel--bqlWf-Y.js             4,725.90 kB\n../../out/renderer/assets/index-BH5OW8ra.js                  6,838.12 kB\n✓ built in 17m 6s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "同步 thinking slider 设计文档与视觉 evidence，记录实际渲染尺寸、八个刻度和视觉验收限制。",
+          "coverage": "static",
+          "coverage_reason": "该项更新设计说明和人工视觉验收记录，不引入运行时行为。",
+          "verify": [
+            "pnpm exec prettier --check docs/composer-thinking-and-workspace-permissions.md .agent-harness/evidence/thinking-slider-shadcn-compact-visual.md"
+          ],
+          "tdd": false,
+          "status": "done",
+          "verifyEvidence": {
+            "command": "pnpm exec prettier --check docs/composer-thinking-and-workspace-permissions.md .agent-harness/evidence/thinking-slider-shadcn-compact-visual.md",
+            "verifiedAt": "2026-09-26T07:39:52.194Z",
+            "exitCode": 0,
+            "stdout": "Checking formatting...\nAll matched files use Prettier code style!",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "pnpm exec prettier --check docs/composer-thinking-and-workspace-permissions.md .agent-harness/evidence/thinking-slider-shadcn-compact-visual.md",
+            "verifiedAt": "2026-09-26T07:39:52.194Z",
+            "exitCode": 0,
+            "stdout": "Checking formatting...\nAll matched files use Prettier code style!",
+            "stderr": ""
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-26T07:39:52.195Z"
+    }
+  ]
+}
