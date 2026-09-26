@@ -1,5 +1,10 @@
 import { isToolUIPart, type ChatTransport, type UIMessage, type UIMessageChunk } from 'ai'
-import type { AgentRunRequest, ReasoningEffort } from '@shared/contracts'
+import {
+  normalizeThinkingLevel,
+  type AgentRunRequest,
+  type ReasoningEffort,
+  type ThinkingLevel,
+} from '@shared/contracts'
 
 const activeRunIds = new Map<string, string>()
 
@@ -8,7 +13,10 @@ export function getActiveAgentRunId(chatId: string): string | undefined {
 }
 
 export function createAgentRunRequest(input: AgentRunRequest): AgentRunRequest {
-  return input
+  const thinkingLevel = normalizeThinkingLevel(input.thinkingLevel, input.reasoning)
+  const request = { ...input, thinkingLevel }
+  if (input.thinkingLevel === undefined) delete request.reasoning
+  return request
 }
 
 function resumesToolApproval(messages: UIMessage[]): boolean {
@@ -20,10 +28,10 @@ function resumesToolApproval(messages: UIMessage[]): boolean {
 }
 
 export class IpcChatTransport implements ChatTransport<UIMessage> {
-  private readonly getReasoning: () => ReasoningEffort
+  private readonly getThinkingLevel: () => ThinkingLevel | ReasoningEffort
 
-  constructor(getReasoning: () => ReasoningEffort = () => 'provider-default') {
-    this.getReasoning = getReasoning
+  constructor(getThinkingLevel: () => ThinkingLevel | ReasoningEffort = () => 'provider-default') {
+    this.getThinkingLevel = getThinkingLevel
   }
 
   async sendMessages({
@@ -35,7 +43,7 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
   > {
     const runId = crypto.randomUUID()
     activeRunIds.set(chatId, runId)
-    const reasoning = this.getReasoning()
+    const thinkingLevel = normalizeThinkingLevel(this.getThinkingLevel())
     let unsubscribe: (() => void) | undefined
     let abortHandler: (() => void) | undefined
     let finished = false
@@ -82,7 +90,7 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
             createAgentRunRequest({
               chatId,
               messages,
-              reasoning,
+              thinkingLevel,
               runId,
             }),
           )

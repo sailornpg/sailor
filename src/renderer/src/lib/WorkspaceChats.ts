@@ -2,7 +2,7 @@ import { workspaceContextDrafts } from './workspaceContextDrafts'
 import { sideChatQuoteDrafts } from './sideChatQuoteDrafts'
 import { lastAssistantMessageIsCompleteWithApprovalResponses, type UIMessage } from 'ai'
 import { Chat } from '@ai-sdk/react'
-import type { SailorApi, ReasoningEffort } from '@shared/contracts'
+import type { SailorApi, ThinkingLevel } from '@shared/contracts'
 import type { PlanTodoList } from '@shared/planTodo'
 import type { WorkspaceChatSummary } from '@shared/workspaces'
 import { IpcChatTransport } from './IpcChatTransport'
@@ -16,7 +16,7 @@ export class WorkspaceChats {
   private selection = 0
   private readonly onPreferenceError: (error: unknown) => void
   private readonly api: Pick<SailorApi['workspaces'], 'getChat' | 'setPreferences'>
-  readonly reasoning = new Map<string, ReasoningEffort>()
+  readonly reasoning = new Map<string, ThinkingLevel>()
   activeId: string | null = null
   constructor(
     api: Pick<SailorApi['workspaces'], 'getChat' | 'setPreferences'>,

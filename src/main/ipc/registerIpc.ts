@@ -95,6 +95,16 @@ export function registerIpc(window: BrowserWindow): () => void {
   ipcMain.handle(IPC.workspaceCreateChat, (_event, id) => workspaces.createChat(id))
   ipcMain.handle(IPC.workspaceCreateSideChat, (_event, id) => workspaces.createSideChat(id))
   ipcMain.handle(IPC.workspaceGetChat, (_event, id) => workspaces.getChat(id))
+  ipcMain.handle(IPC.workspacePermission, (_event, input) =>
+    workspaces.setPermission(
+      z
+        .object({
+          projectId: z.string().min(1).max(200),
+          mode: z.enum(['allow-reads', 'allow-edits', 'allow-all']),
+        })
+        .parse(input),
+    ),
+  )
   ipcMain.handle(IPC.workspacePreferences, (_event, input) => workspaces.setPreferences(input))
   const workspaceFiles = new WorkspaceFilesService((projectId) =>
     workspaces.resolveProjectRoot(projectId),
@@ -152,16 +162,24 @@ export function registerIpc(window: BrowserWindow): () => void {
         runId: z.string().min(1),
         chatId: z.string().min(1),
         messages: z.array(z.unknown()),
-        reasoning: z.enum([
-          'provider-default',
-          'none',
-          'minimal',
-          'low',
-          'medium',
-          'high',
-          'xhigh',
-        ]),
+        thinkingLevel: z
+          .enum(['provider-default', 'off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])
+          .optional(),
+        reasoning: z
+          .enum([
+            'provider-default',
+            'none',
+            'off',
+            'minimal',
+            'low',
+            'medium',
+            'high',
+            'xhigh',
+            'max',
+          ])
+          .optional(),
       })
+      .refine((value) => value.thinkingLevel !== undefined || value.reasoning !== undefined)
       .parse(request) as AgentRunRequest
     void agent.start(valid).catch(() => {
       window.webContents.send(IPC.agentEvent, {
@@ -228,6 +246,7 @@ export function registerIpc(window: BrowserWindow): () => void {
       IPC.workspaceCreateChat,
       IPC.workspaceCreateSideChat,
       IPC.workspaceGetChat,
+      IPC.workspacePermission,
       IPC.workspacePreferences,
       IPC.workspaceFilesList,
       IPC.workspaceFilesRead,

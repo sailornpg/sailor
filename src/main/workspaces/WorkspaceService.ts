@@ -12,15 +12,26 @@ import type { WorkspaceStore } from './WorkspaceStore.js'
 import { WorkspaceToolScope, type WorkspaceToolContext } from './WorkspaceToolScope.js'
 
 const idSchema = z.string().min(1).max(200)
-const requestSchema = z.object({
-  runId: idSchema,
-  chatId: idSchema,
-  messages: z.array(z.unknown()),
-  reasoning: z.enum(['provider-default', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh']),
-})
+const requestSchema = z
+  .object({
+    runId: idSchema,
+    chatId: idSchema,
+    messages: z.array(z.unknown()),
+    thinkingLevel: z
+      .enum(['provider-default', 'off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])
+      .optional(),
+    reasoning: z
+      .enum(['provider-default', 'none', 'off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])
+      .optional(),
+  })
+  .refine((value) => value.thinkingLevel !== undefined || value.reasoning !== undefined)
 const preferencesSchema = z.object({
   activeChatId: idSchema.nullable().optional(),
   collapsedProjectIds: z.array(idSchema).optional(),
+})
+const permissionSchema = z.object({
+  projectId: idSchema,
+  mode: z.enum(['allow-reads', 'allow-edits', 'allow-all']),
 })
 
 export class WorkspaceService {
@@ -144,6 +155,11 @@ export class WorkspaceService {
         await this.persist(live.id)
       } else await this.store.updateChat(parsed.activeChatId, { unread: false })
     }
+    this.changed()
+  }
+  async setPermission(input: unknown) {
+    const parsed = permissionSchema.parse(input)
+    await this.store.setProjectPermission(parsed.projectId, parsed.mode)
     this.changed()
   }
   async manageChat(chatId: unknown, input: unknown) {
@@ -293,7 +309,14 @@ export class WorkspaceService {
     const project = (await this.snapshot()).projects.find((item) => item.id === chat.projectId)
     if (!project) throw new Error('工作区不存在。')
     const scope = await WorkspaceToolScope.create(project.rootPath, signal)
-    return { chatId: chat.id, runId, rootPath: scope.rootPath, scope, signal }
+    return {
+      chatId: chat.id,
+      runId,
+      rootPath: scope.rootPath,
+      scope,
+      signal,
+      permissionMode: project.permissionMode ?? 'allow-all',
+    }
   }
 
   async resolveProjectRoot(projectId: unknown): Promise<string> {

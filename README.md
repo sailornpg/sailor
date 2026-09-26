@@ -8,7 +8,7 @@ Sailor 的核心边界是：**模型执行和文件访问只在 Electron main �
 
 - 按本地目录组织工作区和会话，支持后台运行、取消、归档、恢复、重命名和删除。
 - 配置 DeepSeek 或自定义模型提供商，支持 OpenAI Completions、OpenAI Responses 和 Anthropic Messages。
-- 通过 `/models` 获取模型目录，并维护上下文窗口、最大输出 token、推理等级和视觉能力。
+- 通过 `/models` 获取模型目录，并维护上下文窗口、最大输出 token 和视觉能力；thinking level 在 composer 的模型菜单中按 Pi 标准等级选择，工作区权限默认是“工作区域默认执行”，可在 composer 中切换。
 - 使用 Pi 原生 `read`、`write`、`edit`、`bash`、`grep`、`glob`、`ls` 工具操作当前工作区。
 - 计划 TodoList、`ask_user` 人机协作、工具审批、推理摘要、来源引用和结构化错误反馈。
 - 读取图片及 `xlsx`、`docx`、`pdf`、`csv/tsv`、文本附件。
@@ -95,7 +95,7 @@ docs/                               # 架构及专项设计文档
 
 ## 当前范围
 
-已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、Pi 原生工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。
+已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、composer thinking level、按工作区持久化的 Pi 工具权限、Pi 原生工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。
 
 暂不实现：云端沙盒、远程工作区同步、自动发现项目目录、全局聊天搜索、聊天跨工作区移动、Git diff 收集，以及应用重启后自动续接正在生成的流。
 
@@ -157,4 +157,5 @@ telemetry 默认关闭，记录写入 `.devtools/`；不要在共享环境或生
 - [`docs/file-system-panel.md`](docs/file-system-panel.md)：文件树和只读预览。
 - [`docs/side-chat.md`](docs/side-chat.md)：侧边聊天生命周期和上下文继承。
 - [`docs/define-toolkit-refactor.md`](docs/define-toolkit-refactor.md)：工具 UI 注册表重构方案、风险与全量回归计划；当前实施仍有全量测试和 packaged Electron CDP 视觉验收 blocker。
+- [`docs/composer-thinking-and-workspace-permissions.md`](docs/composer-thinking-and-workspace-permissions.md)：composer thinking level、工作区权限策略、Pi 映射、持久化和审批续跑方案。
 - [`CLAUDE.md`](CLAUDE.md)：项目级协作、验证和安全约定。

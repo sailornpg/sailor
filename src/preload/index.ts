@@ -57,6 +57,7 @@ const api: SailorApi = {
     createChat: (id) => ipcRenderer.invoke(IPC.workspaceCreateChat, id),
     createSideChat: (id) => ipcRenderer.invoke(IPC.workspaceCreateSideChat, id),
     getChat: (id) => ipcRenderer.invoke(IPC.workspaceGetChat, id),
+    setPermission: (input) => ipcRenderer.invoke(IPC.workspacePermission, input),
     setPreferences: (input) => ipcRenderer.invoke(IPC.workspacePreferences, input),
     files: {
       list: (input: WorkspaceFilesListInput) => ipcRenderer.invoke(IPC.workspaceFilesList, input),

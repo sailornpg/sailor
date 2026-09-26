@@ -2557,7 +2557,6 @@ kbd {
   width: auto;
   max-width: 100%;
 }
-
 /* Resize grip is a hover/focus affordance; the file split boundary remains visible. */
 .pane-resizer .pane-resizer-grip {
   opacity: 0;

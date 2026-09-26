@@ -12,8 +12,44 @@ export { askUserInteractionResponseSchema }
 export type { AskUserInteractionResponse }
 
 export type ChatId = string
-export type ReasoningEffort =
-  'provider-default' | 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
+export type ThinkingLevel =
+  'provider-default' | 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+
+/** @deprecated Use ThinkingLevel. Kept for persisted requests and older callers. */
+export type ReasoningEffort = ThinkingLevel | 'none'
+
+const thinkingLevelOrder: ThinkingLevel[] = [
+  'provider-default',
+  'off',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max',
+]
+
+export function getAvailableThinkingLevels(): ThinkingLevel[] {
+  return [...thinkingLevelOrder]
+}
+
+export function toPiThinkingLevel(
+  level: ThinkingLevel | 'none',
+): Exclude<ThinkingLevel, 'provider-default'> | undefined {
+  if (level === 'provider-default') return undefined
+  if (level === 'none') return 'off'
+  return level
+}
+
+export function normalizeThinkingLevel(
+  thinkingLevel: ThinkingLevel | 'none' | undefined,
+  legacyReasoning?: ReasoningEffort,
+): ThinkingLevel {
+  if (thinkingLevel === 'none') return 'off'
+  if (thinkingLevel) return thinkingLevel
+  if (legacyReasoning === 'none') return 'off'
+  return legacyReasoning ?? 'provider-default'
+}
 
 const reasoningEffortOrder: ReasoningEffort[] = ['minimal', 'low', 'medium', 'high', 'xhigh']
 
@@ -34,7 +70,10 @@ export interface ProjectSummary {
   id: string
   name: string
   rootPath: string
+  permissionMode?: WorkspacePermissionMode
 }
+
+export type WorkspacePermissionMode = 'allow-reads' | 'allow-edits' | 'allow-all'
 
 export interface ChatSummary {
   id: ChatId
@@ -47,7 +86,9 @@ export interface AgentRunRequest {
   runId: string
   chatId: ChatId
   messages: UIMessage[]
-  reasoning: ReasoningEffort
+  thinkingLevel?: ThinkingLevel
+  /** @deprecated Use thinkingLevel. */
+  reasoning?: ReasoningEffort
 }
 
 export interface WriteApprovalResponse {
@@ -174,6 +215,7 @@ export interface SailorApi {
     createChat(projectId: string): Promise<WorkspaceChat>
     createSideChat(parentChatId: string): Promise<WorkspaceChat>
     getChat(chatId: string): Promise<WorkspaceChat>
+    setPermission(input: { projectId: string; mode: WorkspacePermissionMode }): Promise<void>
     setPreferences(input: Partial<WorkspacePreferences>): Promise<void>
     files: {
       list(input: WorkspaceFilesListInput): Promise<WorkspaceFileTreePage>
@@ -200,6 +242,7 @@ export const IPC = {
   workspaceCreateChat: 'workspace:create-chat',
   workspaceCreateSideChat: 'workspace:create-side-chat',
   workspaceGetChat: 'workspace:get-chat',
+  workspacePermission: 'workspace:permission',
   workspacePreferences: 'workspace:preferences',
   workspaceFilesList: 'workspace-files:list',
   workspaceFilesRead: 'workspace-files:read',

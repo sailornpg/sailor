@@ -1,12 +1,13 @@
-import type { PiHarnessSettings } from "@ai-sdk/harness-pi";
+import type { PiHarnessSettings } from '@ai-sdk/harness-pi'
 import {
-  resolveReasoningEffort,
+  normalizeThinkingLevel,
+  toPiThinkingLevel,
   type ReasoningEffort,
   type ResolvedModel,
-} from "../../../shared/contracts.js";
+} from '../../../shared/contracts.js'
 
-export const DEFAULT_PI_CONTEXT_WINDOW = 128_000;
-export const DEFAULT_PI_MAX_OUTPUT_TOKENS = 8_192;
+export const DEFAULT_PI_CONTEXT_WINDOW = 128_000
+export const DEFAULT_PI_MAX_OUTPUT_TOKENS = 8_192
 
 export function createPiConfiguration(
   config: ResolvedModel,
@@ -15,14 +16,13 @@ export function createPiConfiguration(
   const contextWindow =
     config.contextWindow && Number.isSafeInteger(config.contextWindow)
       ? config.contextWindow
-      : DEFAULT_PI_CONTEXT_WINDOW;
+      : DEFAULT_PI_CONTEXT_WINDOW
   const maxOutputTokens =
     config.maxOutputTokens && Number.isSafeInteger(config.maxOutputTokens)
       ? config.maxOutputTokens
-      : DEFAULT_PI_MAX_OUTPUT_TOKENS;
-  if (maxOutputTokens >= contextWindow)
-    throw new Error("模型最大输出 token 必须小于上下文窗口。");
-  const effort = resolveReasoningEffort(reasoning, config.reasoningLevels);
+      : DEFAULT_PI_MAX_OUTPUT_TOKENS
+  if (maxOutputTokens >= contextWindow) throw new Error('模型最大输出 token 必须小于上下文窗口。')
+  const thinkingLevel = toPiThinkingLevel(normalizeThinkingLevel(undefined, reasoning))
   return {
     model: `sailor/${config.modelId}`,
     settings: {
@@ -36,8 +36,8 @@ export function createPiConfiguration(
               id: config.modelId,
               name: config.modelId,
               reasoning: config.reasoningLevels.length > 0,
-              input: config.vision ? ["text", "image"] : ["text"],
-              ...(config.protocol === "openai-completions"
+              input: config.vision ? ['text', 'image'] : ['text'],
+              ...(config.protocol === 'openai-completions'
                 ? { compat: { supportsFinishReason: false } }
                 : {}),
               contextWindow,
@@ -47,9 +47,7 @@ export function createPiConfiguration(
           ],
         },
       },
-      ...(effort === "provider-default"
-        ? {}
-        : { thinkingLevel: effort === "none" ? "off" : effort }),
+      ...(thinkingLevel === undefined ? {} : { thinkingLevel }),
     },
-  };
+  }
 }

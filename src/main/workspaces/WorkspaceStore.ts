@@ -10,6 +10,7 @@ import type {
   WorkspaceSnapshot,
   ChatManagement,
 } from '../../shared/workspaces.js'
+import type { WorkspacePermissionMode } from '../../shared/contracts.js'
 
 const messageSchema = z
   .object({
@@ -37,7 +38,14 @@ const chatSchema = z.object({
 })
 const fileSchema = z.object({
   version: z.literal(1),
-  projects: z.array(z.object({ id: z.string(), name: z.string(), rootPath: z.string() })),
+  projects: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      rootPath: z.string(),
+      permissionMode: z.enum(['allow-reads', 'allow-edits', 'allow-all']).default('allow-all'),
+    }),
+  ),
   chats: z.array(chatSchema),
   activeChatId: z.string().nullable(),
   collapsedProjectIds: z.array(z.string()),
@@ -80,9 +88,21 @@ export class WorkspaceStore {
     return this.mutate((state) => {
       const existing = state.projects.find((project) => project.rootPath === rootPath)
       if (existing) return existing
-      const project = { id: randomUUID(), name: basename(rootPath) || rootPath, rootPath }
+      const project = {
+        id: randomUUID(),
+        name: basename(rootPath) || rootPath,
+        rootPath,
+        permissionMode: 'allow-all' as const,
+      }
       state.projects.push(project)
       return project
+    })
+  }
+  setProjectPermission(projectId: string, permissionMode: WorkspacePermissionMode): Promise<void> {
+    return this.mutate((state) => {
+      const project = state.projects.find((candidate) => candidate.id === projectId)
+      if (!project) throw new Error('工作区不存在。')
+      project.permissionMode = permissionMode
     })
   }
   createChat(projectId: string): Promise<WorkspaceChat> {

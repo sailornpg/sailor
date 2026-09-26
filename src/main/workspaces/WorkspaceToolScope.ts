@@ -1,6 +1,7 @@
 import { lstat, realpath, stat } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import type { ToolErrorCode, ToolRecoveryAction } from '../../shared/toolFeedback.js'
+import type { WorkspacePermissionMode } from '../../shared/contracts.js'
 
 export type WorkspacePathKind = 'any' | 'file' | 'directory'
 
@@ -28,18 +29,24 @@ function throwIfAborted(signal: AbortSignal): void {
 
 function isOutside(rootPath: string, candidate: string): boolean {
   const fromRoot = relative(rootPath, candidate)
-  return fromRoot === '..' || fromRoot.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) || isAbsolute(fromRoot)
+  return (
+    fromRoot === '..' ||
+    fromRoot.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) ||
+    isAbsolute(fromRoot)
+  )
 }
 
 export function isSensitivePath(path: string): boolean {
   const segments = path.split(/[\\/]+/).filter(Boolean)
   const name = segments.at(-1)?.toLowerCase() ?? ''
-  return segments.some(segment => ['.git', '.ssh'].includes(segment.toLowerCase()))
-    || name === '.env'
-    || name.startsWith('.env.')
-    || ['id_rsa', 'id_ed25519', '.npmrc', '.pypirc'].includes(name)
-    || name.endsWith('.pem')
-    || name.endsWith('.key')
+  return (
+    segments.some((segment) => ['.git', '.ssh'].includes(segment.toLowerCase())) ||
+    name === '.env' ||
+    name.startsWith('.env.') ||
+    ['id_rsa', 'id_ed25519', '.npmrc', '.pypirc'].includes(name) ||
+    name.endsWith('.pem') ||
+    name.endsWith('.key')
+  )
 }
 
 function mapPathError(error: unknown, path: string): WorkspaceToolScopeError {
@@ -50,13 +57,20 @@ function mapPathError(error: unknown, path: string): WorkspaceToolScopeError {
     ])
   }
   if (code === 'EACCES' || code === 'EPERM') {
-    return scopeError('PERMISSION_DENIED', `没有权限读取路径：${path}`, '请检查文件权限或选择其他路径')
+    return scopeError(
+      'PERMISSION_DENIED',
+      `没有权限读取路径：${path}`,
+      '请检查文件权限或选择其他路径',
+    )
   }
   return scopeError('INTERNAL_ERROR', '路径解析失败，内部细节已隐藏。', '请检查工作区状态后重试')
 }
 
 export class WorkspaceToolScope {
-  private constructor(readonly rootPath: string, private readonly signal: AbortSignal) {}
+  private constructor(
+    readonly rootPath: string,
+    private readonly signal: AbortSignal,
+  ) {}
 
   static async create(rootPath: string, signal: AbortSignal): Promise<WorkspaceToolScope> {
     throwIfAborted(signal)
@@ -67,7 +81,11 @@ export class WorkspaceToolScope {
       return new WorkspaceToolScope(canonicalRoot, signal)
     } catch (error) {
       if (error instanceof WorkspaceToolScopeError) throw error
-      throw scopeError('WORKSPACE_UNAVAILABLE', '工作区目录不存在或无法访问。', '请重新选择有效的工作区目录')
+      throw scopeError(
+        'WORKSPACE_UNAVAILABLE',
+        '工作区目录不存在或无法访问。',
+        '请重新选择有效的工作区目录',
+      )
     }
   }
 
@@ -82,7 +100,11 @@ export class WorkspaceToolScope {
     }
     throwIfAborted(this.signal)
     if (isOutside(this.rootPath, canonicalPath)) {
-      throw scopeError('OUTSIDE_WORKSPACE', '符号链接目标位于工作区之外，已拒绝读取。', '请选择工作区内的真实路径')
+      throw scopeError(
+        'OUTSIDE_WORKSPACE',
+        '符号链接目标位于工作区之外，已拒绝读取。',
+        '请选择工作区内的真实路径',
+      )
     }
     let metadata
     try {
@@ -121,7 +143,11 @@ export class WorkspaceToolScope {
     }
     throwIfAborted(this.signal)
     if (isOutside(this.rootPath, parentPath)) {
-      throw scopeError('OUTSIDE_WORKSPACE', '目标父目录位于工作区之外，已拒绝写入。', '请选择工作区内的路径')
+      throw scopeError(
+        'OUTSIDE_WORKSPACE',
+        '目标父目录位于工作区之外，已拒绝写入。',
+        '请选择工作区内的路径',
+      )
     }
     if (!(await stat(parentPath)).isDirectory()) {
       throw scopeError('NOT_A_DIRECTORY', `父路径不是目录：${input}`, '请选择有效的父目录')
@@ -131,13 +157,21 @@ export class WorkspaceToolScope {
       const metadata = await lstat(targetPath)
       exists = true
       if (metadata.isSymbolicLink()) {
-        throw scopeError('OUTSIDE_WORKSPACE', '写入目标不能是符号链接。', '请选择工作区内的普通文件')
+        throw scopeError(
+          'OUTSIDE_WORKSPACE',
+          '写入目标不能是符号链接。',
+          '请选择工作区内的普通文件',
+        )
       }
       if (!metadata.isFile()) {
         throw scopeError('NOT_A_FILE', `路径不是文件：${input}`, '请选择一个文件路径')
       }
       if (isOutside(this.rootPath, await realpath(targetPath))) {
-        throw scopeError('OUTSIDE_WORKSPACE', '目标文件位于工作区之外，已拒绝写入。', '请选择工作区内的普通文件')
+        throw scopeError(
+          'OUTSIDE_WORKSPACE',
+          '目标文件位于工作区之外，已拒绝写入。',
+          '请选择工作区内的普通文件',
+        )
       }
     } catch (error) {
       if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') throw error
@@ -153,14 +187,22 @@ export class WorkspaceToolScope {
 
   private resolveLexicalPath(input: string): string {
     if (!input || input.includes('\0') || isAbsolute(input) || /^[A-Za-z]:[\\/]/.test(input)) {
-      throw scopeError('INVALID_ARGUMENT', '路径必须是工作区内的非空相对路径。', '请提供工作区相对路径')
+      throw scopeError(
+        'INVALID_ARGUMENT',
+        '路径必须是工作区内的非空相对路径。',
+        '请提供工作区相对路径',
+      )
     }
     const segments = input.split(/[\\/]+/)
     if (segments.includes('..')) {
       throw scopeError('OUTSIDE_WORKSPACE', '路径不能离开工作区。', '请提供工作区内的路径')
     }
     if (isSensitivePath(input)) {
-      throw scopeError('SENSITIVE_PATH', '该路径可能包含敏感凭据，已拒绝读取。', '请选择不含凭据或密钥的文件')
+      throw scopeError(
+        'SENSITIVE_PATH',
+        '该路径可能包含敏感凭据，已拒绝读取。',
+        '请选择不含凭据或密钥的文件',
+      )
     }
 
     const lexicalPath = resolve(this.rootPath, input)
@@ -177,4 +219,5 @@ export interface WorkspaceToolContext {
   rootPath: string
   scope: WorkspaceToolScope
   signal: AbortSignal
+  permissionMode: WorkspacePermissionMode
 }

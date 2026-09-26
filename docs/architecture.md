@@ -21,7 +21,7 @@ Renderer (React 19 + assistant-ui)
             -> Pi native read / write / edit / bash / grep / glob / ls
               -> chatId-bound canonical workspace root
               -> just-bash project mount + credential/symlink policy
-              -> per-call native write/edit/bash approval
+            -> project permission mode (allow-reads / allow-edits / allow-all) plus native approval when required
           <- UIMessageChunk stream
       <- ReadableStream<UIMessageChunk>
 ```
@@ -40,7 +40,7 @@ Renderer (React 19 + assistant-ui)
 - encrypted provider credential persistence under Electron's user-data directory;
 - conversion of current user/approval input to Harness turns; Pi owns native model history and compression;
 - a typed AI SDK tool registry with Zod contracts, driven by Pi through `HarnessAgent`;
-- chat-scoped workspace tools with canonical path, symlink and sensitive-file checks; writes use explicit approval, expected hashes, atomic publication, and same-path serialization;
+- chat-scoped workspace tools with canonical path, symlink and sensitive-file checks; writes follow the workspace permission mode and request native approval when required, with same-path serialization;
 - a per-project interactive PTY (`node-pty`) owned by the user and exposed only through a typed attach/detach terminal IPC; the agent runtime never receives terminal access, terminal output, or a terminal tool;
 - single-file deterministic patches return before/after hashes, line counts, bounded diff references, and structured recovery actions; persisted tool history is display-only and never replays a write;
 - streaming AI SDK `UIMessageChunk` events back over IPC;
@@ -62,7 +62,8 @@ Provider keys enter the renderer only when the user types a new value. Saved key
 - Sailor chat adapters own workspace/model/reasoning/save-error behavior while generic copied elements remain independent of Electron IPC and shared business contracts;
 - the model settings dialog retrieves, searches, and selects the provider's remote model catalog;
 - the settings dialog appearance page selects system/light/dark themes and accent presets; renderer-only appearance preferences are versioned in localStorage and never cross the preload boundary;
-- per-model capability metadata such as context window, output limit, reasoning levels, and vision support is edited locally because `/models` responses do not expose it consistently;
+- per-model capability metadata such as context window, output limit and vision support is edited locally because `/models` responses do not expose it consistently; Pi thinking level is selected per chat in the composer;
+- composer stores thinking level per chat and workspace permission mode per project; main resolves the project from chatId and freezes the mode for each run;
 - provider metadata and new credentials are submitted without reading saved secrets;
 - layout components provide the project sidebar, workspace, and inspector.
 
@@ -96,7 +97,7 @@ The current architecture includes directory-scoped persistent chats with indepen
 
 The settings dialog only exposes Models and Appearance. It composes shared Dialog, Button, Input and Select controls with official surface helpers and Collapsible, using flat rows, section rules, 8px controls and 12px dialogs. Model settings have a scrollable body and a fixed save footer. Appearance changes remain immediate and renderer-only.
 
-Web search runs in Electron main through the local `zhulingyu666/ai-search-mcp` stdio server. Its `search` tool is exposed to Pi as Sailor's stable `web_search` name; `fetch_page` and `research` remain available as supporting tools. The server uses zero-key search engines with regional routing, caching, rate limiting and failover. MCP results are untrusted external content and the renderer only creates links after HTTP(S) validation. Legacy webSearch credentials are not persisted or exposed. Pi's approval-gated virtual bash remains available and cannot launch arbitrary host binaries.
+Web search runs in Electron main through the local `zhulingyu666/ai-search-mcp` stdio server. Its `search` tool is exposed to Pi as Sailor's stable `web_search` name; `fetch_page` and `research` remain available as supporting tools. The server uses zero-key search engines with regional routing, caching, rate limiting and failover. MCP results are untrusted external content and the renderer only creates links after HTTP(S) validation. Legacy webSearch credentials are not persisted or exposed. Pi's virtual bash follows the workspace permission mode and cannot launch arbitrary host binaries.
 
 The following are intentionally deferred:
 
@@ -112,7 +113,7 @@ The following are intentionally deferred:
 
 `WorkspaceStore` writes a version 1 JSON document to `app.getPath('userData')/workspaces.json`:
 
-- `projects`: `{ id, name, rootPath }[]`;
+- `projects`: `{ id, name, rootPath, permissionMode? }[]`; missing permissionMode is read as `allow-all` for legacy projects; new projects also start in `allow-all`; side chats force `allow-reads`;
 - `chats`: `{ id, projectId, title, updatedAt, messages: UIMessage[], runId, status, unread, error }[]`;
 - `activeChatId: string | null`, `collapsedProjectIds: string[]`.
 
@@ -120,7 +121,7 @@ The store validates schema and references before changing data, serializes read/
 
 `WorkspaceService` owns the native picker adapter, message validation via `validateUIMessages` with the installed tool schemas, current in-memory run snapshots, save retry, and unread state. Empty new histories bypass the SDK's nonempty-array validator. It resolves the directory through persisted chatId→projectId, validates that it remains a directory at run start, and never accepts a renderer-supplied execution path. A missing directory blocks new runs without hiding saved history.
 
-The preload exposes only `workspaces.snapshot`, `pickProject`, `createChat`, `getChat`, `setPreferences`, `retrySave`, and change notifications. It exposes no generic filesystem or IPC access. `workspace:changed` is an invalidation event; snapshots contain summaries, and full messages are fetched for the selected chat. New model runs still use the native `UIMessageChunk` stream over `agent:*` IPC.
+The preload exposes only typed workspace operations including `setPermission({ projectId, mode })`; it exposes no generic filesystem or IPC access. `workspace:changed` is an invalidation event; snapshots contain summaries, and full messages are fetched for the selected chat. New model runs still use the native `UIMessageChunk` stream over `agent:*` IPC.
 
 `AgentService` reserves chatId/runId before asynchronous work, snapshots provider configuration at invocation, and permits independent chats to run concurrently. Within a chat only one run is active. It tees the UI stream: one branch reaches the renderer, the other is reconstructed by SDK `readUIMessageStream` and saved in main, including background or partial output. Cancellation only targets the specified run. For resumed conversation after cancellation/error, model conversion uses `ignoreIncompleteToolCalls` while preserving the original UI history. Completed or failed background runs gain unread state; selecting them clears it.
 
@@ -174,7 +175,7 @@ renderer 使用 assistant-ui registry 的 `elements-todo-list` source component 
 
 `src/main/agent/pi/` owns the runtime adapter. `createPiConfiguration` maps saved provider protocol, model ID, context window, vision and reasoning capabilities into an explicit Pi provider named `sailor`. Credentials are supplied through an isolated authentication record, never global `process.env` mutation. `ResolvedModel` now includes optional `contextWindow` and `vision` from the existing settings model. Missing window/output limits use bounded defaults of 128000 / 8192; explicit values remain preferred when the provider exposes them.
 
-`PiRunner` uses Pi's native tools with `permissionMode: allow-reads` and connects the local search MCP tools in main. Native write/edit/bash approvals are registered in main by approval ID, chat ID, run ID, call ID and tool name, expire after five minutes, and are consumed once before continuation. The runtime's saved call is authoritative; renderer responses cannot replace tool parameters. Reboot, cancellation and abandoning a pending turn invalidate approvals. IPC accepts only native write/edit/bash approval names. UI history validates against Pi's exported builtin schemas; retired static tool parts become dynamic history parts with no executor.
+`PiRunner` uses the project permission mode resolved from chatId and frozen at run start (`allow-reads`, `allow-edits` or `allow-all`), with `allow-all` as the new and legacy-project default; side chats force `allow-reads` and a read-only active tool allowlist. Native write/edit/bash approvals are registered in main by approval ID, chat ID, run ID, call ID and tool name, expire after five minutes, and are consumed once before continuation. The runtime's saved call is authoritative; renderer responses cannot replace tool parameters. Reboot, cancellation and abandoning a pending turn invalidate approvals. IPC accepts only native write/edit/bash approval names. UI history validates against Pi's exported builtin schemas; retired static tool parts become dynamic history parts with no executor.
 
 `PiStorage` uses an in-memory just-bash base for private session state and a MountableFs/ReadWriteFs project mount at `/home/sailor/workspace`. The host root is resolved exclusively from the chat in main. A filesystem policy wrapper retains credential path filtering and rejects symlinks; tool implementations are upstream Pi/just-bash. Project files are never checkpointed or restored from session snapshots. No cloud service is involved. Native bash uses just-bash commands and cannot execute arbitrary host binaries. Native write/edit use upstream overwrite/exact replacement semantics, replacing the old expectedHash/atomic patch contract.
 
@@ -188,7 +189,7 @@ Verification: `tests/pi-provider.test.ts`, `tests/pi-storage.test.ts`, and `test
 
 ## Composer model and context rail
 
-The compact model menu composes official `ComposerModelTrigger`, `ComposerMenu` and `ComposerModelItem`; selection continues through Settings IPC and the active-model snapshot, rather than a second modelContext owner. Reasoning remains a per-chat choice. The official `ComposerContext` ring displays a recent-call snapshot, not cumulative billing usage. A trusted inline Pi `message_end` observer reads per-call usage (including cache reads/writes), because harness-pi 1.0.119 emits zero step usage and cumulative session usage. The usage cell is shared with a parked Pi session across approval continuations. At both `finish-step` and `finish` (continuations can omit the former), Sailor publishes optional `UIMessage.metadata.contextUsage` with `{ inputTokens, outputTokens, contextWindow, modelId }` through the existing native metadata stream and workspace persistence. Zero synthetic compaction steps do not overwrite real usage. The tooltip labels inputs/outputs instead of inventing system/tool splits; post-compaction occupancy is refreshed by the next call. The renderer selects the most recent valid assistant usage in the current chat, so a newer unmetered message does not hide earlier statistics. Chats with no valid metadata display unknown; usage is not inferred from text or cumulative billing totals. No new IPC channel or credential exposure is introduced.
+The compact model menu composes official `ComposerModelTrigger`, `ComposerMenu` and `ComposerModelItem`; its model rows use an independent scroll region while the per-chat thinking level footer stays visible, and workspace permission remains a separate compact trigger. Selection continues through Settings IPC and the active-model snapshot, rather than a second modelContext owner. The official `ComposerContext` ring displays a recent-call snapshot, not cumulative billing usage. A trusted inline Pi `message_end` observer reads per-call usage (including cache reads/writes), because harness-pi 1.0.119 emits zero step usage and cumulative session usage. The usage cell is shared with a parked Pi session across approval continuations. At both `finish-step` and `finish` (continuations can omit the former), Sailor publishes optional `UIMessage.metadata.contextUsage` with `{ inputTokens, outputTokens, contextWindow, modelId }` through the existing native metadata stream and workspace persistence. Zero synthetic compaction steps do not overwrite real usage. The tooltip labels inputs/outputs instead of inventing system/tool splits; post-compaction occupancy is refreshed by the next call. The renderer selects the most recent valid assistant usage in the current chat, so a newer unmetered message does not hide earlier statistics. Chats with no valid metadata display unknown; usage is not inferred from text or cumulative billing totals. No new IPC channel or credential exposure is introduced.
 
 ## Conversation map
 

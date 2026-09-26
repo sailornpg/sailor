@@ -4,7 +4,7 @@ import { sideChatQuoteDrafts } from '@/lib/sideChatQuoteDrafts'
 import { useWorkspaceContexts } from '@/lib/workspaceContextDrafts'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ComposerPrimitive, useAui, useAuiEvent, useAuiState } from '@assistant-ui/react'
-import { MessageSquareQuote, Server, X } from 'lucide-react'
+import { Check, MessageSquareQuote, Server, X } from 'lucide-react'
 import {
   Composer,
   ComposerActions,
@@ -12,6 +12,7 @@ import {
   ComposerBar,
   ComposerModelTrigger,
   ComposerMenu,
+  ComposerMenuItem,
   ComposerModelItem,
   ComposerSend,
   ComposerToolbar,
@@ -22,10 +23,11 @@ import { ghostButton } from '@/components/assistant-ui/elements/surfaces'
 import { cn } from '@/lib/utils'
 import type { WorkspaceChats } from '@/lib/WorkspaceChats'
 import {
-  getAvailableReasoningEfforts,
   type ModelSelection,
-  type ReasoningEffort,
+  type ProjectSummary,
   type SettingsSnapshot,
+  type ThinkingLevel,
+  type WorkspacePermissionMode,
 } from '@shared/contracts'
 import type { WorkspaceChatSummary } from '@shared/workspaces'
 import type { MessageQuote } from '@shared/messageQuote'
@@ -37,10 +39,12 @@ import { PlanTodoListView } from '../PlanTodoListView'
 import { SailorAskUserPopover, type SailorAskUserCardProps } from '../tools/SailorAskUserCard'
 import { findPendingAskUser } from './pendingAskUser'
 import { hasPendingToolApproval } from './pendingToolApproval'
+import { ThinkingLevelSlider, thinkingLabels } from './ThinkingLevelSlider'
 
 interface SailorComposerProps {
   chatId: string
   registry: WorkspaceChats
+  project?: ProjectSummary
   summary?: WorkspaceChatSummary
   settings: SettingsSnapshot
   onSelectModel: (selection: ModelSelection) => Promise<void>
@@ -49,15 +53,17 @@ interface SailorComposerProps {
   onRetrySave: () => void
 }
 
-const reasoningLabels: Record<ReasoningEffort, string> = {
-  'provider-default': '模型默认',
-  none: '关闭',
-  minimal: '最少',
-  low: '较低',
-  medium: '中等',
-  high: '较高',
-  xhigh: '最高',
+const permissionLabels: Record<WorkspacePermissionMode, string> = {
+  'allow-reads': '请求批准',
+  'allow-edits': '自动编辑',
+  'allow-all': '工作区域默认执行',
 }
+
+const permissionOptions: { id: WorkspacePermissionMode; name: string }[] = [
+  { id: 'allow-reads', name: permissionLabels['allow-reads'] },
+  { id: 'allow-edits', name: permissionLabels['allow-edits'] },
+  { id: 'allow-all', name: permissionLabels['allow-all'] },
+]
 
 export function SailorComposer({
   chatId,
@@ -65,6 +71,7 @@ export function SailorComposer({
   summary,
   settings,
   onSelectModel,
+  project,
   onOpenSettings,
   onOpenSideChat,
   onRetrySave,
@@ -82,15 +89,20 @@ export function SailorComposer({
   const composerText = useAuiState((state) => state.composer.text)
   const composerQuote = useAuiState((state) => state.composer.quote)
   const attachmentCount = useAuiState((state) => state.composer.attachments.length)
-  const [reasoning, setReasoning] = useState<ReasoningEffort>(
+  const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel>(
     registry.reasoning.get(chatId) ?? 'provider-default',
   )
+  const [permissionMode, setPermissionMode] = useState<WorkspacePermissionMode>(
+    project?.permissionMode ?? 'allow-all',
+  )
   const [modelOpen, setModelOpen] = useState(false)
+  const [permissionOpen, setPermissionOpen] = useState(false)
   const [selectionError, setSelectionError] = useState<string>()
   const [attachmentError, setAttachmentError] = useState<string>()
   const [selecting, setSelecting] = useState(false)
   const [sideChatBusy, setSideChatBusy] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
+  const permissionRef = useRef<HTMLDivElement>(null)
   // The runtime rejects a dropped file before the adapter sees it, so the only
   // way to tell the user why is the official composer event.
   useAuiEvent('composer.attachmentAddError', () => {
@@ -100,13 +112,15 @@ export function SailorComposer({
     setAttachmentError(undefined)
   })
   useEffect(() => {
-    if (!modelOpen) return
+    if (!modelOpen && !permissionOpen) return
     const outside = (event: PointerEvent) => {
-      if (!pickerRef.current?.contains(event.target as Node)) setModelOpen(false)
+      const target = event.target as Node
+      if (!pickerRef.current?.contains(target)) setModelOpen(false)
+      if (!permissionRef.current?.contains(target)) setPermissionOpen(false)
     }
     document.addEventListener('pointerdown', outside)
     return () => document.removeEventListener('pointerdown', outside)
-  }, [modelOpen])
+  }, [modelOpen, permissionOpen])
   const modelOptions = useMemo(
     () =>
       settings.providers.flatMap((provider) =>
@@ -118,10 +132,6 @@ export function SailorComposer({
           modelId: model.id,
           disabled: !provider.hasApiKey,
           keywords: [provider.name, model.id],
-          efforts: getAvailableReasoningEfforts(model.reasoningLevels).map((effort) => ({
-            id: effort,
-            name: reasoningLabels[effort],
-          })),
         })),
       ),
     [settings.providers],
@@ -164,16 +174,24 @@ export function SailorComposer({
   )
 
   useEffect(() => {
-    registry.reasoning.set(chatId, reasoning)
-  }, [chatId, reasoning, registry])
+    registry.reasoning.set(chatId, thinkingLevel)
+  }, [chatId, thinkingLevel, registry])
 
   useEffect(() => {
-    const selected = modelOptions.find((model) => model.id === selectedModel)
-    if (!selected?.efforts) return
-    if (!selected.efforts.some((effort) => effort.id === reasoning)) {
-      setReasoning('provider-default')
+    setPermissionMode(project?.permissionMode ?? 'allow-all')
+  }, [project?.permissionMode])
+
+  const choosePermission = async (mode: WorkspacePermissionMode) => {
+    if (!project || runBusy || mode === permissionMode) return
+    setSelectionError(undefined)
+    try {
+      await window.sailor.workspaces.setPermission({ projectId: project.id, mode })
+      setPermissionMode(mode)
+      setPermissionOpen(false)
+    } catch (cause) {
+      setSelectionError(cause instanceof Error ? cause.message : '权限策略保存失败，请重试。')
     }
-  }, [modelOptions, reasoning, selectedModel])
+  }
 
   return (
     <div className="sailor-composer-stack">
@@ -250,8 +268,8 @@ export function SailorComposer({
                   placeholder="随心输入"
                   rows={1}
                 />
-                <ComposerToolbar className="gap-2">
-                  <ComposerActions className="min-w-0 flex-1">
+                <ComposerToolbar className="gap-1.5">
+                  <ComposerActions className="min-w-0 flex-1 gap-1">
                     <ComposerPrimitive.AddAttachment asChild>
                       <ComposerAttachButton />
                     </ComposerPrimitive.AddAttachment>
@@ -262,6 +280,7 @@ export function SailorComposer({
                         onKeyDown={(event) => {
                           if (event.key === 'Escape') {
                             setModelOpen(false)
+                            setPermissionOpen(false)
                             pickerRef.current
                               ?.querySelector<HTMLButtonElement>(
                                 '[data-slot=composer-model-trigger]',
@@ -275,50 +294,61 @@ export function SailorComposer({
                         }}
                       >
                         <ComposerModelTrigger
-                          aria-label={`选择模型，当前：${selectedModelOption?.name ?? '未选择'}`}
-                          model={selectedModelOption?.name ?? '选择模型'}
+                          aria-label={`模型与思考等级，当前模型：${selectedModelOption?.name ?? '未选择'}，思考等级：${thinkingLabels[thinkingLevel]}`}
+                          model={`${selectedModelOption?.name ?? '选择模型'} · ${thinkingLabels[thinkingLevel]}`}
                           open={modelOpen}
+                          className="max-w-[min(15rem,calc(100vw-8rem))] truncate px-2.5"
                           onClick={() => setModelOpen((value) => !value)}
                         />
                         <ComposerMenu
                           open={modelOpen}
                           inert={!modelOpen}
                           aria-label="可用模型"
-                          className="max-h-72 max-w-[calc(100vw-5rem)] overflow-y-auto"
+                          className="max-w-[calc(100vw-5rem)] p-1"
                         >
-                          {modelOptions.map((model) => (
-                            <ComposerModelItem
-                              key={model.id}
-                              entry={{
-                                name: model.name,
-                                meta: model.description,
-                              }}
-                              selected={model.id === selectedModel}
-                              aria-pressed={model.id === selectedModel}
-                              disabled={model.disabled || selecting}
-                              className="disabled:opacity-40 [&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
-                              title={model.disabled ? '请先配置提供商密钥' : model.name}
-                              onClick={async () => {
-                                setSelecting(true)
-                                setSelectionError(undefined)
-                                try {
-                                  await onSelectModel({
-                                    providerId: model.providerId,
-                                    modelId: model.modelId,
-                                  })
-                                  setModelOpen(false)
-                                } catch (error) {
-                                  setSelectionError(
-                                    error instanceof Error
-                                      ? error.message
-                                      : '切换模型失败，请重试。',
-                                  )
-                                } finally {
-                                  setSelecting(false)
-                                }
-                              }}
-                            />
-                          ))}
+                          <div
+                            data-model-list
+                            className="min-h-0 max-h-64 overflow-y-auto overscroll-contain pe-0.5"
+                          >
+                            {modelOptions.map((model) => (
+                              <ComposerModelItem
+                                key={model.id}
+                                entry={{
+                                  name: model.name,
+                                  meta: model.description,
+                                }}
+                                selected={model.id === selectedModel}
+                                aria-pressed={model.id === selectedModel}
+                                disabled={model.disabled || selecting}
+                                className="rounded-lg px-2 py-1.5 text-[13px] disabled:opacity-40 [&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
+                                title={model.disabled ? '请先配置提供商密钥' : model.name}
+                                onClick={async () => {
+                                  setSelecting(true)
+                                  setSelectionError(undefined)
+                                  try {
+                                    await onSelectModel({
+                                      providerId: model.providerId,
+                                      modelId: model.modelId,
+                                    })
+                                    setModelOpen(false)
+                                  } catch (error) {
+                                    setSelectionError(
+                                      error instanceof Error
+                                        ? error.message
+                                        : '切换模型失败，请重试。',
+                                    )
+                                  } finally {
+                                    setSelecting(false)
+                                  }
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <ThinkingLevelSlider
+                            value={thinkingLevel}
+                            onValueChange={setThinkingLevel}
+                            disabled={runBusy}
+                          />
                         </ComposerMenu>
                       </div>
                     ) : (
@@ -332,19 +362,50 @@ export function SailorComposer({
                         <Server aria-hidden /> 配置模型
                       </Button>
                     )}
-                    {selectedModelOption && selectedModelOption.efforts.length > 1 && (
-                      <select
-                        aria-label="推理等级"
-                        value={reasoning}
-                        onChange={(event) => setReasoning(event.target.value as ReasoningEffort)}
-                        className="min-w-0 max-w-24 bg-transparent text-xs text-muted-foreground outline-none"
+                    {project && (
+                      <div
+                        ref={permissionRef}
+                        className="relative min-w-0"
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Escape') return
+                          setPermissionOpen(false)
+                          permissionRef.current
+                            ?.querySelector<HTMLButtonElement>('[data-slot=composer-model-trigger]')
+                            ?.focus()
+                        }}
+                        onBlur={(event) => {
+                          if (!event.currentTarget.contains(event.relatedTarget))
+                            setPermissionOpen(false)
+                        }}
                       >
-                        {selectedModelOption.efforts.map((effort) => (
-                          <option key={effort.id} value={effort.id}>
-                            {effort.name}
-                          </option>
-                        ))}
-                      </select>
+                        <ComposerModelTrigger
+                          aria-label={`工作区权限，当前：${permissionLabels[permissionMode]}`}
+                          disabled={runBusy}
+                          model={permissionLabels[permissionMode]}
+                          open={permissionOpen}
+                          className="px-2.5"
+                          onClick={() => setPermissionOpen((value) => !value)}
+                        />
+                        <ComposerMenu
+                          open={permissionOpen}
+                          inert={!permissionOpen}
+                          aria-label="工作区权限"
+                          className="max-w-[calc(100vw-5rem)]"
+                        >
+                          {permissionOptions.map((option) => (
+                            <ComposerMenuItem
+                              key={option.id}
+                              active={option.id === permissionMode}
+                              aria-pressed={option.id === permissionMode}
+                              disabled={runBusy || selecting}
+                              onClick={() => void choosePermission(option.id)}
+                            >
+                              <span className="flex-1 truncate text-start">{option.name}</span>
+                              {option.id === permissionMode && <Check size={14} aria-hidden />}
+                            </ComposerMenuItem>
+                          ))}
+                        </ComposerMenu>
+                      </div>
                     )}
                   </ComposerActions>
                   <SailorComposerContext />
