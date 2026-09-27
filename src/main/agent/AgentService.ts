@@ -18,6 +18,7 @@ export class AgentService {
   private readonly controllers = new Map<string, AbortController>()
   private readonly chatRuns = new Map<string, string>()
   private readonly completions = new Map<string, Promise<void>>()
+  private readonly compactions = new Map<string, AbortController>()
   private readonly runner?: AgentRunner
   private readonly workspace?: WorkspaceService
   constructor(
@@ -146,7 +147,32 @@ export class AgentService {
     controller.abort()
     await this.completions.get(runId)
   }
+  async compact(chatId: string): Promise<void> {
+    if (!this.runner?.compact || !this.workspace) throw new Error('当前运行时不支持手动压缩。')
+    if (this.chatRuns.has(chatId) || this.compactions.has(chatId))
+      throw new Error('请等待当前会话完成后再压缩上下文。')
+    const chat = await this.workspace.getChat(chatId)
+    if (chat.status === 'running') throw new Error('请等待当前会话完成后再压缩上下文。')
+    if (!chat.messages.length) throw new Error('当前会话没有可压缩的上下文。')
+    const configured = await this.settings.resolveActiveModel()
+    if (!configured) throw new Error('请先在设置中配置并选择模型。')
+    const controller = new AbortController()
+    this.compactions.set(chatId, controller)
+    try {
+      const context = await this.workspace.resolveToolContext(chatId, controller.signal)
+      await this.runner.compact({
+        chatId,
+        config: configured,
+        context,
+        isSideChat: Boolean(chat.parentChatId),
+        signal: controller.signal,
+      })
+    } finally {
+      this.compactions.delete(chatId)
+    }
+  }
   abortAll(): void {
     for (const runId of this.controllers.keys()) void this.abort(runId)
+    for (const controller of this.compactions.values()) controller.abort()
   }
 }

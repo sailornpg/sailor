@@ -60,9 +60,17 @@ export interface PiRunOptions {
   signal: AbortSignal
   updatePlan?: (plan: PlanTodoList) => Promise<void>
 }
+export interface PiCompactOptions {
+  chatId: string
+  config: ResolvedModel
+  context?: WorkspaceToolContext
+  isSideChat?: boolean
+  signal: AbortSignal
+}
 export interface AgentRunner {
   deleteChat?(chatId: string): Promise<void>
   run(options: PiRunOptions): AsyncIterable<UIMessageChunk>
+  compact?(options: PiCompactOptions): Promise<void>
   respondToApproval?(response: WriteApprovalResponse): void
   respondToAskUser?(response: AskUserInteractionResponse): void
   revokeApprovals?(chatId: string): void
@@ -501,6 +509,48 @@ export class PiRunner implements AgentRunner {
         this.pendingSaves.set(request.chatId, { state, resume })
         await this.storage.save(request.chatId, state, resume)
         this.pendingSaves.delete(request.chatId)
+      }
+    }
+  }
+
+  async compact(options: PiCompactOptions): Promise<void> {
+    const dirty = this.pendingSaves.get(options.chatId)
+    if (dirty) {
+      await this.storage.save(options.chatId, dirty.state, dirty.resume)
+      this.pendingSaves.delete(options.chatId)
+    }
+    const state = await this.storage.open(options.chatId, options.context?.rootPath)
+    if (!state.resume) throw new Error('当前会话没有可恢复的 Pi 上下文。')
+    const skills = options.context ? await loadPiSkills(options.context.scope) : []
+    const configured = createPiConfiguration(options.config, 'provider-default')
+    const agent = new HarnessAgent({
+      harness: createSailorPi(configured.settings),
+      model: configured.model,
+      skills,
+      permissionMode: options.isSideChat
+        ? 'allow-reads'
+        : (options.context?.permissionMode ?? 'allow-all'),
+      tools: {},
+      telemetry: await this.createTelemetry(),
+      sandboxConfig: { workDir: 'workspace' },
+      instructions: options.isSideChat
+        ? `${SAILOR_INSTRUCTIONS} This is a read-only side chat. Do not modify workspace files or run shell commands.`
+        : SAILOR_INSTRUCTIONS,
+    })
+    let session: HarnessAgentSession | undefined
+    try {
+      const sessionId = `sailor-${createHash('sha256').update(options.chatId).digest('hex')}`
+      session = await agent.createSession({
+        sessionId,
+        sandboxSession: state.sandbox,
+        resumeFrom: state.resume,
+        abortSignal: options.signal,
+      })
+      await session.compact()
+    } finally {
+      if (session) {
+        const resume = await session.stop()
+        await this.storage.save(options.chatId, state, resume)
       }
     }
   }

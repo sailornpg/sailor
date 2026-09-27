@@ -9,6 +9,7 @@ import {
   type SailorApi,
   type WriteApprovalResponse,
   type AskUserInteractionResponse,
+  type ComposerSlashCommand,
   type WorkspaceFilesListInput,
   type WorkspaceFilesReadInput,
 } from '@shared/contracts.js'
@@ -25,10 +26,12 @@ import type {
 const api: SailorApi = {
   app: {
     getVersion: () => ipcRenderer.invoke(IPC.appVersion),
+    quit: () => ipcRenderer.invoke(IPC.appQuit),
   },
   agent: {
     start: (request: AgentRunRequest) => ipcRenderer.invoke(IPC.agentStart, request),
     abort: (runId: string) => ipcRenderer.invoke(IPC.agentAbort, runId),
+    compact: (chatId: string) => ipcRenderer.invoke(IPC.agentCompact, chatId),
     respondToApproval: (response: WriteApprovalResponse) =>
       ipcRenderer.invoke(IPC.agentRespondToApproval, response),
     respondToAskUser: (response: AskUserInteractionResponse) =>
@@ -59,6 +62,8 @@ const api: SailorApi = {
     getChat: (id) => ipcRenderer.invoke(IPC.workspaceGetChat, id),
     setPermission: (input) => ipcRenderer.invoke(IPC.workspacePermission, input),
     setPreferences: (input) => ipcRenderer.invoke(IPC.workspacePreferences, input),
+    slashCommands: (chatId: string): Promise<ComposerSlashCommand[]> =>
+      ipcRenderer.invoke(IPC.workspaceSlashCommands, chatId),
     files: {
       list: (input: WorkspaceFilesListInput) => ipcRenderer.invoke(IPC.workspaceFilesList, input),
       read: (input: WorkspaceFilesReadInput) => ipcRenderer.invoke(IPC.workspaceFilesRead, input),

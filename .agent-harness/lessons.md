@@ -102,3 +102,11 @@
 ### feat-composer-default-permission-unified-thinking — Composer 默认工作区执行与统一 thinking 选择（2026-09-26）
 
 - **[架构决策]** 引入分档策略（权限档、粒度档、自动化档等）时，「新对象默认档」和「旧数据缺失字段的迁移档」都属于产品决策，要在 spec 阶段就和用户确认，不要自行选最保守值；否则下一轮迭代很可能整体反转默认，连带改掉持久化回退、运行上下文和 UI 文案。（来源：工作区权限默认档先定为「只读」，下一个 feature 立即改为「默认执行」）
+
+### fix-composer-slash-keyboard-navigation — Composer Slash Keyboard Navigation（2026-09-27）
+
+- **[技术踩坑]** 桌面/集成 smoke 的 fixture 必须直接复用被测的生产渲染路径或组件；在 fixture 里复制一份实现，测试证明的是副本正确而非产品正确，生产路径仍可能保持错误。（来源：Electron fixture 与生产 Composer 共享同一份修正后的列表渲染器，而不是各写一份）
+
+### feat-composer-pi-tui-actions — Composer Pi TUI Actions（2026-09-27）
+
+- **[架构决策]** 一个命令或能力注册表若混合了多种执行语义（字面 prompt、UI 动作、宿主操作等），必须显式建模语义类型并在分发点按类型路由：只有字面类进入 prompt 通道，动作类走明确的 UI/IPC 映射且不伪造审批记录。不要用字符串前缀或命名约定推断语义，否则每新增一类命令都要重新猜边界。（来源：Pi TUI 命令映射为 Sailor action，Skill 命令保持 literal）

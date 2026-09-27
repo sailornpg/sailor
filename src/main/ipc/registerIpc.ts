@@ -5,6 +5,7 @@ import { app, dialog, ipcMain, type BrowserWindow } from 'electron'
 import { z } from 'zod'
 import { AgentService } from '../agent/AgentService.js'
 import { PiStorage } from '../agent/pi/PiStorage.js'
+import { loadComposerSlashCommands } from '../agent/pi/piSlashCommands.js'
 import { ProviderModelCatalog } from '../settings/ProviderModelCatalog.js'
 import { safeStorageCipher } from '../settings/SafeStorageCipher.js'
 import { SettingsService } from '../settings/SettingsService.js'
@@ -106,6 +107,12 @@ export function registerIpc(window: BrowserWindow): () => void {
     ),
   )
   ipcMain.handle(IPC.workspacePreferences, (_event, input) => workspaces.setPreferences(input))
+  ipcMain.handle(IPC.workspaceSlashCommands, async (_event, chatId: unknown) => {
+    const id = z.string().min(1).max(200).parse(chatId)
+    const signal = AbortSignal.timeout(10_000)
+    const context = await workspaces.resolveToolContext(id, signal)
+    return loadComposerSlashCommands(context.scope)
+  })
   const workspaceFiles = new WorkspaceFilesService((projectId) =>
     workspaces.resolveProjectRoot(projectId),
   )
@@ -156,6 +163,9 @@ export function registerIpc(window: BrowserWindow): () => void {
   })
 
   ipcMain.handle(IPC.appVersion, () => app.getVersion())
+  ipcMain.handle(IPC.appQuit, () => {
+    app.quit()
+  })
   ipcMain.handle(IPC.agentStart, async (_event, request: AgentRunRequest) => {
     const valid = z
       .object({
@@ -190,6 +200,9 @@ export function registerIpc(window: BrowserWindow): () => void {
     })
   })
   ipcMain.handle(IPC.agentAbort, (_event, runId: string) => agent.abort(z.string().parse(runId)))
+  ipcMain.handle(IPC.agentCompact, (_event, chatId: string) =>
+    agent.compact(z.string().min(1).max(200).parse(chatId)),
+  )
   ipcMain.handle(IPC.agentRespondToApproval, (_event, response: WriteApprovalResponse) =>
     agent.respondToApproval(writeApprovalResponseSchema.parse(response)),
   )
@@ -248,13 +261,16 @@ export function registerIpc(window: BrowserWindow): () => void {
       IPC.workspaceGetChat,
       IPC.workspacePermission,
       IPC.workspacePreferences,
+      IPC.workspaceSlashCommands,
       IPC.workspaceFilesList,
       IPC.workspaceFilesRead,
     ])
       ipcMain.removeHandler(channel)
     ipcMain.removeHandler(IPC.appVersion)
+    ipcMain.removeHandler(IPC.appQuit)
     ipcMain.removeHandler(IPC.agentStart)
     ipcMain.removeHandler(IPC.agentAbort)
+    ipcMain.removeHandler(IPC.agentCompact)
     ipcMain.removeHandler(IPC.agentRespondToApproval)
     ipcMain.removeHandler(IPC.agentRespondToAskUser)
     ipcMain.removeHandler(IPC.agentRevokeApprovals)

@@ -1,0 +1,113 @@
+{
+  "features": [
+    {
+      "id": "feat-composer-input-directive-highlight",
+      "name": "Composer Input Directive Highlight",
+      "description": "在 Composer 输入框内将通过 slash 弹窗选中的 Skill 或 literal 命令显示为带图标的 accent token，同时保持底层发送文本为原始 /skill:* 或命令 literal。",
+      "status": "done",
+      "dependencies": ["feat-composer-slash-commands", "feat-composer-slash-selection-highlight"],
+      "checklist": [
+        {
+          "action": "增加可测试的 Composer directive token 解析与显示标签逻辑，并让已选 literal 在手动编辑、清空和会话切换时正确失效；保持发送值仍为原始命令文本。",
+          "coverage": "unit",
+          "test": "node --test tests/composer-input-directive-highlight.test.ts",
+          "verify": [
+            "node --test tests/composer-input-directive-highlight.test.ts",
+            "pnpm run lint:js",
+            "pnpm run lint:css"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/composer-input-directive-highlight.test.ts",
+            "verifiedAt": "2026-09-27T13:56:44.334Z",
+            "exitCode": 0,
+            "stdout": "✔ directive helpers preserve literal text and invalidate edited commands (67.360458ms)\n✔ Composer keeps the literal command while rendering a selected directive token (0.809792ms)\n✔ manual edits invalidate the selected token without changing the outgoing literal formatter (0.421083ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 350.997833",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/composer-input-directive-highlight.test.ts",
+              "verifiedAt": "2026-09-27T13:56:44.598Z",
+              "exitCode": 0,
+              "stdout": "✔ directive helpers preserve literal text and invalidate edited commands (61.0685ms)\n✔ Composer keeps the literal command while rendering a selected directive token (0.782375ms)\n✔ manual edits invalidate the selected token without changing the outgoing literal formatter (0.412834ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 233.436125",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run lint:js",
+              "verifiedAt": "2026-09-27T13:56:47.435Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs"
+            },
+            {
+              "command": "pnpm run lint:css",
+              "verifiedAt": "2026-09-27T13:56:48.121Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ stylelint 'src/**/*.css'"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/composer-input-directive-highlight.test.ts && pnpm run lint:js && pnpm run lint:css",
+            "verifiedAt": "2026-09-27T13:56:48.121Z",
+            "exitCode": 0,
+            "stdout": "✔ directive helpers preserve literal text and invalidate edited commands (61.0685ms)\n✔ Composer keeps the literal command while rendering a selected directive token (0.782375ms)\n✔ manual edits invalidate the selected token without changing the outgoing literal formatter (0.412834ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 233.436125",
+            "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'"
+          }
+        },
+        {
+          "action": "运行真实 Electron Composer 场景，选择 Skill 后断言输入框出现图标与 accent token、光标位于 token 后、普通手输 /skill:* 仍显示 literal，编辑 token 后回退为普通文本，并覆盖亮暗主题与窄窗口。",
+          "coverage": "e2e",
+          "test": "node tests/composer-input-directive-highlight-electron.test.mjs",
+          "verify": [
+            "node tests/composer-input-directive-highlight-electron.test.mjs",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "coverage_reason": "token 图标、透明 textarea 与 overlay 对齐、实际 caret 和主题对比度依赖 Electron 渲染，无法用廉价的前置单元断言替代真实桌面冒烟。",
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/composer-input-directive-highlight-electron.test.mjs",
+            "verifiedAt": "2026-09-27T13:58:17.821Z",
+            "exitCode": 0,
+            "stdout": "PASS composer input directive highlight Electron smoke",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node tests/composer-input-directive-highlight-electron.test.mjs",
+              "verifiedAt": "2026-09-27T13:58:20.752Z",
+              "exitCode": 0,
+              "stdout": "PASS composer input directive highlight Electron smoke",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-27T13:58:21.519Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-27T13:58:32.696Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 47 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           167.16 kB\n✓ built in 198ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.64 kB\n✓ built in 227ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3376 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-fJOEgz8u.css                   209.94 kB\n../../out/renderer/assets/ReviewPanel-h7Kd4_uG.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CbN6RsmU.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-D3cF2-Ju.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-WQ_5Du6Q.js              4.36 kB\n../../out/renderer/assets/ParticleSailboatScene-BQojNpQ4.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CuCw4nQf.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-Dyb43F4t.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-CfXSfO-R.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DhxGcZO4.js             4,725.90 kB\n../../out/renderer/assets/index-BWlnbCtY.js                  6,860.83 kB\n✓ built in 9.38s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node tests/composer-input-directive-highlight-electron.test.mjs && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-27T13:58:32.696Z",
+            "exitCode": 0,
+            "stdout": "PASS composer input directive highlight Electron smoke\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 47 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           167.16 kB\n✓ built in 198ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.64 kB\n✓ built in 227ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3376 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-fJOEgz8u.css                   209.94 kB\n../../out/renderer/assets/ReviewPanel-h7Kd4_uG.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-CbN6RsmU.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-D3cF2-Ju.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-WQ_5Du6Q.js              4.36 kB\n../../out/renderer/assets/ParticleSailboatScene-BQojNpQ4.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CuCw4nQf.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-Dyb43F4t.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-CfXSfO-R.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DhxGcZO4.js             4,725.90 kB\n../../out/renderer/assets/index-BWlnbCtY.js                  6,860.83 kB\n✓ built in 9.38s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-27T13:58:32.696Z"
+    }
+  ]
+}

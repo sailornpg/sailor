@@ -7,6 +7,7 @@ export interface SideChatEnvironmentValue {
   registry: WorkspaceChats
   snapshot: WorkspaceSnapshot
   settings: SettingsSnapshot
+  createChat(projectId?: string): Promise<void>
   createSideChat(parentChatId: string, question?: string): Promise<void>
   onSelectModel(selection: ModelSelection): Promise<void>
   onOpenSettings(): void

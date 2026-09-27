@@ -18,6 +18,8 @@ interface ChatWorkspaceProps {
   settings: SettingsSnapshot
   onSelectModel: (selection: ModelSelection) => Promise<void>
   onOpenSettings: () => void
+  onNewChat: () => Promise<void>
+  onCompact: () => Promise<void>
   onOpenSideChat: (question?: string, quote?: MessageQuote) => Promise<void>
   /** Panel picker and dock toggle, owned by the layout layer. */
   panelToolbar?: ReactNode
@@ -68,6 +70,8 @@ export function ChatWorkspace({
   settings,
   onSelectModel,
   onOpenSettings,
+  onNewChat,
+  onCompact,
   onOpenSideChat,
   panelToolbar,
 }: ChatWorkspaceProps) {
@@ -105,6 +109,8 @@ export function ChatWorkspace({
             registry={registry}
             settings={settings}
             summary={summary}
+            onNewChat={onNewChat}
+            onCompact={onCompact}
           />
         </main>
       </SailorChatProvider>

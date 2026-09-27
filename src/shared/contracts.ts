@@ -181,6 +181,23 @@ export interface WorkspaceFilePreview {
   reason?: string
 }
 
+export type ComposerSlashCommandSource = 'sailor' | 'pi' | 'skill'
+
+/** A command handled by Sailor UI/main actions instead of the model prompt. */
+export type ComposerSlashCommandAction =
+  'settings' | 'model' | 'new' | 'quit' | 'reload' | 'compact'
+
+/** Metadata only; Skill content and workspace paths never cross into renderer. */
+export interface ComposerSlashCommand {
+  id: string
+  label: string
+  description: string
+  source: ComposerSlashCommandSource
+  action?: ComposerSlashCommandAction
+  icon?: string
+  argumentHint?: string
+}
+
 export interface ResolvedModel extends ModelSelection {
   providerName: string
   baseUrl: string
@@ -197,10 +214,12 @@ export type AgentRunEvent = { type: 'chunk'; chunk: UIMessageChunk } | { type: '
 export interface SailorApi {
   app: {
     getVersion(): Promise<string>
+    quit(): Promise<void>
   }
   agent: {
     start(request: AgentRunRequest): Promise<void>
     abort(runId: string): Promise<void>
+    compact(chatId: ChatId): Promise<void>
     respondToApproval(response: WriteApprovalResponse): Promise<void>
     respondToAskUser(response: AskUserInteractionResponse): Promise<void>
     revokeApprovals(chatId: ChatId): Promise<void>
@@ -217,6 +236,7 @@ export interface SailorApi {
     getChat(chatId: string): Promise<WorkspaceChat>
     setPermission(input: { projectId: string; mode: WorkspacePermissionMode }): Promise<void>
     setPreferences(input: Partial<WorkspacePreferences>): Promise<void>
+    slashCommands(chatId: ChatId): Promise<ComposerSlashCommand[]>
     files: {
       list(input: WorkspaceFilesListInput): Promise<WorkspaceFileTreePage>
       read(input: WorkspaceFilesReadInput): Promise<WorkspaceFilePreview>
@@ -244,11 +264,14 @@ export const IPC = {
   workspaceGetChat: 'workspace:get-chat',
   workspacePermission: 'workspace:permission',
   workspacePreferences: 'workspace:preferences',
+  workspaceSlashCommands: 'workspace:slash-commands',
   workspaceFilesList: 'workspace-files:list',
   workspaceFilesRead: 'workspace-files:read',
   appVersion: 'app:version',
+  appQuit: 'app:quit',
   agentStart: 'agent:start',
   agentAbort: 'agent:abort',
+  agentCompact: 'agent:compact',
   agentRespondToApproval: 'agent:respond-to-approval',
   agentRespondToAskUser: 'agent:respond-to-ask-user',
   agentRevokeApprovals: 'agent:revoke-approvals',

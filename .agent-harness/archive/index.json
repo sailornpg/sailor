@@ -468,6 +468,41 @@
       "status": "done",
       "archived_at": "2026-09-27T05:33:00.460Z",
       "archive_path": ".agent-harness/archive/feat-agent-host-command-execution"
+    },
+    {
+      "id": "feat-composer-slash-commands",
+      "title": "Composer Slash Commands",
+      "status": "done",
+      "archived_at": "2026-09-27T14:08:49.878Z",
+      "archive_path": ".agent-harness/archive/feat-composer-slash-commands"
+    },
+    {
+      "id": "fix-composer-slash-keyboard-navigation",
+      "title": "Composer Slash Keyboard Navigation",
+      "status": "done",
+      "archived_at": "2026-09-27T14:08:49.985Z",
+      "archive_path": ".agent-harness/archive/fix-composer-slash-keyboard-navigation"
+    },
+    {
+      "id": "feat-composer-pi-tui-actions",
+      "title": "Composer Pi TUI Actions",
+      "status": "done",
+      "archived_at": "2026-09-27T14:08:50.084Z",
+      "archive_path": ".agent-harness/archive/feat-composer-pi-tui-actions"
+    },
+    {
+      "id": "feat-composer-slash-selection-highlight",
+      "title": "Composer Slash Selection Highlight",
+      "status": "done",
+      "archived_at": "2026-09-27T14:08:50.181Z",
+      "archive_path": ".agent-harness/archive/feat-composer-slash-selection-highlight"
+    },
+    {
+      "id": "feat-composer-input-directive-highlight",
+      "title": "Composer Input Directive Highlight",
+      "status": "done",
+      "archived_at": "2026-09-27T14:08:50.296Z",
+      "archive_path": ".agent-harness/archive/feat-composer-input-directive-highlight"
     }
   ]
 }

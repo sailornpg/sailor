@@ -9,8 +9,15 @@ import { SailorThread } from '@/components/chat/thread/SailorThread'
 import { Button } from '@/components/ui/button'
 
 export default function SideChatPanel({ context, data }: PanelProps) {
-  const { registry, snapshot, settings, createSideChat, onSelectModel, onOpenSettings } =
-    useSideChatEnvironment()
+  const {
+    registry,
+    snapshot,
+    settings,
+    createChat,
+    createSideChat,
+    onSelectModel,
+    onOpenSettings,
+  } = useSideChatEnvironment()
   const parentChatId = context.chatId
   const available = snapshot.chats.filter(
     (item) => item.parentChatId === parentChatId && !item.archived,
@@ -109,6 +116,8 @@ export default function SideChatPanel({ context, data }: PanelProps) {
         <SailorThread
           chatId={selected.id}
           onOpenSettings={onOpenSettings}
+          onNewChat={() => createChat(project?.id)}
+          onCompact={() => window.sailor.agent.compact(selected.id)}
           onRetrySave={() => {
             void window.sailor.workspaces
               .retrySave(selected.id)

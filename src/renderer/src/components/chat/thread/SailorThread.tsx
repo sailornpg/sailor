@@ -22,6 +22,8 @@ interface SailorThreadProps {
   settings: SettingsSnapshot
   onSelectModel: (selection: ModelSelection) => Promise<void>
   onOpenSettings: () => void
+  onNewChat: () => Promise<void>
+  onCompact: () => Promise<void>
   onOpenSideChat?: (question?: string, quote?: MessageQuote) => Promise<void>
   onRetrySave: () => void
   variant?: 'main' | 'side'

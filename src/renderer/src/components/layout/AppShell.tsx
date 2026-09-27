@@ -242,6 +242,8 @@ export function AppShell() {
           onRetrySave={() => perform(() => window.sailor.workspaces.retrySave(chat.id))}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenSideChat={(question, quote) => createSideChat(chat.id, question, quote)}
+          onNewChat={() => createChat(project?.id)}
+          onCompact={() => window.sailor.agent.compact(chat.id)}
           onSelectModel={selectModel}
           panelToolbar={panelToolbar}
           settings={settings}
@@ -260,6 +262,7 @@ export function AppShell() {
           registry: chatRegistry,
           snapshot,
           settings,
+          createChat: (projectId) => createChat(projectId),
           createSideChat,
           onSelectModel: selectModel,
           onOpenSettings: () => setSettingsOpen(true),

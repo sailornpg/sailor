@@ -1,0 +1,157 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-27T14:08:49.985Z
+**Feature ID:** fix-composer-slash-keyboard-navigation
+**Feature Name:** Composer Slash Keyboard Navigation
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** feat-composer-input-directive-highlight
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+Keep the highlighted slash command visible while navigating a long command list with ArrowDown and ArrowUp, and keep the catalog limited to commands that Sailor can actually execute through its prompt path.
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-27T08:59:56.437Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "checklist": [
+    {
+      "action": "Add a regression assertion in the real Electron Composer fixture that repeated ArrowDown and ArrowUp navigation scrolls the list to the highlighted command and keeps that command inside the visible list bounds.",
+      "coverage": "e2e",
+      "test": "node tests/composer-slash-commands-electron.test.mjs",
+      "verify": ["node tests/composer-slash-commands-electron.test.mjs", "pnpm run build"],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node tests/composer-slash-commands-electron.test.mjs",
+        "verifiedAt": "2026-09-27T08:58:31.068Z",
+        "exitCode": 0,
+        "stdout": "PASS composer slash commands Electron smoke",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node tests/composer-slash-commands-electron.test.mjs",
+          "verifiedAt": "2026-09-27T08:58:34.050Z",
+          "exitCode": 0,
+          "stdout": "PASS composer slash commands Electron smoke",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-27T08:58:44.981Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 47 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           163.04 kB\n✓ built in 186ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.44 kB\n✓ built in 223ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3374 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-Cp_muB0s.css                   208.34 kB\n../../out/renderer/assets/ReviewPanel-DTRN7flY.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-C5dTAbpN.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CNyl8tUp.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-B9s_tAch.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-xew-O5lx.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CLAF8PqJ.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-07oNLwGu.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-D1lo-L0a.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-BO8uu-T6.js             4,725.90 kB\n../../out/renderer/assets/index-BYLs3xQQ.js                  6,848.98 kB\n✓ built in 9.08s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        }
+      ],
+      "evidence": {
+        "command": "node tests/composer-slash-commands-electron.test.mjs && pnpm run build",
+        "verifiedAt": "2026-09-27T08:58:44.981Z",
+        "exitCode": 0,
+        "stdout": "PASS composer slash commands Electron smoke\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 47 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           163.04 kB\n✓ built in 186ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.44 kB\n✓ built in 223ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3374 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-Cp_muB0s.css                   208.34 kB\n../../out/renderer/assets/ReviewPanel-DTRN7flY.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-C5dTAbpN.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CNyl8tUp.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-B9s_tAch.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-xew-O5lx.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CLAF8PqJ.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-07oNLwGu.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-D1lo-L0a.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-BO8uu-T6.js             4,725.90 kB\n../../out/renderer/assets/index-BYLs3xQQ.js                  6,848.98 kB\n✓ built in 9.08s",
+        "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+      }
+    },
+    {
+      "action": "Make the command list itself the scroll boundary, observe assistant-ui highlighted-state changes, and share the corrected list renderer between production Composer and the Electron fixture.",
+      "coverage": "unit",
+      "test": "node --test tests/composer-slash-commands.test.ts",
+      "verify": [
+        "node --test tests/composer-slash-commands.test.ts",
+        "pnpm run typecheck",
+        "pnpm run lint:js"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/composer-slash-commands.test.ts",
+        "verifiedAt": "2026-09-27T08:59:44.684Z",
+        "exitCode": 0,
+        "stdout": "✔ Composer uses the official assistant-ui slash trigger primitives (2.244333ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 59.006",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/composer-slash-commands.test.ts",
+          "verifiedAt": "2026-09-27T08:59:44.773Z",
+          "exitCode": 0,
+          "stdout": "✔ Composer uses the official assistant-ui slash trigger primitives (2.288792ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 62.139",
+          "stderr": ""
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-27T08:59:45.505Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run lint:js",
+          "verifiedAt": "2026-09-27T08:59:48.087Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs"
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/composer-slash-commands.test.ts && pnpm run typecheck && pnpm run lint:js",
+        "verifiedAt": "2026-09-27T08:59:48.087Z",
+        "exitCode": 0,
+        "stdout": "✔ Composer uses the official assistant-ui slash trigger primitives (2.288792ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 62.139",
+        "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs"
+      }
+    },
+    {
+      "action": "Keep Pi interactive-only TUI commands out of the literal prompt catalog until Sailor provides explicit action and IPC mappings, while retaining validated Skill commands and the existing /btw path without adding approvals.",
+      "coverage": "static",
+      "verify": [
+        "node --test tests/composer-slash-command-catalog.test.ts tests/composer-slash-command-ipc.test.ts",
+        "rg \"interactive-only|source: 'sailor'\" src/main/agent/pi/piSlashCommands.ts"
+      ],
+      "tdd": false,
+      "coverage_reason": "Pi TUI command dispatch is an explicit product/API mapping boundary; the current verification pins the metadata contract and documents why unsupported commands are not shown.",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/composer-slash-command-catalog.test.ts tests/composer-slash-command-ipc.test.ts",
+          "verifiedAt": "2026-09-27T08:59:56.422Z",
+          "exitCode": 0,
+          "stdout": "✔ command catalog exposes Sailor and validated workspace Skills without file content (445.689833ms)\n✔ slash command IPC remains a narrow metadata-only contract (2.446084ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 594.562084",
+          "stderr": ""
+        },
+        {
+          "command": "rg \"interactive-only|source: 'sailor'\" src/main/agent/pi/piSlashCommands.ts",
+          "verifiedAt": "2026-09-27T08:59:56.437Z",
+          "exitCode": 0,
+          "stdout": "* Pi's interactive-only commands such as /settings and /model are deliberately\n    source: 'sailor',",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/composer-slash-command-catalog.test.ts tests/composer-slash-command-ipc.test.ts && rg \"interactive-only|source: 'sailor'\" src/main/agent/pi/piSlashCommands.ts",
+        "verifiedAt": "2026-09-27T08:59:56.437Z",
+        "exitCode": 0,
+        "stdout": "✔ command catalog exposes Sailor and validated workspace Skills without file content (445.689833ms)\n✔ slash command IPC remains a narrow metadata-only contract (2.446084ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 594.562084\n* Pi's interactive-only commands such as /settings and /model are deliberately\n    source: 'sailor',",
+        "stderr": ""
+      }
+    }
+  ]
+}
+```
