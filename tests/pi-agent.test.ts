@@ -187,6 +187,79 @@ test(
   },
 )
 
+test('Pi 在工作区默认执行模式下直接运行 host_exec', { timeout: 30000 }, async (t) => {
+  const f = await fixture(t)
+  const agent = f.createAgent()
+  f.replies.push(
+    {
+      tool: 'host_exec',
+      id: 'host-node-1',
+      input: { command: 'node -e "process.stdout.write(\'host-node-ok\')"' },
+    },
+    { text: '宿主命令完成' },
+  )
+  await agent.start(await f.request('执行宿主 node'))
+  assert.equal((await f.store.getChat(f.chat.id)).status, 'completed', JSON.stringify(f.events))
+  assert.equal(
+    f.events.some((event) => event.chunk?.type === 'tool-approval-request'),
+    false,
+    JSON.stringify(f.events),
+  )
+  assert.match(
+    JSON.stringify(
+      f.events.find(
+        (event) =>
+          event.chunk?.type === 'tool-output-available' &&
+          event.chunk?.toolCallId === 'host-node-1',
+      ),
+    ),
+    /host-node-ok/,
+  )
+})
+
+test('Pi 在请求批准模式下让 host_exec 复用现有审批续跑', { timeout: 30000 }, async (t) => {
+  const f = await fixture(t)
+  await f.workspace.setPermission({ projectId: f.chat.projectId, mode: 'allow-edits' })
+  const agent = f.createAgent()
+  f.replies.push({
+    tool: 'host_exec',
+    id: 'host-node-approval',
+    input: { command: 'node -e "process.stdout.write(\'approved-host-node\')"' },
+  })
+  await agent.start(await f.request('请求执行宿主 node'))
+  const approval = f.events.find((event) => event.chunk?.type === 'tool-approval-request')?.chunk
+  assert.ok(approval, JSON.stringify(f.events))
+  assert.equal(
+    f.events.some(
+      (event) =>
+        event.chunk?.toolCallId === 'host-node-approval' &&
+        event.chunk?.type === 'tool-output-available',
+    ),
+    false,
+  )
+
+  agent.respondToApproval({
+    chatId: f.chat.id,
+    toolCallId: approval.toolCallId,
+    toolName: 'host_exec',
+    approvalId: approval.approvalId,
+    approved: true,
+  })
+  const history = (await f.store.getChat(f.chat.id)).messages
+  const part = history.at(-1).parts.find((item: any) => item.toolCallId === approval.toolCallId)
+  part.state = 'approval-responded'
+  part.approval = { ...part.approval, approved: true }
+  f.replies.push({ text: '宿主命令已批准' })
+  await agent.start({
+    chatId: f.chat.id,
+    runId: crypto.randomUUID(),
+    reasoning: 'provider-default',
+    messages: history,
+  })
+  assert.equal((await f.store.getChat(f.chat.id)).status, 'completed', JSON.stringify(f.events))
+  assert.match(JSON.stringify(f.events), /approved-host-node/)
+})
+
 test('Pi 拒绝审批不会写文件，重启不能重用旧审批', { timeout: 30000 }, async (t) => {
   const f = await fixture(t)
   const agent = f.createAgent()

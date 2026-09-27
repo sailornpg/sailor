@@ -10,6 +10,7 @@ Sailor 的核心边界是：**模型执行和文件访问只在 Electron main �
 - 配置 DeepSeek 或自定义模型提供商，支持 OpenAI Completions、OpenAI Responses 和 Anthropic Messages。
 - 通过 `/models` 获取模型目录，并维护上下文窗口、最大输出 token 和视觉能力；thinking level 在 composer 的模型菜单中按 Pi 标准等级选择，工作区权限默认是“工作区域默认执行”，可在 composer 中切换。
 - 使用 Pi 原生 `read`、`write`、`edit`、`bash`、`grep`、`glob`、`ls` 工具操作当前工作区。
+- 使用 `host_exec` 在真实宿主环境运行 `npm`、`pnpm`、`node` 和项目测试；是否需要确认由 composer 中选择的工作区权限模式决定。
 - 计划 TodoList、`ask_user` 人机协作、工具审批、推理摘要、来源引用和结构化错误反馈。
 - 读取图片及 `xlsx`、`docx`、`pdf`、`csv/tsv`、文本附件。
 - 通过本地 MCP 搜索公共网页，并在消息中展示来源。
@@ -30,10 +31,11 @@ Electron main
   WorkspaceService + WorkspaceStore
   SettingsService + safeStorage
   AgentService + PiRunner
-  TerminalService (node-pty)
+  TerminalService (node-pty, 用户交互终端)
         │
         ├─ HarnessAgent + AI SDK + Pi
         │    ├─ Pi native tools + just-bash workspace mount
+        │    ├─ host_exec (login shell, main process, workspace cwd)
         │    ├─ host tools: update_plan / ask_user / read_document
         │    └─ MCP tools: web_search / fetch_page / research
         └─ UIMessageChunk stream → renderer
@@ -89,13 +91,14 @@ docs/                               # 架构及专项设计文档
 - 外观、侧栏和面板尺寸等非敏感偏好保存在 renderer 的 versioned `localStorage` 中。
 - 工作区路径由 main 根据持久化的 `chatId → projectId → rootPath` 解析；renderer 不能提交任意执行路径。
 - 文件工具在挂载边界拒绝绝对路径、越界路径、越界符号链接和敏感凭据文件，并限制扫描、搜索、读取和附件大小。
-- Pi 的写入、编辑和 just-bash 每次都需要一次性审批；审批绑定 chat、run、tool call 和原始参数，过期、重复或伪造响应会失败。
+- `host_exec` 与 Pi 写入、编辑和 bash 共用工作区权限：`allow-all` 直接执行，`allow-edits`/`allow-reads` 下命令沿用 bash 审批；审批绑定 chat、run、tool call 和原始参数，过期、重复或伪造响应会失败。
 - 右侧终端是用户主动打开的真实本机 PTY。它不向模型暴露，也不把输出写入聊天或磁盘；项目目录只是工作目录，不是沙盒。
+- Agent 的 `host_exec` 使用独立的一次性宿主 shell，不接管右侧用户终端。命令在当前用户权限下运行，cwd 固定在 chat 所属工作区，输出有大小与时间上限并作为工具结果返回模型；工作区路径不是 OS 沙盒，命令仍可能访问工作区外资源。
 - renderer 使用 `contextIsolation: true`、`nodeIntegration: false` 和 `sandbox: true`。
 
 ## 当前范围
 
-已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、composer thinking level、按工作区持久化的 Pi 工具权限、Pi 原生工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。
+已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、composer thinking level、按工作区持久化的 Pi 与宿主命令权限、Pi 原生及真实宿主命令工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。
 
 暂不实现：云端沙盒、远程工作区同步、自动发现项目目录、全局聊天搜索、聊天跨工作区移动、Git diff 收集，以及应用重启后自动续接正在生成的流。
 

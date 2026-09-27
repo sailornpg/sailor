@@ -2,37 +2,37 @@
 
 ## Current Objective
 
-feat-settings-design-cleanup 已完成，状态由 verifier 标记 done。
+`feat-agent-host-command-execution` 已完成，状态由 verifier 标记为 `done`。
 
 ## Completed
 
-设置按 assistant-ui 设计重构，仅保留模型和外观；移除 Web 搜索与旧本机执行的设置、IPC、执行器。旧配置仍可读，旧字段不再暴露/使用并在后续保存时省略。Pi 原生工具与历史反馈保持正常。
+- 新增 main 进程 `HostCommandExecutor`，在 chat 绑定的工作区内通过用户 login shell 执行真实 `node`、`npm`、`pnpm` 和测试命令。
+- 新增 `host_exec` Pi 工具；`allow-all` 直接执行，`allow-edits` / `allow-reads` 复用现有 bash 审批，侧聊不注册该工具。
+- Agent 使用独立的一次性宿主 shell，不接管右侧用户 PTY；Pi 原生 `bash` 继续使用 just-bash。
+- 修复 shell 参数：`sh` / `dash` 使用 login + `-c`，`zsh` / `bash` / `fish` 使用 login + `-i -c`，兼顾 nvm 初始化和干净 stderr。
+- 更新架构文档、README、feature evidence 和 progress。
 
 ## Verification Evidence
 
-全量 121 项测试、typecheck、build 通过；真实 Electron 桌面/窄窗及浅/深色、关键交互已验收。详情见 `.agent-harness/evidence/settings-design-acceptance.md` 和 feature verifier evidence。
+- `node --test tests/host-command-executor.test.ts`：4 项通过。
+- `node --test --test-name-pattern='host_exec' tests/host-exec-tool.test.ts tests/pi-agent.test.ts`：4 项通过。
+- `node tests/host-exec-electron-smoke.mjs`：真实 Electron `node` / `npm` 与三档权限检查通过。
+- `pnpm run build`：通过。
+- `./.agent-harness/init.sh`：typecheck 与 build 通过。
+- `node ./.agent-harness/scripts/clean-state-check.mjs`：通过；随后 `--skip-verification` 复检也通过。
 
 ## Risks / Next Session
 
-没有已知 blocker。当前目录不是 Git 仓库，未 commit。下次启动仍运行 `.agent-harness/init.sh`。只在用户明确要求时归档。
+没有已知 blocker。工作区仍有本 feature 的未提交改动；用户未要求 commit。只在用户明确要求时归档当前 feature。
 
 ## Files Changed
 
-- `src/renderer/src/components/settings/`：模型、外观、模型选择和设置导航。
-- `src/renderer/src/styles/globals.css`、`components/ui/select.tsx`：设计与浮层样式。
-- `src/main/settings/SettingsService.ts`、main IPC、preload、shared contracts/workspaces：移除旧配置接口。
-- `src/main/workspaces/`、`src/main/agent/AgentService.ts`：移除执行开关和搜索流包装。
-- 退役 search/execution 后端及其专属测试已删除；历史 UI 测试仍保留。
-- README、architecture、execution plan、harness evidence 已同步。
+- `src/main/agent/host/HostCommandExecutor.ts`：真实宿主 shell 执行、边界、超时和输出限制。
+- `src/main/agent/host/hostExecTool.ts`、`src/main/agent/pi/PiRunner.ts`：Agent 工具注册和权限映射。
+- `src/main/ipc/registerIpc.ts`、`src/renderer/src/components/chat/tools/`：审批契约和工具预览。
+- `tests/host-command-executor.test.ts`、`tests/host-exec-tool.test.ts`、`tests/host-exec-tool-ui.test.ts`、`tests/host-exec-electron-smoke.mjs` 及 fixture：专项验证。
+- `README.md`、`docs/architecture.md`、`.agent-harness/feature_list.json`、`.agent-harness/progress.md`：文档与 evidence。
 
 ## Recommended Next Step
 
-无需后续修复；用户可直接查看设置效果，或明确要求归档当前 feature。
-
-## Latest Update
-
-feat-sidebar-simplify 已完成：移除品牌旁工作区标签和重复空态控件，保留工作区 + 与一行提示。类型检查/构建和 Electron 深浅色、800px 窄窗口检查通过，详见 progress。
-
-## Latest Highlight Update
-
-feat-sidebar-active-highlight 已完成；当前会话背景对比增强、标题字重 600。列表测试、构建及深浅色/窄窗视觉验收通过；详见 progress。
+可直接向用户说明真实宿主命令和现有权限选择已接通；如需继续，先运行 `./.agent-harness/init.sh` 并读取当前 feature state。

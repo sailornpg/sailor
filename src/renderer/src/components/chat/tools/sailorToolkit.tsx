@@ -20,6 +20,7 @@ export const sailorToolkit = defineToolkit({
   write: backendTool(SailorToolCall),
   edit: backendTool(SailorToolCall),
   bash: backendTool(SailorToolCall),
+  host_exec: backendTool(SailorToolCall),
   web_search: backendTool(StructuredToolFallback),
   fetch_page: backendTool(StructuredToolFallback),
   ask_user: backendTool(AskUserMessage),

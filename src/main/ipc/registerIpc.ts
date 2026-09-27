@@ -56,7 +56,7 @@ const writeApprovalResponseSchema = z.strictObject({
   chatId: z.string().min(1).max(200),
   approvalId: z.string().min(1).max(256),
   toolCallId: z.string().min(1).max(256),
-  toolName: z.enum(['write', 'edit', 'bash']),
+  toolName: z.enum(['write', 'edit', 'bash', 'host_exec']),
   approved: z.boolean(),
   reason: z.string().max(500).optional(),
 })

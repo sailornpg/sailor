@@ -37,6 +37,11 @@ export function approvalPreview(
     props.args && typeof props.args === 'object' ? (props.args as Record<string, unknown>) : {}
   const path = args.file_path ?? args.path
   if (props.toolName === 'bash' && typeof args.command === 'string') return args.command
+  if (props.toolName === 'host_exec' && typeof args.command === 'string') {
+    return typeof args.cwd === 'string' && args.cwd.length > 0
+      ? `${args.command}\n\n工作目录：${args.cwd}`
+      : args.command
+  }
   if (
     props.toolName === 'edit' &&
     typeof path === 'string' &&

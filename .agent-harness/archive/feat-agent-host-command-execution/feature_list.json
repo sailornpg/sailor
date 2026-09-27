@@ -1,0 +1,193 @@
+{
+  "features": [
+    {
+      "id": "feat-agent-host-command-execution",
+      "name": "Agent 宿主命令执行",
+      "description": "为 Pi Agent 增加受当前工作区权限模式控制的真实宿主命令执行能力，使其可以运行 npm、node、pnpm 等项目命令，同时保留用户终端与 Pi 虚拟 bash 的边界。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "新增 main 进程 HostCommandExecutor，在主进程解析的工作区根目录执行宿主命令，限制 cwd、环境、超时、输出大小并支持 AbortSignal 终止进程组。",
+          "coverage": "unit",
+          "test": "node --test tests/host-command-executor.test.ts",
+          "verify": ["node --test tests/host-command-executor.test.ts", "pnpm run typecheck"],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/host-command-executor.test.ts",
+            "verifiedAt": "2026-09-27T05:18:59.367Z",
+            "exitCode": 0,
+            "stdout": "✔ 在工作区根目录执行真实命令并返回 stdout、stderr 和退出码 (67.823709ms)\n✔ login shell 会加载用户交互配置，以便取得 nvm 等初始化的 PATH (16.095791ms)\n✔ 拒绝离开工作区的 cwd，并在超时或取消时终止宿主进程 (45.557666ms)\n✔ 输出超过上限时返回截断结果并停止命令 (5.985208ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 281.662708",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/host-command-executor.test.ts",
+              "verifiedAt": "2026-09-27T05:18:59.666Z",
+              "exitCode": 0,
+              "stdout": "✔ 在工作区根目录执行真实命令并返回 stdout、stderr 和退出码 (67.705041ms)\n✔ login shell 会加载用户交互配置，以便取得 nvm 等初始化的 PATH (13.325959ms)\n✔ 拒绝离开工作区的 cwd，并在超时或取消时终止宿主进程 (46.911916ms)\n✔ 输出超过上限时返回截断结果并停止命令 (5.447125ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 273.200625",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-27T05:19:00.512Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/host-command-executor.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-27T05:19:00.512Z",
+            "exitCode": 0,
+            "stdout": "✔ 在工作区根目录执行真实命令并返回 stdout、stderr 和退出码 (67.705041ms)\n✔ login shell 会加载用户交互配置，以便取得 nvm 等初始化的 PATH (13.325959ms)\n✔ 拒绝离开工作区的 cwd，并在超时或取消时终止宿主进程 (46.911916ms)\n✔ 输出超过上限时返回截断结果并停止命令 (5.447125ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 273.200625",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "注册 host_exec Agent 工具，并将宿主命令的审批决策映射到现有工作区权限：allow-all 直接执行，allow-edits 与 allow-reads 使用现有 bash 级别审批；侧聊不得获得该工具。",
+          "coverage": "unit",
+          "test": "node --test --test-name-pattern='host_exec' tests/host-exec-tool.test.ts tests/pi-agent.test.ts",
+          "verify": [
+            "node --test --test-name-pattern='host_exec' tests/host-exec-tool.test.ts tests/pi-agent.test.ts",
+            "pnpm run typecheck"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test --test-name-pattern='host_exec' tests/host-exec-tool.test.ts tests/pi-agent.test.ts",
+            "verifiedAt": "2026-09-27T04:46:26.696Z",
+            "exitCode": 0,
+            "stdout": "✔ host_exec 使用主进程解析的工作区目录执行命令，并复用权限模式映射 (115.8035ms)\n✔ 侧聊不会注册 host_exec (0.224ms)\n✔ Pi 在工作区默认执行模式下直接运行 host_exec (4612.205459ms)\n✔ Pi 在请求批准模式下让 host_exec 复用现有审批续跑 (3160.712541ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8209.023708",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test --test-name-pattern='host_exec' tests/host-exec-tool.test.ts tests/pi-agent.test.ts",
+              "verifiedAt": "2026-09-27T04:46:34.517Z",
+              "exitCode": 0,
+              "stdout": "✔ host_exec 使用主进程解析的工作区目录执行命令，并复用权限模式映射 (103.494791ms)\n✔ 侧聊不会注册 host_exec (0.308208ms)\n✔ Pi 在工作区默认执行模式下直接运行 host_exec (4166.722ms)\n✔ Pi 在请求批准模式下让 host_exec 复用现有审批续跑 (3200.966917ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7790.319458",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-27T04:46:35.273Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test --test-name-pattern='host_exec' tests/host-exec-tool.test.ts tests/pi-agent.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-27T04:46:35.273Z",
+            "exitCode": 0,
+            "stdout": "✔ host_exec 使用主进程解析的工作区目录执行命令，并复用权限模式映射 (103.494791ms)\n✔ 侧聊不会注册 host_exec (0.308208ms)\n✔ Pi 在工作区默认执行模式下直接运行 host_exec (4166.722ms)\n✔ Pi 在请求批准模式下让 host_exec 复用现有审批续跑 (3200.966917ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7790.319458",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "扩展共享审批契约与 assistant-ui 工具注册，让 host_exec 复用现有审批续跑和命令预览，不新增另一套审批交互。",
+          "coverage": "unit",
+          "test": "node --test tests/host-exec-tool-ui.test.ts",
+          "verify": ["node --test tests/host-exec-tool-ui.test.ts", "pnpm run typecheck"],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/host-exec-tool-ui.test.ts",
+            "verifiedAt": "2026-09-27T04:48:29.601Z",
+            "exitCode": 0,
+            "stdout": "✔ host_exec 复用现有审批卡片、命令预览和工具注册 (798.238917ms)\n✔ main IPC 允许 host_exec 使用现有审批响应契约 (0.531583ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 989.509292",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/host-exec-tool-ui.test.ts",
+              "verifiedAt": "2026-09-27T04:48:30.622Z",
+              "exitCode": 0,
+              "stdout": "✔ host_exec 复用现有审批卡片、命令预览和工具注册 (799.717709ms)\n✔ main IPC 允许 host_exec 使用现有审批响应契约 (0.493708ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 991.519833",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-27T04:48:31.308Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/host-exec-tool-ui.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-27T04:48:31.308Z",
+            "exitCode": 0,
+            "stdout": "✔ host_exec 复用现有审批卡片、命令预览和工具注册 (799.717709ms)\n✔ main IPC 允许 host_exec 使用现有审批响应契约 (0.493708ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 991.519833",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "在真实 Electron main/runtime 中验证 Agent 执行 node 与 npm，检查工作区 cwd、输出、退出码和权限模式行为。",
+          "coverage": "e2e",
+          "test": "node tests/host-exec-electron-smoke.mjs",
+          "verify": ["node tests/host-exec-electron-smoke.mjs", "pnpm run build"],
+          "tdd": false,
+          "coverage_reason": "需要真实 Electron 主进程、宿主 Node/npm 和模型工具流，不能用廉价的前置单元断言替代。",
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/host-exec-electron-smoke.mjs",
+            "verifiedAt": "2026-09-27T05:19:09.766Z",
+            "exitCode": 0,
+            "stdout": "{\n  \"checks\": [\n    {\n      \"name\": \"Electron main 可执行真实 node\",\n      \"ok\": true,\n      \"detail\": \"{\\\"cwd\\\":\\\"/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-ag2vhn\\\",\\\"stdout\\\":\\\"electron-host-node-ok\\\",\\\"stderr\\\":\\\"\\\",\\\"exitCode\\\":0,\\\"signal\\\":null,\\\"timedOut\\\":false,\\\"aborted\\\":false,\\\"truncated\\\":false}\"\n    },\n    {\n      \"name\": \"Electron main 可执行真实 npm 并使用工作区 cwd\",\n      \"ok\": true,\n      \"detail\": \"{\\\"cwd\\\":\\\"/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-ag2vhn\\\",\\\"stdout\\\":\\\"/private/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-ag2vhn\\\",\\\"stderr\\\":\\\"\\\",\\\"exitCode\\\":0,\\\"signal\\\":null,\\\"timedOut\\\":false,\\\"aborted\\\":false,\\\"truncated\\\":false}\"\n    },\n    {\n      \"name\": \"allow-all 不请求逐次审批\",\n      \"ok\": true,\n      \"detail\": null\n    },\n    {\n      \"name\": \"allow-edits 复用现有 bash 审批\",\n      \"ok\": true,\n      \"detail\": null\n    },\n    {\n      \"name\": \"allow-reads 复用现有 bash 审批\",\n      \"ok\": true,\n      \"detail\": null\n    }\n  ]\n}",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node tests/host-exec-electron-smoke.mjs",
+              "verifiedAt": "2026-09-27T05:19:11.559Z",
+              "exitCode": 0,
+              "stdout": "{\n  \"checks\": [\n    {\n      \"name\": \"Electron main 可执行真实 node\",\n      \"ok\": true,\n      \"detail\": \"{\\\"cwd\\\":\\\"/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-1BJkXG\\\",\\\"stdout\\\":\\\"electron-host-node-ok\\\",\\\"stderr\\\":\\\"\\\",\\\"exitCode\\\":0,\\\"signal\\\":null,\\\"timedOut\\\":false,\\\"aborted\\\":false,\\\"truncated\\\":false}\"\n    },\n    {\n      \"name\": \"Electron main 可执行真实 npm 并使用工作区 cwd\",\n      \"ok\": true,\n      \"detail\": \"{\\\"cwd\\\":\\\"/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-1BJkXG\\\",\\\"stdout\\\":\\\"/private/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-1BJkXG\\\",\\\"stderr\\\":\\\"\\\",\\\"exitCode\\\":0,\\\"signal\\\":null,\\\"timedOut\\\":false,\\\"aborted\\\":false,\\\"truncated\\\":false}\"\n    },\n    {\n      \"name\": \"allow-all 不请求逐次审批\",\n      \"ok\": true,\n      \"detail\": null\n    },\n    {\n      \"name\": \"allow-edits 复用现有 bash 审批\",\n      \"ok\": true,\n      \"detail\": null\n    },\n    {\n      \"name\": \"allow-reads 复用现有 bash 审批\",\n      \"ok\": true,\n      \"detail\": null\n    }\n  ]\n}",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-27T05:19:22.559Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 46 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           162.06 kB\n✓ built in 202ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.29 kB\n✓ built in 231ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3372 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CCY-q6dp.css                   206.81 kB\n../../out/renderer/assets/ReviewPanel-Cs2xobx_.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Dl-iIjHY.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CscRp9HZ.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Dln_PO0a.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-BhNwyRmn.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CZrWG7bj.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-CoiJQ2_s.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-D0-7QOFY.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DqsDNZxe.js             4,725.90 kB\n../../out/renderer/assets/index-BzvI7Ps8.js                  6,838.57 kB\n✓ built in 9.12s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node tests/host-exec-electron-smoke.mjs && pnpm run build",
+            "verifiedAt": "2026-09-27T05:19:22.559Z",
+            "exitCode": 0,
+            "stdout": "{\n  \"checks\": [\n    {\n      \"name\": \"Electron main 可执行真实 node\",\n      \"ok\": true,\n      \"detail\": \"{\\\"cwd\\\":\\\"/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-1BJkXG\\\",\\\"stdout\\\":\\\"electron-host-node-ok\\\",\\\"stderr\\\":\\\"\\\",\\\"exitCode\\\":0,\\\"signal\\\":null,\\\"timedOut\\\":false,\\\"aborted\\\":false,\\\"truncated\\\":false}\"\n    },\n    {\n      \"name\": \"Electron main 可执行真实 npm 并使用工作区 cwd\",\n      \"ok\": true,\n      \"detail\": \"{\\\"cwd\\\":\\\"/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-1BJkXG\\\",\\\"stdout\\\":\\\"/private/var/folders/4z/wd3vlch55p1g9ff91z8mn9w00000gn/T/sailor-host-exec-project-1BJkXG\\\",\\\"stderr\\\":\\\"\\\",\\\"exitCode\\\":0,\\\"signal\\\":null,\\\"timedOut\\\":false,\\\"aborted\\\":false,\\\"truncated\\\":false}\"\n    },\n    {\n      \"name\": \"allow-all 不请求逐次审批\",\n      \"ok\": true,\n      \"detail\": null\n    },\n    {\n      \"name\": \"allow-edits 复用现有 bash 审批\",\n      \"ok\": true,\n      \"detail\": null\n    },\n    {\n      \"name\": \"allow-reads 复用现有 bash 审批\",\n      \"ok\": true,\n      \"detail\": null\n    }\n  ]\n}\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 46 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           162.06 kB\n✓ built in 202ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.29 kB\n✓ built in 231ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3372 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-CCY-q6dp.css                   206.81 kB\n../../out/renderer/assets/ReviewPanel-Cs2xobx_.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Dl-iIjHY.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-CscRp9HZ.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-Dln_PO0a.js              4.23 kB\n../../out/renderer/assets/ParticleSailboatScene-BhNwyRmn.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CZrWG7bj.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-CoiJQ2_s.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-D0-7QOFY.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-DqsDNZxe.js             4,725.90 kB\n../../out/renderer/assets/index-BzvI7Ps8.js                  6,838.57 kB\n✓ built in 9.12s",
+            "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        },
+        {
+          "action": "同步架构文档和 README，记录 host_exec、权限映射、输出边界及用户终端与 Agent 宿主执行的隔离关系。",
+          "coverage": "static",
+          "verify": [
+            "rg -n \"host_exec|宿主命令|allow-all|allow-edits|allow-reads\" docs/architecture.md README.md"
+          ],
+          "tdd": false,
+          "coverage_reason": "文档一致性由静态检索验证，不存在独立运行时行为。",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "rg -n \"host_exec|宿主命令|allow-all|allow-edits|allow-reads\" docs/architecture.md README.md",
+            "verifiedAt": "2026-09-27T05:18:25.577Z",
+            "exitCode": 0,
+            "stdout": "README.md:13:- 使用 `host_exec` 在真实宿主环境运行 `npm`、`pnpm`、`node` 和项目测试；是否需要确认由 composer 中选择的工作区权限模式决定。\nREADME.md:38:        │    ├─ host_exec (login shell, main process, workspace cwd)\nREADME.md:94:- `host_exec` 与 Pi 写入、编辑和 bash 共用工作区权限：`allow-all` 直接执行，`allow-edits`/`allow-reads` 下命令沿用 bash 审批；审批绑定 chat、run、tool call 和原始参数，过期、重复或伪造响应会失败。\nREADME.md:96:- Agent 的 `host_exec` 使用独立的一次性宿主 shell，不接管右侧用户终端。命令在当前用户权限下运行，cwd 固定在 chat 所属工作区，输出有大小与时间上限并作为工具结果返回模型；工作区路径不是 OS 沙盒，命令仍可能访问工作区外资源。\nREADME.md:101:已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、composer thinking level、按工作区持久化的 Pi 与宿主命令权限、Pi 原生及真实宿主命令工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。\ndocs/architecture.md:24:            -> project permission mode (allow-reads / allow-edits / allow-all) plus native approval when required\ndocs/architecture.md:25:            -> host_exec (main-process login shell, real host binaries, same project permission mode)\ndocs/architecture.md:46:- an Agent `host_exec` tool in main that starts real host commands in a dedicated login shell, resolves its workspace root from the active chat, applies the same `allow-all` / `allow-edits` / `allow-reads` policy as Pi's bash tool, and returns bounded output to the model;\ndocs/architecture.md:102:Web search runs in Electron main through the local `zhulingyu666/ai-search-mcp` stdio server. Its `search` tool is exposed to Pi as Sailor's stable `web_search` name; `fetch_page` and `research` remain available as supporting tools. The server uses zero-key search engines with regional routing, caching, rate limiting and failover. MCP results are untrusted external content and the renderer only creates links after HTTP(S) validation. Legacy webSearch credentials are not persisted or exposed. Pi's virtual bash follows the workspace permission mode and cannot launch arbitrary host binaries. `host_exec` is the explicit host-process boundary for commands such as `node`, `npm`, `pnpm` and project test/build scripts. It uses the selected login shell in Electron main, starts with the canonical workspace root (or a validated path within it), and returns stdout/stderr, exit status and truncation/timeout state to the tool result. The default output cap is 256 KiB and the default timeout is 300 seconds. `allow-all` runs without per-call approval; `allow-edits` and `allow-reads` request approval under the existing Bash policy. Side chats do not register the tool. The command runs with the current user's privileges; workspace cwd is not an OS sandbox. The interactive terminal remains a separate user-owned PTY, and its live input/output is not shared with the Agent.\ndocs/architecture.md:118:- `projects`: `{ id, name, rootPath, permissionMode? }[]`; missing permissionMode is read as `allow-all` for legacy projects; new projects also start in `allow-all`; side chats force `allow-reads`;\ndocs/architecture.md:176:Pi 原生 `bash` 继续使用 just-bash，不能调用本机 pnpm、Node 或编译器。需要真实宿主命令时使用 main 进程的独立 `host_exec` 工具；它按 chat 解析工作区、复用 composer 当前权限模式、受超时与输出上限约束，且不共享用户手动终端。宿主命令使用当前用户权限运行，工作区 cwd 本身不构成 OS 沙盒。\ndocs/architecture.md:180:`PiRunner` uses the project permission mode resolved from chatId and frozen at run start (`allow-reads`, `allow-edits` or `allow-all`), with `allow-all` as the new and legacy-project default; side chats force `allow-reads` and a read-only active tool allowlist. Native write/edit/bash/host_exec approvals are registered in main by approval ID, chat ID, run ID, call ID and tool name, expire after five minutes, and are consumed once before continuation. The runtime's saved call is authoritative; renderer responses cannot replace tool parameters. Reboot, cancellation and abandoning a pending turn invalidate approvals. IPC accepts the native write/edit/bash/host_exec approval names. UI history validates against Pi's exported builtin schemas; retired static tool parts become dynamic history parts with no executor.\ndocs/architecture.md:186:Pi owns automatic compaction, native conversation construction and Skill discovery/selection. `loadPiS\n... output truncated ...",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "rg -n \"host_exec|宿主命令|allow-all|allow-edits|allow-reads\" docs/architecture.md README.md",
+            "verifiedAt": "2026-09-27T05:18:25.577Z",
+            "exitCode": 0,
+            "stdout": "README.md:13:- 使用 `host_exec` 在真实宿主环境运行 `npm`、`pnpm`、`node` 和项目测试；是否需要确认由 composer 中选择的工作区权限模式决定。\nREADME.md:38:        │    ├─ host_exec (login shell, main process, workspace cwd)\nREADME.md:94:- `host_exec` 与 Pi 写入、编辑和 bash 共用工作区权限：`allow-all` 直接执行，`allow-edits`/`allow-reads` 下命令沿用 bash 审批；审批绑定 chat、run、tool call 和原始参数，过期、重复或伪造响应会失败。\nREADME.md:96:- Agent 的 `host_exec` 使用独立的一次性宿主 shell，不接管右侧用户终端。命令在当前用户权限下运行，cwd 固定在 chat 所属工作区，输出有大小与时间上限并作为工具结果返回模型；工作区路径不是 OS 沙盒，命令仍可能访问工作区外资源。\nREADME.md:101:已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、composer thinking level、按工作区持久化的 Pi 与宿主命令权限、Pi 原生及真实宿主命令工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。\ndocs/architecture.md:24:            -> project permission mode (allow-reads / allow-edits / allow-all) plus native approval when required\ndocs/architecture.md:25:            -> host_exec (main-process login shell, real host binaries, same project permission mode)\ndocs/architecture.md:46:- an Agent `host_exec` tool in main that starts real host commands in a dedicated login shell, resolves its workspace root from the active chat, applies the same `allow-all` / `allow-edits` / `allow-reads` policy as Pi's bash tool, and returns bounded output to the model;\ndocs/architecture.md:102:Web search runs in Electron main through the local `zhulingyu666/ai-search-mcp` stdio server. Its `search` tool is exposed to Pi as Sailor's stable `web_search` name; `fetch_page` and `research` remain available as supporting tools. The server uses zero-key search engines with regional routing, caching, rate limiting and failover. MCP results are untrusted external content and the renderer only creates links after HTTP(S) validation. Legacy webSearch credentials are not persisted or exposed. Pi's virtual bash follows the workspace permission mode and cannot launch arbitrary host binaries. `host_exec` is the explicit host-process boundary for commands such as `node`, `npm`, `pnpm` and project test/build scripts. It uses the selected login shell in Electron main, starts with the canonical workspace root (or a validated path within it), and returns stdout/stderr, exit status and truncation/timeout state to the tool result. The default output cap is 256 KiB and the default timeout is 300 seconds. `allow-all` runs without per-call approval; `allow-edits` and `allow-reads` request approval under the existing Bash policy. Side chats do not register the tool. The command runs with the current user's privileges; workspace cwd is not an OS sandbox. The interactive terminal remains a separate user-owned PTY, and its live input/output is not shared with the Agent.\ndocs/architecture.md:118:- `projects`: `{ id, name, rootPath, permissionMode? }[]`; missing permissionMode is read as `allow-all` for legacy projects; new projects also start in `allow-all`; side chats force `allow-reads`;\ndocs/architecture.md:176:Pi 原生 `bash` 继续使用 just-bash，不能调用本机 pnpm、Node 或编译器。需要真实宿主命令时使用 main 进程的独立 `host_exec` 工具；它按 chat 解析工作区、复用 composer 当前权限模式、受超时与输出上限约束，且不共享用户手动终端。宿主命令使用当前用户权限运行，工作区 cwd 本身不构成 OS 沙盒。\ndocs/architecture.md:180:`PiRunner` uses the project permission mode resolved from chatId and frozen at run start (`allow-reads`, `allow-edits` or `allow-all`), with `allow-all` as the new and legacy-project default; side chats force `allow-reads` and a read-only active tool allowlist. Native write/edit/bash/host_exec approvals are registered in main by approval ID, chat ID, run ID, call ID and tool name, expire after five minutes, and are consumed once before continuation. The runtime's saved call is authoritative; renderer responses cannot replace tool parameters. Reboot, cancellation and abandoning a pending turn invalidate approvals. IPC accepts the native write/edit/bash/host_exec approval names. UI history validates against Pi's exported builtin schemas; retired static tool parts become dynamic history parts with no executor.\ndocs/architecture.md:186:Pi owns automatic compaction, native conversation construction and Skill discovery/selection. `loadPiS\n... output truncated ...",
+            "stderr": ""
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-27T05:19:22.559Z"
+    }
+  ]
+}

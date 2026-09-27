@@ -461,6 +461,13 @@
       "status": "done",
       "archived_at": "2026-09-26T13:54:28.587Z",
       "archive_path": ".agent-harness/archive/feat-thinking-slider-ticks-minimal"
+    },
+    {
+      "id": "feat-agent-host-command-execution",
+      "title": "Agent 宿主命令执行",
+      "status": "done",
+      "archived_at": "2026-09-27T05:33:00.460Z",
+      "archive_path": ".agent-harness/archive/feat-agent-host-command-execution"
     }
   ]
 }
