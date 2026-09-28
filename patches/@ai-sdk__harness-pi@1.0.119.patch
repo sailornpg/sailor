@@ -1,5 +1,18 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index b4c1f0406a2fe3979582234f045bf32de4ce6e29..2c1d130c0c0354e335709425e4701b9b03f6779c 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -46,6 +46,8 @@ type PiHarnessSettings = {
+      * Filesystem-discovered user and project extensions remain disabled.
+      */
+     readonly extensionFactories?: ReadonlyArray<ExtensionFactory>;
++    /** Main-process-only callback for four Pi runtime display events. */
++    readonly onNativeEvent?: (event: unknown) => void;
+ };
+ declare const PI_BUILTIN_TOOLS: {
+     readonly read: HarnessV1BuiltinTool<{
 diff --git a/dist/index.js b/dist/index.js
-index b18c571ffe4b6797ec028757d18b5c8c2f2507dd..a8b20d61e384a017daaabad3e674665faef41249 100644
+index b18c571ffe4b6797ec028757d18b5c8c2f2507dd..0b12c1e36f33aae4a47474039fac10c48f8d96fb 100644
 --- a/dist/index.js
 +++ b/dist/index.js
 @@ -1036,25 +1036,37 @@ import {
@@ -46,7 +59,17 @@ index b18c571ffe4b6797ec028757d18b5c8c2f2507dd..a8b20d61e384a017daaabad3e674665f
  }
  function serializeToolOutput(output) {
    if (typeof output === "string") {
-@@ -2771,7 +2781,7 @@ async function createPiSession(input) {
+@@ -2655,6 +2667,9 @@ async function createPiSession(input) {
+       if (!translatorState) return;
+       const event = parseNativeEvent(rawEvent);
+       if (!event) return;
++      if (event.type === "compaction_start" || event.type === "compaction_end" || event.type === "auto_retry_start" || event.type === "auto_retry_end") {
++        input.settings.onNativeEvent?.(event);
++      }
+       for (const part of translatePiEvent(event, translatorState)) {
+         if (currentEmit) {
+           currentEmit(part);
+@@ -2771,7 +2786,7 @@ async function createPiSession(input) {
            }
          });
          try {
@@ -55,7 +78,7 @@ index b18c571ffe4b6797ec028757d18b5c8c2f2507dd..a8b20d61e384a017daaabad3e674665f
            if (terminalError) {
              if (suspending && isAbortError(terminalError)) return;
              currentEmit?.({ type: "error", error: new Error(terminalError) });
-@@ -2876,8 +2886,10 @@ async function createPiSession(input) {
+@@ -2876,8 +2891,10 @@ async function createPiSession(input) {
            harnessId: HARNESS_ID2
          });
        }
@@ -67,3 +90,11 @@ index b18c571ffe4b6797ec028757d18b5c8c2f2507dd..a8b20d61e384a017daaabad3e674665f
          ...promptOpts.model ? { model: promptOpts.model } : {},
          skills: promptOpts.skills,
          tools: promptOpts.tools ?? [],
+@@ -3357,6 +3374,7 @@ function createPi(settings = {}) {
+           ...settings.mcpServers ? { mcpServers: settings.mcpServers } : {},
+           ...settings.providers ? { providers: settings.providers } : {},
+           ...settings.extensionFactories ? { extensionFactories: settings.extensionFactories } : {},
++          ...settings.onNativeEvent ? { onNativeEvent: settings.onNativeEvent } : {},
+           ...startOpts.headers ? { headers: startOpts.headers } : {}
+         },
+         clientApp: PI_CLIENT_APP,

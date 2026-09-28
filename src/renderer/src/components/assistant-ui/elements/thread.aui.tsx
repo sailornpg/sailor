@@ -102,6 +102,7 @@ export type ThreadComponents = {
   ReasoningGroup?: ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>> | undefined
   TaskGroup?: ComponentType<{ group: ThreadGroupPart }> | undefined
   WorkspaceContext?: ComponentType<DataMessagePartProps> | undefined
+  RuntimeEventStatus?: ComponentType | undefined
 }
 
 const messageGroupBy = groupPartByType({
@@ -201,6 +202,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
     Welcome = ThreadWelcome,
     Composer: ComposerComponent = Composer,
     ViewportNavigation,
+    RuntimeEventStatus,
   } = useContext(ThreadComponentsContext)
 
   return (
@@ -251,6 +253,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
 
           <div data-slot="aui_message-group" className="mb-8 flex flex-col gap-y-6 empty:hidden">
             <ThreadPrimitive.Messages>{() => <ThreadMessage />}</ThreadPrimitive.Messages>
+            {RuntimeEventStatus && <RuntimeEventStatus />}
           </div>
 
           <ThreadPrimitive.ViewportFooter

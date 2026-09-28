@@ -44,6 +44,14 @@ export class WorkspaceChats {
     }
     return entry
   }
+  async applyMessages(id: string, messages: UIMessage[]): Promise<void> {
+    const entry = this.entries.get(id)
+    if (entry) (await entry).messages = messages
+  }
+  async refreshMessages(id: string): Promise<void> {
+    const entry = this.entries.get(id)
+    if (entry) (await entry).messages = (await this.api.getChat(id)).messages
+  }
   forget(id: string) {
     workspaceContextDrafts.forget(id)
     sideChatQuoteDrafts.forget(id)

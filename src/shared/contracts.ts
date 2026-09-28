@@ -7,6 +7,7 @@ import type {
 import type { TerminalApi } from './terminal.js'
 import type { UIMessage, UIMessageChunk } from 'ai'
 import { askUserInteractionResponseSchema, type AskUserInteractionResponse } from './askUser.js'
+import type { PiProjectedEvent } from './piDisplayEvent.js'
 
 export { askUserInteractionResponseSchema }
 export type { AskUserInteractionResponse }
@@ -209,7 +210,10 @@ export interface ResolvedModel extends ModelSelection {
   vision?: boolean
 }
 
-export type AgentRunEvent = { type: 'chunk'; chunk: UIMessageChunk } | { type: 'end' }
+export type AgentRunEvent =
+  | { type: 'chunk'; chunk: UIMessageChunk }
+  | { type: 'pi-event'; event: PiProjectedEvent }
+  | { type: 'end' }
 
 export interface SailorApi {
   app: {
@@ -219,7 +223,7 @@ export interface SailorApi {
   agent: {
     start(request: AgentRunRequest): Promise<void>
     abort(runId: string): Promise<void>
-    compact(chatId: ChatId): Promise<void>
+    compact(chatId: ChatId): Promise<UIMessage[]>
     respondToApproval(response: WriteApprovalResponse): Promise<void>
     respondToAskUser(response: AskUserInteractionResponse): Promise<void>
     revokeApprovals(chatId: ChatId): Promise<void>

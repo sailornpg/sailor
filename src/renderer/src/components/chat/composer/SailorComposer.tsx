@@ -56,6 +56,7 @@ import {
   type ComposerDirectiveSelection,
 } from './composerDirective'
 import { ComposerDirectiveHighlight } from './ComposerDirectiveHighlight'
+import { TransientErrorNotice } from './TransientErrorNotice'
 
 interface SailorComposerProps {
   chatId: string
@@ -127,11 +128,13 @@ export function SailorComposer({
   const [composerCaretPosition, setComposerCaretPosition] = useState<number>()
   const [composerCaretIsCollapsed, setComposerCaretIsCollapsed] = useState(true)
   const [composerFocused, setComposerFocused] = useState(false)
+  const [composerComposing, setComposerComposing] = useState(false)
   const [composerScrollTop, setComposerScrollTop] = useState(0)
   const [composerScrollLeft, setComposerScrollLeft] = useState(0)
   const pickerRef = useRef<HTMLDivElement>(null)
   const permissionRef = useRef<HTMLDivElement>(null)
   const composerInputRef = useRef<HTMLTextAreaElement>(null)
+  const composerComposingRef = useRef(false)
   // The runtime rejects a dropped file before the adapter sees it, so the only
   // way to tell the user why is the official composer event.
   useAuiEvent('composer.attachmentAddError', () => {
@@ -206,13 +209,21 @@ export function SailorComposer({
     setComposerCaretPosition(start)
     setComposerCaretIsCollapsed(start === end)
   }
-  const handleComposerInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    updateComposerCaret(event.currentTarget)
-    const value = event.target.value
+  const syncComposerDirective = (input: HTMLTextAreaElement) => {
+    updateComposerCaret(input)
+    const value = input.value
     setSelectedDirective((current) => {
       if (!current) return undefined
       return getComposerDirectiveParts(value, current) ? current : undefined
     })
+  }
+  const handleComposerInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    if (
+      composerComposingRef.current ||
+      (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)
+    )
+      return
+    syncComposerDirective(event.currentTarget)
   }
   const executeSlashCommand = useCallback(
     (command: ComposerSlashCommand) => {
@@ -226,6 +237,7 @@ export function SailorComposer({
       // model prompt text. Skill and /btw commands intentionally have no action
       // and therefore keep the literal formatter behavior below.
       setSelectedDirective(undefined)
+      setSelectionError(undefined)
       aui.composer.setText('')
       const reportActionError = (cause: unknown) => {
         setSelectionError(cause instanceof Error ? cause.message : '命令执行失败，请重试。')
@@ -361,6 +373,8 @@ export function SailorComposer({
     }
   }
 
+  const transientError = selectionError ?? error?.message ?? summary?.error ?? attachmentError
+
   return (
     <div className="sailor-composer-stack">
       <PlanTodoListView
@@ -370,11 +384,7 @@ export function SailorComposer({
         waitingForApproval={hasPendingToolApproval(messages)}
       />
       <SailorAskUserPopover pending={pendingAskUser} />
-      {(selectionError || error || summary?.error || attachmentError) && (
-        <div className="runtime-error" role="alert">
-          {selectionError ?? error?.message ?? summary?.error ?? attachmentError}
-        </div>
-      )}
+      {transientError && <TransientErrorNotice key={transientError} message={transientError} />}
       {summary?.saveError && (
         <div className="runtime-error" role="alert">
           {summary.saveError}{' '}
@@ -439,22 +449,40 @@ export function SailorComposer({
                         selection={directiveActive ? selectedDirective : undefined}
                         caretPosition={composerCaretPosition}
                         caretIsCollapsed={composerCaretIsCollapsed}
-                        focused={composerFocused}
+                        focused={composerFocused && !composerComposing}
                         scrollTop={composerScrollTop}
                         scrollLeft={composerScrollLeft}
                       />
                       <ComposerPrimitive.Input
                         ref={composerInputRef}
                         onChange={handleComposerInputChange}
-                        onClick={(event) => updateComposerCaret(event.currentTarget)}
+                        onCompositionStart={() => {
+                          composerComposingRef.current = true
+                          setComposerComposing(true)
+                        }}
+                        onCompositionEnd={(event) => {
+                          composerComposingRef.current = false
+                          setComposerComposing(false)
+                          syncComposerDirective(event.currentTarget)
+                        }}
+                        onClick={(event) => {
+                          if (!composerComposingRef.current)
+                            updateComposerCaret(event.currentTarget)
+                        }}
                         onFocus={() => setComposerFocused(true)}
                         onBlur={() => setComposerFocused(false)}
-                        onKeyUp={(event) => updateComposerCaret(event.currentTarget)}
+                        onKeyUp={(event) => {
+                          if (!composerComposingRef.current)
+                            updateComposerCaret(event.currentTarget)
+                        }}
                         onScroll={(event) => {
                           setComposerScrollTop(event.currentTarget.scrollTop)
                           setComposerScrollLeft(event.currentTarget.scrollLeft)
                         }}
-                        onSelect={(event) => updateComposerCaret(event.currentTarget)}
+                        onSelect={(event) => {
+                          if (!composerComposingRef.current)
+                            updateComposerCaret(event.currentTarget)
+                        }}
                         onKeyDown={(event) => {
                           if (
                             event.key !== 'Enter' ||
@@ -475,6 +503,7 @@ export function SailorComposer({
                         }}
                         aria-label="任务描述"
                         autoFocus
+                        spellCheck={false}
                         className={cn(
                           'placeholder:text-foreground/35 max-h-48 min-h-11 w-full resize-none bg-transparent px-3 py-2 text-[15px] leading-6 caret-blue-500 outline-none dark:caret-blue-400',
                           directiveActive && 'sailor-composer-input-tokenized',

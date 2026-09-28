@@ -262,6 +262,7 @@ test('Pi 在请求批准模式下让 host_exec 复用现有审批续跑', { time
 
 test('Pi 拒绝审批不会写文件，重启不能重用旧审批', { timeout: 30000 }, async (t) => {
   const f = await fixture(t)
+  await f.workspace.setPermission({ projectId: f.chat.projectId, mode: 'allow-reads' })
   const agent = f.createAgent()
   f.replies.push({ tool: 'write', input: { file_path: 'denied.txt', content: 'no' } })
   await agent.start(await f.request('写文件'))
@@ -296,6 +297,7 @@ for (const approved of [true, false]) {
     { timeout: 40000 },
     async (t) => {
       const f = await fixture(t)
+      await f.workspace.setPermission({ projectId: f.chat.projectId, mode: 'allow-reads' })
       const agent = f.createAgent()
       const plan = {
         revision: 1,
@@ -420,16 +422,55 @@ test('Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需�
   assert.match(JSON.stringify(f.requests[2].messages), /Review carefully/)
   assert.match(JSON.stringify(f.requests[3].messages), /Check tests first/)
   assert.ok(
-    f.events.some((e) => e.chunk?.toolName === 'compaction'),
+    f.events.some((e) => e.chunk?.type === 'data-pi-event'),
     JSON.stringify(f.events),
+  )
+  assert.equal(
+    f.events.some((e) => e.chunk?.toolName === 'compaction'),
+    false,
+  )
+  assert.equal(
+    (await f.store.getChat(f.chat.id)).messages
+      .flatMap((message: any) => message.parts)
+      .filter((part: any) => part.type === 'data-pi-event').length,
+    1,
   )
   await f.createAgent().start(await f.request('继续摘要中的任务'))
   assert.equal((await f.store.getChat(f.chat.id)).status, 'completed', JSON.stringify(f.events))
   assert.match(JSON.stringify(f.requests.at(-1).messages), /项目摘要/)
 })
 
+test('Pi 手动压缩保存 checkpoint 后返回一条可恢复事件', { timeout: 30000 }, async (t) => {
+  const f = await fixture(t)
+  const agent = f.createAgent()
+  await agent.start(await f.request('背景资料'.repeat(25000)))
+  await agent.start(await f.request('补充背景'.repeat(25000)))
+  await agent.start(await f.request('第三轮上下文'))
+  const messages = await agent.compact(f.chat.id)
+  assert.equal(
+    messages
+      .flatMap((message: any) => message.parts)
+      .filter((part: any) => part.type === 'data-pi-event').length,
+    1,
+  )
+  assert.match(JSON.stringify(messages), /"trigger":"manual"/)
+  const restored = (await f.store.getChat(f.chat.id)).messages
+  assert.equal(
+    restored
+      .flatMap((message: any) => message.parts)
+      .filter((part: any) => part.type === 'data-pi-event').length,
+    1,
+  )
+  assert.equal(
+    restored.findLast((message: any) => message.role === 'assistant')?.id,
+    messages.findLast((message: any) => message.role === 'assistant')?.id,
+  )
+  await assert.rejects(agent.compact(f.chat.id), /上下文已经压缩/)
+})
+
 test('Pi 写入等待 main 审批，批准后只执行一次并续跑', { timeout: 30000 }, async (t) => {
   const f = await fixture(t)
+  await f.workspace.setPermission({ projectId: f.chat.projectId, mode: 'allow-reads' })
   const agent = f.createAgent()
   // Some providers omit usage on the approval-producing tool call.
   f.replies.push({ tool: 'write', input: { file_path: 'hello.txt', content: 'hello' }, tokens: 0 })
@@ -486,6 +527,7 @@ test(
 
 test('Pi 内置 bash 需逐次审批并使用本地挂载', { timeout: 30000 }, async (t) => {
   const f = await fixture(t)
+  await f.workspace.setPermission({ projectId: f.chat.projectId, mode: 'allow-reads' })
   const agent = f.createAgent()
   f.replies.push({
     tool: 'bash',
@@ -519,6 +561,7 @@ test('Pi 内置 bash 需逐次审批并使用本地挂载', { timeout: 30000 }, 
 
 test('Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑', { timeout: 30000 }, async (t) => {
   const f = await fixture(t)
+  await f.workspace.setPermission({ projectId: f.chat.projectId, mode: 'allow-reads' })
   await writeFile(join(f.root, 'project/edit.txt'), 'before')
   const agent = f.createAgent()
   f.replies.push({

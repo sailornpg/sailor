@@ -1,4 +1,5 @@
 import { readUIMessageStream } from 'ai'
+import { randomUUID } from 'node:crypto'
 import { PiRunner, type AgentRunner } from './pi/PiRunner.js'
 import { type AgentRunEvent, type AgentRunRequest } from '@shared/contracts.js'
 import type { SettingsService } from '../settings/SettingsService.js'
@@ -32,7 +33,11 @@ export class AgentService {
     this.workspace = dependencies.workspace
   }
   async start(input: AgentRunRequest): Promise<void> {
-    if (this.controllers.has(input.runId) || this.chatRuns.has(input.chatId))
+    if (
+      this.controllers.has(input.runId) ||
+      this.chatRuns.has(input.chatId) ||
+      this.compactions.has(input.chatId)
+    )
       throw new Error('此会话已有运行中的任务。')
     const controller = new AbortController()
     let resolveCompletion: () => void = () => {}
@@ -64,6 +69,10 @@ export class AgentService {
       const chunks = this.runner.run({
         request,
         config: configuredModel,
+        onPiEvent: (event) => {
+          if (event.chatId === request.chatId && event.runId === request.runId)
+            this.emit(request.runId, { type: 'pi-event', event })
+        },
         context: toolContext,
         sideContextSnapshot: chat?.parentChatId ? chat.contextSnapshot : undefined,
         isSideChat: Boolean(chat?.parentChatId),
@@ -147,26 +156,35 @@ export class AgentService {
     controller.abort()
     await this.completions.get(runId)
   }
-  async compact(chatId: string): Promise<void> {
+  async compact(chatId: string): Promise<import('ai').UIMessage[]> {
     if (!this.runner?.compact || !this.workspace) throw new Error('当前运行时不支持手动压缩。')
     if (this.chatRuns.has(chatId) || this.compactions.has(chatId))
       throw new Error('请等待当前会话完成后再压缩上下文。')
-    const chat = await this.workspace.getChat(chatId)
-    if (chat.status === 'running') throw new Error('请等待当前会话完成后再压缩上下文。')
-    if (!chat.messages.length) throw new Error('当前会话没有可压缩的上下文。')
-    const configured = await this.settings.resolveActiveModel()
-    if (!configured) throw new Error('请先在设置中配置并选择模型。')
     const controller = new AbortController()
+    const operationId = randomUUID()
     this.compactions.set(chatId, controller)
     try {
+      const chat = await this.workspace.getChat(chatId)
+      if (chat.status === 'running') throw new Error('请等待当前会话完成后再压缩上下文。')
+      if (!chat.messages.length) throw new Error('当前会话没有可压缩的上下文。')
+      const configured = await this.settings.resolveActiveModel()
+      if (!configured) throw new Error('请先在设置中配置并选择模型。')
       const context = await this.workspace.resolveToolContext(chatId, controller.signal)
-      await this.runner.compact({
+      const outcome = await this.runner.compact({
         chatId,
+        operationId,
         config: configured,
         context,
         isSideChat: Boolean(chat.parentChatId),
         signal: controller.signal,
+        onPiEvent: (event) => {
+          if (event.chatId === chatId && event.runId === operationId)
+            this.emit(operationId, { type: 'pi-event', event })
+        },
       })
+      const messages = await this.workspace.appendPiEvent(chatId, outcome.event)
+      if (outcome.error) throw new Error(outcome.error)
+      return messages
     } finally {
       this.compactions.delete(chatId)
     }

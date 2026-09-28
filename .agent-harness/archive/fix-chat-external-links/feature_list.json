@@ -1,0 +1,76 @@
+{
+  "features": [
+    {
+      "id": "fix-chat-external-links",
+      "name": "会话网页链接使用系统浏览器",
+      "description": "阻止会话链接替换 Sailor 主窗口，将 HTTP(S) 链接交给系统默认浏览器，覆盖普通点击和新窗口链接。",
+      "status": "done",
+      "checklist": [
+        {
+          "action": "补充真实 Electron 回归测试，复用生产 createMainWindow 验证普通网页链接和新窗口链接交给 shell.openExternal、主窗口不导航、非网页协议不外开及失败处理。修复主窗口链接路由。",
+          "coverage": "e2e",
+          "test": "node tests/external-links-electron.test.mjs",
+          "verify": "node tests/external-links-electron.test.mjs",
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/external-links-electron.test.mjs",
+            "verifiedAt": "2026-09-28T06:11:19.917Z",
+            "exitCode": 0,
+            "stdout": "PASS external links Electron: same-window, new-window, HTTP(S), localhost, unsupported schemes, browser failure, anchors",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node tests/external-links-electron.test.mjs",
+            "verifiedAt": "2026-09-28T06:11:22.015Z",
+            "exitCode": 0,
+            "stdout": "PASS external links Electron: same-window, new-window, HTTP(S), localhost, unsupported schemes, browser failure, anchors",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node tests/external-links-electron.test.mjs",
+            "verifiedAt": "2026-09-28T06:11:22.015Z",
+            "exitCode": 0,
+            "stdout": "PASS external links Electron: same-window, new-window, HTTP(S), localhost, unsupported schemes, browser failure, anchors",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "同步外链打开行为的架构说明，运行类型检查、构建、范围 lint 和 clean-state gate。",
+          "coverage": "static",
+          "tdd": false,
+          "coverage_reason": "文档与交付 gate；链接行为由专用 Electron 测试验证。",
+          "verify": [
+            "pnpm exec eslint src/main/window.ts tests/external-links-electron.test.mjs tests/fixtures/external-links-electron-harness.cjs",
+            "node .agent-harness/scripts/clean-state-check.mjs"
+          ],
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm exec eslint src/main/window.ts tests/external-links-electron.test.mjs tests/fixtures/external-links-electron-harness.cjs",
+              "verifiedAt": "2026-09-28T06:11:44.574Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            },
+            {
+              "command": "node .agent-harness/scripts/clean-state-check.mjs",
+              "verifiedAt": "2026-09-28T06:11:59.643Z",
+              "exitCode": 0,
+              "stdout": "=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 50 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           177.12 kB\n✓ built in 297ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.64 kB\n✓ built in 392ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3379 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-cY3Wx8VX.css                   209.94 kB\n../../out/renderer/assets/ReviewPanel-CziOaLYj.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Bd9ERleg.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BbW6qEpO.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-2_2V4RIa.js              4.63 kB\n../../out/renderer/assets/ParticleSailboatScene-uJWwTBxQ.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BdDkbtIs.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DpF7Ncz0.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-fzrJqrxm.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-bFQC4qno.js             4,725.90 kB\n../../out/renderer/assets/index-C6B8ARQf.js                  6,867.27 kB\n✓ built in 11.00s\n=== Verification 完成 ===\n\n下一步：\n1. 阅读 .agent-harness/feature_list.json，了解当前 feature state\n2. 只选择一个未完成 feature\n3. 只实现这个 feature\n4. 声称完成前重新运行 verification\n=== Clean-state passed ===",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "pnpm exec eslint src/main/window.ts tests/external-links-electron.test.mjs tests/fixtures/external-links-electron-harness.cjs && node .agent-harness/scripts/clean-state-check.mjs",
+            "verifiedAt": "2026-09-28T06:11:59.643Z",
+            "exitCode": 0,
+            "stdout": "=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 50 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           177.12 kB\n✓ built in 297ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.64 kB\n✓ built in 392ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3379 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-cY3Wx8VX.css                   209.94 kB\n../../out/renderer/assets/ReviewPanel-CziOaLYj.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-Bd9ERleg.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BbW6qEpO.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-2_2V4RIa.js              4.63 kB\n../../out/renderer/assets/ParticleSailboatScene-uJWwTBxQ.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-BdDkbtIs.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-DpF7Ncz0.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-fzrJqrxm.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-bFQC4qno.js             4,725.90 kB\n../../out/renderer/assets/index-C6B8ARQf.js                  6,867.27 kB\n✓ built in 11.00s\n=== Verification 完成 ===\n\n下一步：\n1. 阅读 .agent-harness/feature_list.json，了解当前 feature state\n2. 只选择一个未完成 feature\n3. 只实现这个 feature\n4. 声称完成前重新运行 verification\n=== Clean-state passed ===",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-28T06:11:59.644Z"
+    }
+  ]
+}

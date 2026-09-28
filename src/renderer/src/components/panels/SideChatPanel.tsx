@@ -7,6 +7,7 @@ import { useSideChatEnvironment } from '@/components/chat/runtime/SideChatEnviro
 import { SailorChatProvider } from '@/components/chat/runtime/SailorChatProvider'
 import { SailorThread } from '@/components/chat/thread/SailorThread'
 import { Button } from '@/components/ui/button'
+import { TransientErrorNotice } from '@/components/chat/composer/TransientErrorNotice'
 
 export default function SideChatPanel({ context, data }: PanelProps) {
   const {
@@ -108,16 +109,22 @@ export default function SideChatPanel({ context, data }: PanelProps) {
             <MessageSquarePlus aria-hidden />
           </Button>
         </div>
-        {error && (
-          <div className="runtime-error" role="alert">
-            {error}
-          </div>
-        )}
+        {error && <TransientErrorNotice key={error} message={error} />}
         <SailorThread
           chatId={selected.id}
           onOpenSettings={onOpenSettings}
           onNewChat={() => createChat(project?.id)}
-          onCompact={() => window.sailor.agent.compact(selected.id)}
+          onCompact={async () => {
+            try {
+              await registry.applyMessages(
+                selected.id,
+                await window.sailor.agent.compact(selected.id),
+              )
+            } catch (cause) {
+              await registry.refreshMessages(selected.id).catch(() => {})
+              throw cause
+            }
+          }}
           onRetrySave={() => {
             void window.sailor.workspaces
               .retrySave(selected.id)

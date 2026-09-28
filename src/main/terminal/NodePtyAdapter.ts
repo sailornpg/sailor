@@ -15,7 +15,9 @@ class NodePtyProcess implements PtyProcess {
   }
 
   onExit(listener: (exit: TerminalExit) => void): () => void {
-    const subscription = this.pty.onExit(event => listener({ code: event.exitCode ?? null, signal: event.signal ?? null }))
+    const subscription = this.pty.onExit((event) =>
+      listener({ code: event.exitCode ?? null, signal: event.signal ?? null }),
+    )
     return () => subscription.dispose()
   }
 
@@ -28,6 +30,7 @@ class NodePtyProcess implements PtyProcess {
   }
 
   signalGroup(signal: NodeJS.Signals): void {
+    if (process.platform === 'win32') return
     try {
       // node-pty spawns the shell with POSIX_SPAWN_SETSID, so its pid is also the
       // process-group id of the terminal's jobs.
@@ -45,13 +48,15 @@ class NodePtyProcess implements PtyProcess {
 export function createNodePtyAdapter(): PtyAdapter {
   return {
     spawn(options: PtySpawnOptions): PtyProcess {
-      return new NodePtyProcess(nodePty.spawn(options.file, options.args, {
-        name: options.name,
-        cols: options.cols,
-        rows: options.rows,
-        cwd: options.cwd,
-        env: options.env,
-      }))
+      return new NodePtyProcess(
+        nodePty.spawn(options.file, options.args, {
+          name: options.name,
+          cols: options.cols,
+          rows: options.rows,
+          cwd: options.cwd,
+          env: options.env,
+        }),
+      )
     },
   }
 }

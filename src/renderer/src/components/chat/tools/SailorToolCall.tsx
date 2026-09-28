@@ -47,7 +47,7 @@ export const SailorToolCall: ToolCallMessagePartComponent = (props) => {
   const args =
     props.args && typeof props.args === 'object' ? (props.args as Record<string, unknown>) : {}
   const query =
-    [args.file_path, args.path, args.command, args.pattern, args.query].find(
+    [args.file_path, args.path, args.command, args.pattern, args.query, args.url].find(
       (value): value is string => typeof value === 'string' && value.length > 0,
     ) ?? props.toolName
   return (

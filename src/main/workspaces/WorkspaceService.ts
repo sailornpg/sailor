@@ -1,11 +1,13 @@
 import { projectWorkspaceMessages } from '../agent/pi/workspaceContext.js'
 import { stat } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
 import { Buffer } from 'node:buffer'
 import { type UIMessage } from 'ai'
 import { validateChatMessages } from './validateChatMessages.js'
 import { z } from 'zod'
 import { isImageMediaType } from '../../shared/attachments.js'
 import type { AgentRunRequest } from '../../shared/contracts.js'
+import type { PiDisplayEvent } from '../../shared/piDisplayEvent.js'
 import type { WorkspaceChat, WorkspacePreferences, RunStatus } from '../../shared/workspaces.js'
 import { planTodoListSchema, type PlanTodoList } from '../../shared/planTodo.js'
 import type { WorkspaceStore } from './WorkspaceStore.js'
@@ -237,6 +239,29 @@ export class WorkspaceService {
     chat.messages = structuredClone(messages)
     chat.updatedAt = Date.now()
     await this.persist(chatId)
+  }
+  async appendPiEvent(chatId: string, event: PiDisplayEvent): Promise<UIMessage[]> {
+    if (this.managing.has(chatId)) throw new Error('此会话正在更新，请稍后重试。')
+    this.managing.add(chatId)
+    try {
+      const chat = await this.getChat(chatId)
+      if (chat.status === 'running') throw new Error('请等待当前会话完成后再压缩上下文。')
+      if (chat.saveError) throw new Error('请先重试保存此会话。')
+      const messages = structuredClone(chat.messages)
+      const index = messages.findLastIndex((message) => message.role === 'assistant')
+      const part = { type: 'data-pi-event' as const, data: event }
+      if (index >= 0)
+        messages[index] = { ...messages[index], parts: [...messages[index].parts, part] }
+      else messages.push({ id: randomUUID(), role: 'assistant', parts: [part] })
+      chat.messages = messages
+      chat.updatedAt = Date.now()
+      this.live.set(chatId, chat)
+      await this.persist(chatId)
+      if (chat.saveError) throw new Error(chat.saveError)
+      return structuredClone(messages)
+    } finally {
+      this.managing.delete(chatId)
+    }
   }
   async updatePlan(chatId: string, runId: string, input: PlanTodoList): Promise<void> {
     const plan = planTodoListSchema.parse(input)

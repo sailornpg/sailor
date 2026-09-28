@@ -243,7 +243,14 @@ export function AppShell() {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenSideChat={(question, quote) => createSideChat(chat.id, question, quote)}
           onNewChat={() => createChat(project?.id)}
-          onCompact={() => window.sailor.agent.compact(chat.id)}
+          onCompact={async () => {
+            try {
+              await chatRegistry.applyMessages(chat.id, await window.sailor.agent.compact(chat.id))
+            } catch (error) {
+              await chatRegistry.refreshMessages(chat.id).catch(() => {})
+              throw error
+            }
+          }}
           onSelectModel={selectModel}
           panelToolbar={panelToolbar}
           settings={settings}

@@ -12,6 +12,7 @@ import { SailorToolCalls } from '../tools/SailorToolCall'
 import { SailorToolFallback } from '../tools/sailorToolkit'
 import { WorkspaceContextMessage } from './WorkspaceContextMessage'
 import { SelectionQuoteToolbar } from './SelectionQuoteToolbar'
+import { PiRuntimeEventStatus } from '../events/PiRuntimeEventStatus'
 import type { MessageQuote } from '@shared/messageQuote'
 
 interface SailorThreadProps {
@@ -56,6 +57,10 @@ function SailorConversationMap() {
   return <ConversationMapAui side="right" />
 }
 
+function SailorPiRuntimeStatus() {
+  return <PiRuntimeEventStatus chatId={useSailorThreadConfig().chatId} />
+}
+
 const THREAD_COMPONENTS: ThreadComponents = {
   ViewportNavigation: SailorConversationMap,
   Welcome: SailorWelcome,
@@ -63,6 +68,7 @@ const THREAD_COMPONENTS: ThreadComponents = {
   ToolFallback: SailorToolFallback,
   ToolGroup: SailorToolCalls,
   WorkspaceContext: WorkspaceContextMessage,
+  RuntimeEventStatus: SailorPiRuntimeStatus,
 }
 
 export function SailorThread(props: SailorThreadProps): ReactNode {

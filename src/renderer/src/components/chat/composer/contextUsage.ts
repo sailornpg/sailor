@@ -56,9 +56,20 @@ export interface ContextBreakdownView {
 }
 
 // 分类顺序即展示顺序，与官方 demo 一致：系统 → 工具 → 附件 → 会话。
-const SEGMENT_ORDER: readonly ContextSegmentKey[] = ['system', 'tools', 'attachments', 'conversation']
+const SEGMENT_ORDER: readonly ContextSegmentKey[] = [
+  'system',
+  'tools',
+  'attachments',
+  'conversation',
+]
 
-const PAYLOAD_FIELDS: readonly (keyof ContextPayloadMeasure)[] = ['systemChars', 'toolChars', 'attachmentChars', 'conversationChars', 'images']
+const PAYLOAD_FIELDS: readonly (keyof ContextPayloadMeasure)[] = [
+  'systemChars',
+  'toolChars',
+  'attachmentChars',
+  'conversationChars',
+  'images',
+]
 
 const asCount = (value: unknown): number | undefined =>
   Number.isSafeInteger(value) && (value as number) >= 0 ? (value as number) : undefined
@@ -139,25 +150,50 @@ export function composeContextUsage(input: {
 }
 
 /**
- * 最近一条带有用量的 assistant 消息；官方提取器由调用方注入
+ * 最近一条带有用量的 assistant 消息；成功压缩后旧用量不再代表当前上下文。
+ * 官方提取器由调用方注入
  * （应用里传 `getThreadMessageTokenUsage`，保持本模块与运行时解耦）。
  */
 export function latestContextUsage(
-  messages: readonly { role?: string; metadata?: unknown }[],
+  messages: readonly { role?: string; metadata?: unknown; parts?: readonly unknown[] }[],
   readTokens: (message: { role?: string; metadata?: unknown }) => ContextTokenUsage | undefined,
 ): ContextUsage | undefined {
+  return latestContextUsageState(messages, readTokens).usage
+}
+
+export function latestContextUsageState(
+  messages: readonly { role?: string; metadata?: unknown; parts?: readonly unknown[] }[],
+  readTokens: (message: { role?: string; metadata?: unknown }) => ContextTokenUsage | undefined,
+): { usage?: ContextUsage; pendingAfterCompaction: boolean } {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index]
     if (message.role !== 'assistant') continue
-    const usage = composeContextUsage({ tokens: readTokens(message), extras: readContextExtras(message.metadata) })
-    if (usage) return usage
+    if (message.parts?.some(isSuccessfulCompaction)) return { pendingAfterCompaction: true }
+    const usage = composeContextUsage({
+      tokens: readTokens(message),
+      extras: readContextExtras(message.metadata),
+    })
+    if (usage) return { usage, pendingAfterCompaction: false }
   }
+  return { pendingAfterCompaction: false }
+}
+
+function isSuccessfulCompaction(part: unknown): boolean {
+  if (!part || typeof part !== 'object') return false
+  const candidate = part as { type?: unknown; data?: unknown }
+  if (candidate.type !== 'data-pi-event' || !candidate.data || typeof candidate.data !== 'object')
+    return false
+  const event = candidate.data as { kind?: unknown; phase?: unknown }
+  return event.kind === 'compaction' && event.phase === 'succeeded'
 }
 
 const charsOf = (payload: ContextPayloadMeasure, key: ContextSegmentKey): number =>
-  key === 'system' ? payload.systemChars
-    : key === 'tools' ? payload.toolChars
-      : key === 'attachments' ? payload.attachmentChars
+  key === 'system'
+    ? payload.systemChars
+    : key === 'tools'
+      ? payload.toolChars
+      : key === 'attachments'
+        ? payload.attachmentChars
         : payload.conversationChars
 
 /**
@@ -172,8 +208,8 @@ export function buildContextBreakdown(usage: ContextUsage): ContextBreakdownView
   const payload = usage.payload
   // 按**测量到的字符数**决定是否给出该分类：没有任何内容的分类不占一行
   // （element 只对 0 占比的色条跳过，行列表不过滤，所以过滤必须在这里做）。
-  const present = payload ? SEGMENT_ORDER.filter(key => charsOf(payload, key) > 0) : []
-  const weights = payload ? present.map(key => Math.ceil(charsOf(payload, key) / 4)) : []
+  const present = payload ? SEGMENT_ORDER.filter((key) => charsOf(payload, key) > 0) : []
+  const weights = payload ? present.map((key) => Math.ceil(charsOf(payload, key) / 4)) : []
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
 
   if (!payload || totalWeight <= 0) {
@@ -184,8 +220,8 @@ export function buildContextBreakdown(usage: ContextUsage): ContextBreakdownView
     }
   }
 
-  const exact = weights.map(weight => (weight * usage.inputTokens) / totalWeight)
-  const tokens = exact.map(value => Math.floor(value))
+  const exact = weights.map((weight) => (weight * usage.inputTokens) / totalWeight)
+  const tokens = exact.map((value) => Math.floor(value))
   let remainder = usage.inputTokens - tokens.reduce((sum, value) => sum + value, 0)
   const byFraction = exact
     .map((value, index) => ({ index, fraction: value - Math.floor(value) }))

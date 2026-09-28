@@ -49,6 +49,7 @@ test('Composer keeps the literal command while rendering a selected directive to
     /<ComposerDirectiveHighlight[\s\S]*selection=\{directiveActive \? selectedDirective/,
   )
   assert.match(composer, /onChange=\{handleComposerInputChange\}/)
+  assert.match(composer, /spellCheck=\{false\}/)
   assert.match(composer, /literalSlashCommandFormatter/)
   assert.match(highlight, /getComposerDirectiveParts/)
   assert.match(highlight, /formatComposerDirectiveLabel/)
@@ -56,6 +57,7 @@ test('Composer keeps the literal command while rendering a selected directive to
   assert.match(highlight, /data-composer-directive-token/)
   assert.match(styles, /\.sailor-composer-input-tokenized[\s\S]*color: transparent/)
   assert.match(styles, /\.sailor-composer-directive-token[\s\S]*var\(--appearance-accent\)/)
+  assert.match(styles, /\.sailor-composer-directive-token\s*\{[^}]*vertical-align: -2px;/)
 })
 
 test('manual edits invalidate the selected token without changing the outgoing literal formatter', async () => {
@@ -65,7 +67,7 @@ test('manual edits invalidate the selected token without changing the outgoing l
   ])
 
   assert.match(composer, /setSelectedDirective\(undefined\)/)
-  assert.match(composer, /event\.target\.value/)
+  assert.match(composer, /const value = input\.value/)
   assert.match(composer, /getComposerDirectiveParts/)
   assert.match(formatter, /serialize: \(item\) => `\/\$\{item\.label\}`/)
 })

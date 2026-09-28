@@ -705,6 +705,34 @@ kbd {
   color: var(--destructive);
   font-size: 12px;
 }
+.runtime-error-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.runtime-error-notice span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.runtime-error button.runtime-error-close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.runtime-error button.runtime-error-close:hover {
+  background: color-mix(in oklab, var(--destructive) 10%, transparent);
+}
+.runtime-error button.runtime-error-close:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
 
 /* Panel dock: tab strip (with the + picker) when panels are open, otherwise a centered function list.
    Its top band is 48px like the workspace topbar, so both edges line up without a filler row. */
@@ -2574,7 +2602,7 @@ kbd {
   padding: 0 1px;
   color: var(--appearance-accent);
   font-weight: 500;
-  vertical-align: baseline;
+  vertical-align: -2px;
   white-space: nowrap;
 }
 .sailor-composer-directive-icon {

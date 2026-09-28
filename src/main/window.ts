@@ -21,8 +21,27 @@ export function createMainWindow(): BrowserWindow {
 
   window.once('ready-to-show', () => window.show())
 
+  const openWebLink = (url: string): void => {
+    let protocol: string
+    try {
+      protocol = new URL(url).protocol
+    } catch {
+      return
+    }
+    if (protocol !== 'http:' && protocol !== 'https:') return
+    void shell.openExternal(url).catch(() => {
+      console.error('无法使用系统默认浏览器打开网页链接')
+    })
+  }
+
+  // Ordinary Markdown links navigate the current window instead of opening a new one.
+  window.webContents.on('will-navigate', (event, url) => {
+    event.preventDefault()
+    openWebLink(url)
+  })
+
   window.webContents.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url)
+    openWebLink(url)
     return { action: 'deny' }
   })
 

@@ -14,7 +14,7 @@ test('Pi TUI actions use narrow app/agent IPC without approval plumbing', async 
   assert.match(contracts, /appQuit: ['"]app:quit['"]/)
   assert.match(contracts, /agentCompact: ['"]agent:compact['"]/)
   assert.match(contracts, /quit\(\): Promise<void>/)
-  assert.match(contracts, /compact\(chatId: ChatId\): Promise<void>/)
+  assert.match(contracts, /compact\(chatId: ChatId\): Promise<UIMessage\[\]>/)
   assert.match(preload, /quit: \(\) => ipcRenderer\.invoke\(IPC\.appQuit\)/)
   assert.match(
     preload,

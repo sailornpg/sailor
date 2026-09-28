@@ -1,0 +1,227 @@
+{
+  "features": [
+    {
+      "id": "feat-pi-runtime-event-ui",
+      "name": "Pi 运行事件展示",
+      "description": "在 Sailor 聊天中展示 Pi 自动及手动压缩、自动重试的进行中状态和可恢复的最终结果，并建立可扩展的有类型事件投影。",
+      "status": "done",
+      "trd_spec": "docs/pi-runtime-event-ui.md",
+      "checklist": [
+        {
+          "action": "通过 pinned harness-pi 适配层接收压缩开始/结束与自动重试开始/结束，映射为有界的共享事件契约，并验证迟到、重复、跨 chat/run 事件不会串流。",
+          "coverage": "integration",
+          "test": "node --test tests/pi-event-bridge.test.ts",
+          "verify": ["node --test tests/pi-event-bridge.test.ts", "pnpm run typecheck"],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-event-bridge.test.ts",
+            "verifiedAt": "2026-09-28T03:47:32.688Z",
+            "exitCode": 0,
+            "stdout": "✔ Pi bridge exposes only the four display events (2.030125ms)\n✔ Pi events retain one bounded lifecycle within the matching chat and run (67.9745ms)\n✔ retry updates one event and rejects invalid counts or unmatched endings (21.839416ms)\n✔ back-to-back compactions and retry cycles each receive a fresh event id (19.41675ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 310.902459",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-event-bridge.test.ts",
+              "verifiedAt": "2026-09-28T03:47:32.997Z",
+              "exitCode": 0,
+              "stdout": "✔ Pi bridge exposes only the four display events (1.857208ms)\n✔ Pi events retain one bounded lifecycle within the matching chat and run (58.788083ms)\n✔ retry updates one event and rejects invalid counts or unmatched endings (20.542291ms)\n✔ back-to-back compactions and retry cycles each receive a fresh event id (17.889333ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 280.08975",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-28T03:47:33.871Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-event-bridge.test.ts && pnpm run typecheck",
+            "verifiedAt": "2026-09-28T03:47:33.871Z",
+            "exitCode": 0,
+            "stdout": "✔ Pi bridge exposes only the four display events (1.857208ms)\n✔ Pi events retain one bounded lifecycle within the matching chat and run (58.788083ms)\n✔ retry updates one event and rejects invalid counts or unmatched endings (20.542291ms)\n✔ back-to-back compactions and retry cycles each receive a fresh event id (17.889333ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 280.08975",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "将自动压缩和自动重试投影为运行态通知及单条终态 data part；在 Pi checkpoint 保存后提交终态，恢复历史并避免与原 compaction 工具记录重复；确认事件不会进入模型提示或重放 Pi 操作。",
+          "coverage": "integration",
+          "test": "node --test tests/pi-event-history.test.ts",
+          "verify": "node --test tests/pi-event-history.test.ts",
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-event-history.test.ts",
+            "verifiedAt": "2026-09-28T04:27:44.443Z",
+            "exitCode": 0,
+            "stdout": "✔ terminal event waits for checkpoint and persists once as data-pi-event (65.410292ms)\n✔ checkpoint failure clears live state without committing a success record (19.466375ms)\n✔ automatic retry produces one final record across attempt updates (14.793458ms)\n✔ restored Pi data stays out of model messages and rejects malformed fields (955.9505ms)\n✔ AgentService relays live events and saves one recoverable final part (377.722833ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1652.726875",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node --test tests/pi-event-history.test.ts",
+            "verifiedAt": "2026-09-28T04:27:45.959Z",
+            "exitCode": 0,
+            "stdout": "✔ terminal event waits for checkpoint and persists once as data-pi-event (65.0715ms)\n✔ checkpoint failure clears live state without committing a success record (20.330375ms)\n✔ automatic retry produces one final record across attempt updates (17.554833ms)\n✔ restored Pi data stays out of model messages and rejects malformed fields (820.755917ms)\n✔ AgentService relays live events and saves one recoverable final part (361.662667ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1489.002375",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node --test tests/pi-event-history.test.ts",
+            "verifiedAt": "2026-09-28T04:27:45.959Z",
+            "exitCode": 0,
+            "stdout": "✔ terminal event waits for checkpoint and persists once as data-pi-event (65.0715ms)\n✔ checkpoint failure clears live state without committing a success record (20.330375ms)\n✔ automatic retry produces one final record across attempt updates (17.554833ms)\n✔ restored Pi data stays out of model messages and rejects malformed fields (820.755917ms)\n✔ AgentService relays live events and saves one recoverable final part (361.662667ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1489.002375",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "让手动 /compact 复用同一事件状态与最终记录，覆盖 checkpoint 保存失败、空 assistant 历史、前端消息同步及并发互斥。",
+          "coverage": "integration",
+          "test": "node --test tests/pi-manual-compaction-events.test.ts",
+          "verify": [
+            "node --test tests/pi-manual-compaction-events.test.ts",
+            "node --test tests/composer-pi-tui-ipc.test.ts"
+          ],
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/pi-manual-compaction-events.test.ts",
+            "verifiedAt": "2026-09-28T05:02:30.528Z",
+            "exitCode": 0,
+            "stdout": "✔ manual compact saves an event-only assistant message and returns it for the open Chat (831.891708ms)\n✔ manual compact is mutually exclusive and checkpoint failure leaves history unchanged (99.4965ms)\n✔ simultaneous manual compactions reserve the chat before settings resolve (87.430459ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1201.478334",
+            "stderr": ""
+          },
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-manual-compaction-events.test.ts",
+              "verifiedAt": "2026-09-28T05:02:31.755Z",
+              "exitCode": 0,
+              "stdout": "✔ manual compact saves an event-only assistant message and returns it for the open Chat (827.525958ms)\n✔ manual compact is mutually exclusive and checkpoint failure leaves history unchanged (100.877042ms)\n✔ simultaneous manual compactions reserve the chat before settings resolve (93.716167ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1201.566083",
+              "stderr": ""
+            },
+            {
+              "command": "node --test tests/composer-pi-tui-ipc.test.ts",
+              "verifiedAt": "2026-09-28T05:02:31.835Z",
+              "exitCode": 0,
+              "stdout": "✔ Pi TUI actions use narrow app/agent IPC without approval plumbing (2.198ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 55.072334",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-manual-compaction-events.test.ts && node --test tests/composer-pi-tui-ipc.test.ts",
+            "verifiedAt": "2026-09-28T05:02:31.835Z",
+            "exitCode": 0,
+            "stdout": "✔ manual compact saves an event-only assistant message and returns it for the open Chat (827.525958ms)\n✔ manual compact is mutually exclusive and checkpoint failure leaves history unchanged (100.877042ms)\n✔ simultaneous manual compactions reserve the chat before settings resolve (93.716167ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1201.566083\n✔ Pi TUI actions use narrow app/agent IPC without approval plumbing (2.198ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 55.072334",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "用 assistant-ui primitives 和现有主题组件呈现 Pi 事件运行态、终态及旧 compaction 历史，保持键盘可访问、亮暗主题与减少动效支持。",
+          "coverage": "static",
+          "verify": [
+            "pnpm run typecheck",
+            "pnpm exec eslint src/renderer/src/components/chat/events"
+          ],
+          "tdd": false,
+          "coverage_reason": "布局、文案与视觉层级无法由廉价的前置断言判断；真实交互和视觉由专用 Electron 冒烟项覆盖。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-28T05:39:29.252Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm exec eslint src/renderer/src/components/chat/events",
+              "verifiedAt": "2026-09-28T05:39:29.986Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": ""
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run typecheck && pnpm exec eslint src/renderer/src/components/chat/events",
+            "verifiedAt": "2026-09-28T05:39:29.986Z",
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+          }
+        },
+        {
+          "action": "在真实 Electron 中触发自动与手动压缩、自动重试成功/失败，断言进行中提示、唯一结束记录、会话切换与重启恢复，并检查浅色、深色、窄窗口截图。",
+          "coverage": "e2e",
+          "test": "node tests/pi-runtime-events-electron.test.mjs",
+          "verify": "node tests/pi-runtime-events-electron.test.mjs",
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/pi-runtime-events-electron.test.mjs",
+            "verifiedAt": "2026-09-28T05:49:29.599Z",
+            "exitCode": 0,
+            "stdout": "PASS Pi runtime events Electron smoke",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node tests/pi-runtime-events-electron.test.mjs",
+            "verifiedAt": "2026-09-28T05:49:32.606Z",
+            "exitCode": 0,
+            "stdout": "PASS Pi runtime events Electron smoke",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node tests/pi-runtime-events-electron.test.mjs",
+            "verifiedAt": "2026-09-28T05:49:32.606Z",
+            "exitCode": 0,
+            "stdout": "PASS Pi runtime events Electron smoke",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "实施后同步 README 与架构文档，运行 Pi 回归、typecheck 和 production build 并记录 verification evidence。",
+          "coverage": "static",
+          "verify": [
+            "node --test tests/pi-agent.test.ts tests/pi-event-bridge.test.ts tests/pi-event-history.test.ts tests/pi-manual-compaction-events.test.ts",
+            "pnpm run typecheck",
+            "pnpm run build"
+          ],
+          "tdd": false,
+          "coverage_reason": "文档同步与最终验证是静态交付；行为断言已分别登记在集成和 Electron 冒烟项。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "node --test tests/pi-agent.test.ts tests/pi-event-bridge.test.ts tests/pi-event-history.test.ts tests/pi-manual-compaction-events.test.ts",
+              "verifiedAt": "2026-09-28T05:58:57.132Z",
+              "exitCode": 0,
+              "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (8415.845833ms)\n✔ Pi 在工作区默认执行模式下直接运行 host_exec (4389.440834ms)\n✔ Pi 在请求批准模式下让 host_exec 复用现有审批续跑 (3246.479208ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (5471.581875ms)\n✔ 计划在连续两次允许工具审批续跑时始终保留 (10784.601541ms)\n✔ 计划在连续两次拒绝工具审批续跑时始终保留 (10565.692167ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (5622.443208ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (11450.380709ms)\n✔ Pi 手动压缩保存 checkpoint 后返回一条可恢复事件 (8535.714459ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (5432.846875ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (5741.679875ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (5617.066834ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (5388.589542ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (11303.3955ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (5790.423416ms)\n✔ 同一会话切换视觉模型后图片实际送达 provider (9538.040958ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (104.232542ms)\n✔ 非图片附件返回明确提示且不发模型请求 (96.373917ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (105.953791ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (110.543041ms)\n✔ 文档附件写入会话 VFS 并在本轮 prompt 中列出绝对路径 (2965.3735ms)\n✔ read_document 读取上传的 xlsx 附件并返回解析结果 (3118.474375ms)\n✔ Pi bridge exposes only the four display events (2.811125ms)\n✔ Pi events retain one bounded lifecycle within the matching chat and run (90.045041ms)\n✔ retry updates one event and rejects invalid counts or unmatched endings (34.100458ms)\n✔ back-to-back compactions and retry cycles each receive a fresh event id (33.965417ms)\n✔ terminal event waits for checkpoint and persists once as data-pi-event (95.350542ms)\n✔ checkpoint failure clears live state without committing a success record (32.46825ms)\n✔ automatic retry produces one final record across attempt updates (32.277416ms)\n✔ restored Pi data stays out of model messages and rejects malformed fields (1141.425ms)\n✔ AgentService relays live events and saves one recoverable final part (868.612334ms)\n✔ manual compact saves an event-only assistant message and returns it for the open Chat (1577.584208ms)\n✔ manual compact is mutually exclusive and checkpoint failure leaves history unchanged (705.563625ms)\n✔ simultaneous manual compactions reserve the chat before settings resolve (111.717125ms)\nℹ tests 34\nℹ suites 0\nℹ pass 34\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 124408.611333",
+              "stderr": ""
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-28T05:58:57.959Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-28T05:59:09.508Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 50 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           176.68 kB\n✓ built in 219ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.64 kB\n✓ built in 260ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3379 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-cY3Wx8VX.css                   209.94 kB\n../../out/renderer/assets/ReviewPanel-HxBpVm9A.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-D0yUn9AO.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DENNLnMg.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-CkETHqvj.js              4.63 kB\n../../out/renderer/assets/ParticleSailboatScene-CaDiS-yO.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-qUSuHOvE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-Bw6yFo6k.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DRqs2h_V.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-6U3-UOMU.js             4,725.90 kB\n../../out/renderer/assets/index-Duco3Zyc.js                  6,867.26 kB\n✓ built in 9.59s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "node --test tests/pi-agent.test.ts tests/pi-event-bridge.test.ts tests/pi-event-history.test.ts tests/pi-manual-compaction-events.test.ts && pnpm run typecheck && pnpm run build",
+            "verifiedAt": "2026-09-28T05:59:09.508Z",
+            "exitCode": 0,
+            "stdout": "✔ 真实 Pi runtime 多轮与重建恢复原生上下文，模型只看到 Pi 原生工具 (8415.845833ms)\n✔ Pi 在工作区默认执行模式下直接运行 host_exec (4389.440834ms)\n✔ Pi 在请求批准模式下让 host_exec 复用现有审批续跑 (3246.479208ms)\n✔ Pi 拒绝审批不会写文件，重启不能重用旧审批 (5471.581875ms)\n✔ 计划在连续两次允许工具审批续跑时始终保留 (10784.601541ms)\n✔ 计划在连续两次拒绝工具审批续跑时始终保留 (10565.692167ms)\n✔ 停止 Pi 后不继续输出，下一轮可恢复对话 (5622.443208ms)\n✔ Pi 原生自动压缩触发并作为可恢复事件输出；Skills 按需读取 (11450.380709ms)\n✔ Pi 手动压缩保存 checkpoint 后返回一条可恢复事件 (8535.714459ms)\n✔ Pi 写入等待 main 审批，批准后只执行一次并续跑 (5432.846875ms)\n✔ Pi 自定义 Responses endpoint 产生流式回答，下一轮可切换模型 (5741.679875ms)\n✔ Pi 内置 bash 需逐次审批并使用本地挂载 (5617.066834ms)\n✔ Pi 原生 edit 审批绑定真实请求，伪造响应和重复响应不能续跑 (5388.589542ms)\n✔ Pi 原生 read/grep/find/ls 使用同一个真实工作区 (11303.3955ms)\n✔ Pi 每步真实用量通过消息 metadata 传给 UI 并保存，后续调用不累计历史 (5790.423416ms)\n✔ 同一会话切换视觉模型后图片实际送达 provider (9538.040958ms)\n✔ 非视觉模型发送图片返回明确提示且不发模型请求 (104.232542ms)\n✔ 非图片附件返回明确提示且不发模型请求 (96.373917ms)\n✔ 不支持的图片类型返回明确提示且不发模型请求 (105.953791ms)\n✔ 非法图片数据返回明确提示且不发模型请求 (110.543041ms)\n✔ 文档附件写入会话 VFS 并在本轮 prompt 中列出绝对路径 (2965.3735ms)\n✔ read_document 读取上传的 xlsx 附件并返回解析结果 (3118.474375ms)\n✔ Pi bridge exposes only the four display events (2.811125ms)\n✔ Pi events retain one bounded lifecycle within the matching chat and run (90.045041ms)\n✔ retry updates one event and rejects invalid counts or unmatched endings (34.100458ms)\n✔ back-to-back compactions and retry cycles each receive a fresh event id (33.965417ms)\n✔ terminal event waits for checkpoint and persists once as data-pi-event (95.350542ms)\n✔ checkpoint failure clears live state without committing a success record (32.46825ms)\n✔ automatic retry produces one final record across attempt updates (32.277416ms)\n✔ restored Pi data stays out of model messages and rejects malformed fields (1141.425ms)\n✔ AgentService relays live events and saves one recoverable final part (868.612334ms)\n✔ manual compact saves an event-only assistant message and returns it for the open Chat (1577.584208ms)\n✔ manual compact is mutually exclusive and checkpoint failure leaves history unchanged (705.563625ms)\n✔ simultaneous manual compactions reserve the chat before settings resolve (111.717125ms)\nℹ tests 34\nℹ suites 0\nℹ pass 34\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 124408.611333\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 50 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           176.68 kB\n✓ built in 219ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  173.64 kB\n✓ built in 260ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3379 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-cY3Wx8VX.css                   209.94 kB\n../../out/renderer/assets/ReviewPanel-HxBpVm9A.js                0.62 kB\n../../out/renderer/assets/PanelPlaceholder-D0yUn9AO.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-DENNLnMg.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-CkETHqvj.js              4.63 kB\n../../out/renderer/assets/ParticleSailboatScene-CaDiS-yO.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-qUSuHOvE.js          7.21 kB\n../../out/renderer/assets/TerminalPanel-Bw6yFo6k.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DRqs2h_V.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-6U3-UOMU.js             4,725.90 kB\n../../out/renderer/assets/index-Duco3Zyc.js                  6,867.26 kB\n✓ built in 9.59s",
+            "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-28T05:59:09.509Z"
+    }
+  ]
+}

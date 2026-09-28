@@ -80,8 +80,8 @@ function signalProcess(child: ChildProcessWithoutNullStreams, signal: NodeJS.Sig
 
 function shellCommand(env: NodeJS.ProcessEnv): { file: string; args: string[] } {
   if (process.platform === 'win32') {
-    const file = typeof env.ComSpec === 'string' && env.ComSpec.trim() ? env.ComSpec : 'cmd.exe'
-    return { file, args: ['/d', '/s', '/c'] }
+    const shell = resolveShell(env)
+    return { file: shell.file, args: ['/d', '/s', '/c'] }
   }
   const shell = resolveShell(env)
   // POSIX `sh`/`dash` print an extra `logout` when forced into interactive mode,

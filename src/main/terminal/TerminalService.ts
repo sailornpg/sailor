@@ -39,6 +39,7 @@ export interface TerminalServiceOptions {
   resolveProjectRoot(projectId: string): Promise<string>
   adapter: PtyAdapter
   env?: NodeJS.ProcessEnv
+  platform?: NodeJS.Platform
   limits?: Partial<TerminalLimits>
   generateSessionId?: () => string
   now?: () => number
@@ -74,7 +75,7 @@ function describeError(error: unknown): string {
 }
 
 function delay(ms: number): Promise<void> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms)
   })
 }
@@ -87,6 +88,7 @@ function delay(ms: number): Promise<void> {
 export class TerminalService {
   private readonly limits: TerminalLimits
   private readonly env: NodeJS.ProcessEnv
+  private readonly platform: NodeJS.Platform
   private readonly sessions = new Map<string, TerminalSession>()
   private readonly ordinals = new Map<string, number>()
   private activityTick = 0
@@ -96,6 +98,7 @@ export class TerminalService {
   constructor(private readonly options: TerminalServiceOptions) {
     this.limits = { ...TERMINAL_LIMITS, ...options.limits }
     this.env = options.env ?? process.env
+    this.platform = options.platform ?? process.platform
   }
 
   /** Creates a new PTY session. Renderer input cannot influence the command. */
@@ -107,14 +110,17 @@ export class TerminalService {
     try {
       rootPath = await this.options.resolveProjectRoot(id)
     } catch (error) {
-      throw new TerminalError('WORKSPACE_UNAVAILABLE', `无法打开工作区目录：${describeError(error)}`)
+      throw new TerminalError(
+        'WORKSPACE_UNAVAILABLE',
+        `无法打开工作区目录：${describeError(error)}`,
+      )
     }
 
     this.enforceProjectLimits(id)
     await this.evictOverGlobalLimit()
 
     const { cols, rows } = clampTerminalSize(size.cols, size.rows, this.limits)
-    const shell = resolveShell(this.env)
+    const shell = resolveShell(this.env, this.platform)
     const ordinal = (this.ordinals.get(id) ?? 0) + 1
     this.ordinals.set(id, ordinal)
 
@@ -135,8 +141,14 @@ export class TerminalService {
         outputLimitBytes: this.limits.outputLimitBytes,
         flushIntervalMs: this.limits.flushIntervalMs,
         maxFlushBytes: this.limits.maxFlushBytes,
-        onChunk: chunk => {
-          this.emit({ type: 'output', projectId: id, sessionId: session.sessionId, seq: chunk.seq, data: chunk.data })
+        onChunk: (chunk) => {
+          this.emit({
+            type: 'output',
+            projectId: id,
+            sessionId: session.sessionId,
+            seq: chunk.seq,
+            data: chunk.data,
+          })
         },
         schedule: this.options.schedule,
       }),
@@ -157,8 +169,8 @@ export class TerminalService {
       session.process = process
       session.pid = process.pid
       session.status = 'running'
-      session.release.push(process.onData(data => this.handleData(session, data)))
-      session.release.push(process.onExit(exit => this.handleExit(session, exit)))
+      session.release.push(process.onData((data) => this.handleData(session, data)))
+      session.release.push(process.onExit((exit) => this.handleExit(session, exit)))
     } catch (error) {
       session.status = 'failed'
       session.ended = true
@@ -166,20 +178,29 @@ export class TerminalService {
     }
 
     this.sessions.set(session.sessionId, session)
-    this.emit({ type: 'state', projectId: id, sessionId: session.sessionId, info: this.info(session) })
+    this.emit({
+      type: 'state',
+      projectId: id,
+      sessionId: session.sessionId,
+      info: this.info(session),
+    })
     return this.info(session)
   }
 
   /** Creation order per project; ended sessions stay listed so their tab keeps its output. */
   list(projectId?: string): TerminalSessionInfo[] {
-    const scoped = projectId === undefined
-      ? [...this.sessions.values()]
-      : [...this.sessions.values()].filter(session => session.projectId === projectId)
-    return scoped.map(session => this.info(session))
+    const scoped =
+      projectId === undefined
+        ? [...this.sessions.values()]
+        : [...this.sessions.values()].filter((session) => session.projectId === projectId)
+    return scoped.map((session) => this.info(session))
   }
 
   find(projectId: string, sessionId: string): TerminalSessionInfo | null {
-    const session = typeof projectId === 'string' && typeof sessionId === 'string' ? this.sessions.get(sessionId) : undefined
+    const session =
+      typeof projectId === 'string' && typeof sessionId === 'string'
+        ? this.sessions.get(sessionId)
+        : undefined
     return session && session.projectId === projectId ? this.info(session) : null
   }
 
@@ -194,26 +215,39 @@ export class TerminalService {
     if (typeof data !== 'string') throw new TerminalError('INVALID_INPUT', '终端输入必须是字符串。')
     if (data.length === 0) return
     if (terminalInputBytes(data) > this.limits.maxWriteBytes) {
-      throw new TerminalError('INVALID_INPUT', `单次终端输入不能超过 ${this.limits.maxWriteBytes} 字节。`)
+      throw new TerminalError(
+        'INVALID_INPUT',
+        `单次终端输入不能超过 ${this.limits.maxWriteBytes} 字节。`,
+      )
     }
     session.process?.write(data)
     this.touch(session)
   }
 
-  async resize(projectId: string, sessionId: string, cols: number, rows: number): Promise<TerminalSessionInfo> {
+  async resize(
+    projectId: string,
+    sessionId: string,
+    cols: number,
+    rows: number,
+  ): Promise<TerminalSessionInfo> {
     const session = this.requireLiveSession(projectId, sessionId, 'SESSION_EXITED')
     const size = clampTerminalSize(cols, rows, this.limits)
     session.cols = size.cols
     session.rows = size.rows
     session.process?.resize(size.cols, size.rows)
     this.touch(session)
-    this.emit({ type: 'state', projectId: session.projectId, sessionId: session.sessionId, info: this.info(session) })
+    this.emit({
+      type: 'state',
+      projectId: session.projectId,
+      sessionId: session.sessionId,
+      info: this.info(session),
+    })
     return this.info(session)
   }
 
   /**
-   * Explicit stop used by the panel's tab close button: `SIGHUP` to the process group,
-   * `SIGKILL` after the grace period, then the record is dropped.
+   * Explicit stop used by the panel's tab close button. POSIX signals the
+   * process group; Windows closes the PTY through node-pty.
    */
   async terminate(projectId: string, sessionId: string): Promise<void> {
     const session = this.requireSession(projectId, sessionId)
@@ -231,7 +265,11 @@ export class TerminalService {
   async disposeAll(): Promise<void> {
     this.disposed = true
     const sessions = [...this.sessions.values()]
-    await Promise.all(sessions.filter(session => !session.ended).map(session => this.stopSession(session).catch(() => undefined)))
+    await Promise.all(
+      sessions
+        .filter((session) => !session.ended)
+        .map((session) => this.stopSession(session).catch(() => undefined)),
+    )
     for (const session of sessions) this.releaseSession(session)
     this.sessions.clear()
     this.ordinals.clear()
@@ -249,6 +287,16 @@ export class TerminalService {
     if (session.ended) return
     const process = session.process
     if (!process) {
+      this.endSession(session, session.exit ?? { code: null, signal: null })
+      return
+    }
+
+    if (this.platform === 'win32') {
+      try {
+        process.kill()
+      } catch {
+        // The PTY may have exited while the close request was in flight.
+      }
       this.endSession(session, session.exit ?? { code: null, signal: null })
       return
     }
@@ -295,7 +343,12 @@ export class TerminalService {
     session.exit = exit
     session.process = null
     this.releaseSession(session)
-    this.emit({ type: 'state', projectId: session.projectId, sessionId: session.sessionId, info: this.info(session) })
+    this.emit({
+      type: 'state',
+      projectId: session.projectId,
+      sessionId: session.sessionId,
+      info: this.info(session),
+    })
   }
 
   private releaseSession(session: TerminalSession): void {
@@ -316,13 +369,16 @@ export class TerminalService {
 
   /** Per-project live cap plus a bounded number of retained exited tabs. */
   private enforceProjectLimits(projectId: string): void {
-    const tracked = [...this.sessions.values()].filter(session => session.projectId === projectId)
-    const live = tracked.filter(session => !session.ended).length
+    const tracked = [...this.sessions.values()].filter((session) => session.projectId === projectId)
+    const live = tracked.filter((session) => !session.ended).length
     if (live >= this.limits.maxSessionsPerProject) {
-      throw new TerminalError('SESSION_LIMIT', `每个工作区最多同时打开 ${this.limits.maxSessionsPerProject} 个终端。`)
+      throw new TerminalError(
+        'SESSION_LIMIT',
+        `每个工作区最多同时打开 ${this.limits.maxSessionsPerProject} 个终端。`,
+      )
     }
     while (tracked.length + 1 > this.limits.maxTrackedSessionsPerProject) {
-      const victim = tracked.find(session => session.ended)
+      const victim = tracked.find((session) => session.ended)
       if (!victim) return
       tracked.splice(tracked.indexOf(victim), 1)
       this.releaseSession(victim)
@@ -333,7 +389,9 @@ export class TerminalService {
   /** Keeps the number of live PTYs bounded by recycling the least recently used session. */
   private async evictOverGlobalLimit(): Promise<void> {
     while (this.liveSessions().length >= this.limits.maxSessions) {
-      const victim = this.liveSessions().reduce((oldest, candidate) => (candidate.lastActiveTick < oldest.lastActiveTick ? candidate : oldest))
+      const victim = this.liveSessions().reduce((oldest, candidate) =>
+        candidate.lastActiveTick < oldest.lastActiveTick ? candidate : oldest,
+      )
       await this.stopSession(victim).catch(() => undefined)
       this.releaseSession(victim)
       this.sessions.delete(victim.sessionId)
@@ -341,7 +399,7 @@ export class TerminalService {
   }
 
   private liveSessions(): TerminalSession[] {
-    return [...this.sessions.values()].filter(session => !session.ended)
+    return [...this.sessions.values()].filter((session) => !session.ended)
   }
 
   private liveSession(projectId: string, sessionId: string): TerminalSession | null {
@@ -357,7 +415,11 @@ export class TerminalService {
     return session
   }
 
-  private requireLiveSession(projectId: string, sessionId: string, code: TerminalErrorCode): TerminalSession {
+  private requireLiveSession(
+    projectId: string,
+    sessionId: string,
+    code: TerminalErrorCode,
+  ): TerminalSession {
     const session = this.requireSession(projectId, sessionId)
     if (session.ended || session.status !== 'running') {
       throw new TerminalError(code, '终端会话已经结束，请重新启动。')
@@ -373,7 +435,7 @@ export class TerminalService {
   }
 
   private touch(session: TerminalSession): void {
-    session.lastActiveTick = (this.activityTick += 1)
+    session.lastActiveTick = this.activityTick += 1
   }
 
   private now(): number {

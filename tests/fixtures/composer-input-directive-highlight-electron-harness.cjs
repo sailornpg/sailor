@@ -33,6 +33,78 @@ async function setInput(window, value) {
   await wait()
 }
 
+async function composeChinese(window, prefix, composingScreenshotPath) {
+  const debuggerApi = window.webContents.debugger
+  if (!debuggerApi.isAttached()) debuggerApi.attach('1.3')
+  await window.webContents.executeJavaScript(`document.querySelector('#directive-input').focus()`)
+  await debuggerApi.sendCommand('Input.imeSetComposition', {
+    text: 'ni',
+    selectionStart: 2,
+    selectionEnd: 2,
+  })
+  await wait()
+  const composing = await window.webContents.executeJavaScript(`(() => {
+    const input = document.querySelector('#directive-input')
+    return {
+      value: input.value,
+      focused: document.activeElement === input,
+      textFill: getComputedStyle(input).webkitTextFillColor,
+      token: Boolean(document.querySelector('[data-composer-directive-token]')),
+      layerText: document.querySelector('[data-composer-directive-layer]')?.textContent,
+      overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    }
+  })()`)
+  check(
+    `${prefix}拼音预编辑可见`,
+    composing.value.endsWith('ni') &&
+      composing.focused &&
+      !composing.overflow &&
+      (prefix.includes('Skill')
+        ? composing.token &&
+          composing.textFill === 'rgba(0, 0, 0, 0)' &&
+          composing.layerText?.includes('Ai Sdk') &&
+          composing.layerText?.includes('ni') &&
+          !composing.layerText?.includes('/skill:ai-sdk')
+        : composing.textFill !== 'rgba(0, 0, 0, 0)'),
+    JSON.stringify(composing),
+  )
+  if (composingScreenshotPath)
+    await fs.writeFile(composingScreenshotPath, (await window.capturePage()).toPNG())
+  await debuggerApi.sendCommand('Input.imeSetComposition', {
+    text: 'nihao',
+    selectionStart: 5,
+    selectionEnd: 5,
+  })
+  await debuggerApi.sendCommand('Input.imeSetComposition', {
+    text: '',
+    selectionStart: 0,
+    selectionEnd: 0,
+  })
+  await debuggerApi.sendCommand('Input.insertText', { text: '你好' })
+  await wait()
+  const committed = await window.webContents.executeJavaScript(
+    `document.querySelector('#directive-input').value`,
+  )
+  check(`${prefix}候选中文上屏`, committed.endsWith('你好'), JSON.stringify({ committed }))
+  await debuggerApi.sendCommand('Input.imeSetComposition', {
+    text: 'ma',
+    selectionStart: 2,
+    selectionEnd: 2,
+  })
+  await debuggerApi.sendCommand('Input.imeSetComposition', {
+    text: '',
+    selectionStart: 0,
+    selectionEnd: 0,
+  })
+  await debuggerApi.sendCommand('Input.insertText', { text: '吗' })
+  await wait()
+  const continued = await window.webContents.executeJavaScript(
+    `document.querySelector('#directive-input').value`,
+  )
+  check(`${prefix}连续中文输入`, continued.endsWith('你好吗'), JSON.stringify({ continued }))
+  return continued
+}
+
 async function main() {
   const root = process.cwd()
   const { createServer } = await import('vite')
@@ -75,6 +147,10 @@ async function main() {
     await wait(300)
     await window.webContents.executeJavaScript("document.documentElement.dataset.accent = 'blue'")
     await wait()
+
+    const plainChinese = await composeChinese(window, '普通输入')
+    check('普通输入保留中文文本', plainChinese === '你好吗', JSON.stringify({ plainChinese }))
+    await setInput(window, '')
 
     await setInput(window, '/')
     await window.webContents.executeJavaScript(
@@ -137,6 +213,50 @@ async function main() {
       JSON.stringify(selected),
     )
     check('token 场景没有横向溢出', !selected.overflow, JSON.stringify(selected))
+    const skillChinese = await composeChinese(
+      window,
+      '已选 Skill 后',
+      path.join(screenshotDir, 'composer-input-directive-composing.png'),
+    )
+    check(
+      'Skill 后中文保留 literal 前缀',
+      skillChinese === '/skill:ai-sdk 你好吗',
+      JSON.stringify({ skillChinese }),
+    )
+    const typography = await window.webContents.executeJavaScript(`(() => {
+      const input = document.querySelector('#directive-input')
+      const token = document.querySelector('[data-composer-directive-token]')
+      const labelText = token?.querySelector('[data-composer-directive-label]')?.firstChild
+      let afterText = token?.nextSibling
+      while (afterText && (afterText.nodeType !== Node.TEXT_NODE || !afterText.textContent.trim()))
+        afterText = afterText.nextSibling
+      if (!labelText || !afterText) return { spellcheck: input.spellcheck }
+      const labelRange = document.createRange()
+      labelRange.setStart(labelText, 0)
+      labelRange.setEnd(labelText, 1)
+      const afterRange = document.createRange()
+      const index = afterText.textContent.length - afterText.textContent.trimStart().length
+      afterRange.setStart(afterText, index)
+      afterRange.setEnd(afterText, index + 1)
+      return {
+        spellcheck: input.spellcheck,
+        labelTop: labelRange.getBoundingClientRect().top,
+        textTop: afterRange.getBoundingClientRect().top,
+        labelBottom: labelRange.getBoundingClientRect().bottom,
+        textBottom: afterRange.getBoundingClientRect().bottom,
+      }
+    })()`)
+    check(
+      '透明 textarea 不显示拼写检查装饰',
+      typography.spellcheck === false,
+      JSON.stringify(typography),
+    )
+    check(
+      'Skill 标记与后续文字垂直对齐',
+      Number.isFinite(typography.labelTop) &&
+        Math.abs(typography.labelTop - typography.textTop) <= 1.5,
+      JSON.stringify(typography),
+    )
     await fs.writeFile(
       path.join(screenshotDir, 'composer-input-directive-light.png'),
       (await window.capturePage()).toPNG(),
@@ -145,7 +265,11 @@ async function main() {
     await window.webContents.executeJavaScript("document.querySelector('#send-directive').click()")
     await wait()
     const sent = await window.webContents.executeJavaScript('window.__directiveSmoke.sent')
-    check('发送仍使用 literal command', sent === '/skill:ai-sdk', JSON.stringify({ sent }))
+    check(
+      '发送仍使用 literal command 与中文正文',
+      sent === '/skill:ai-sdk 你好吗',
+      JSON.stringify({ sent }),
+    )
 
     await setInput(window, '')
     await setInput(window, '/skill:ai-sdk')
@@ -205,6 +329,11 @@ async function main() {
       JSON.stringify(narrow),
     )
     await fs.writeFile(screenshotPath, (await window.capturePage()).toPNG())
+    await composeChinese(
+      window,
+      '暗色窄窗口已选 Skill 后',
+      path.join(screenshotDir, 'composer-input-directive-composing-dark.png'),
+    )
   } finally {
     await server.close()
     await fs.rm(projectRoot, { recursive: true, force: true })

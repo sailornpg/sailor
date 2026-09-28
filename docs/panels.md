@@ -31,12 +31,12 @@ Codex 风格的右侧面板系统：一个 dock 承载多个面板 tab，面板�
 
 ```ts
 interface PanelDescriptor {
-  id: PanelId                       // 'review' | 'files' | 'terminal' | 'browser' | 'side-chat' | ...
+  id: PanelId // 'review' | 'files' | 'terminal' | 'browser' | 'side-chat' | ...
   title: string
   icon: ComponentType<{ size?: number }>
-  shortcut: PanelShortcut           // 展示与匹配共用同一份定义
-  scope: PanelScope                 // 'workspace' | 'global'
-  multiplicity: 'single' | 'multi'  // 每个 scope 允许的实例数
+  shortcut: PanelShortcut // 展示与匹配共用同一份定义
+  scope: PanelScope // 'workspace' | 'global'
+  multiplicity: 'single' | 'multi' // 每个 scope 允许的实例数
   availability(ctx: PanelContext): PanelAvailability
   load(): Promise<{ default: ComponentType<PanelProps> }>
 }
@@ -52,8 +52,8 @@ interface PanelDescriptor {
 ```ts
 interface PanelLayoutState {
   visible: boolean
-  width: number                      // clamp 到 [minWidth, maxWidth]
-  open: PanelInstance[]              // 打开顺序即 tab 顺序
+  width: number // clamp 到 [minWidth, maxWidth]
+  open: PanelInstance[] // 打开顺序即 tab 顺序
   activeInstanceId: string | null
 }
 ```
@@ -79,13 +79,13 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 
 ## 面板的边界与成本
 
-| 面板 | 数据来源 | 新增依赖 | 安全边界 |
-| --- | --- | --- | --- |
-| 审查 review | 会话内 agent 文件改动聚合（已有 `fileChangeFeedback` / 审批记录）；git diff 需主进程新能力 | 无 | 只读 |
-| 文件 files | 主进程只读文件能力，preload 无通用 fs | 无 | 复用 `WorkspaceToolScope` 的路径/敏感文件/字节上限校验 |
-| 终端 terminal | 主进程 `node-pty`（当前用户权限，非 OS 沙盒） | `node-pty` + `@xterm/xterm` + `@xterm/addon-fit` | 用户手动命令通道：AI 不注册、不订阅、输出不入模；窄 IPC 只接受主进程签发的 projectId/sessionId |
-| 浏览器 browser | 现有 `WebPreview` 渲染结果 | 完整浏览器需 `webviewTag` 或 `WebContentsView` | `webviewTag` 会削弱当前 `sandbox: true` 边界 |
-| 侧边聊天 side-chat | `WorkspaceChats` 每 chatId 稳定实例，主进程已支持并发 run | 无 | 同一 chat 不得同时挂两个 surface |
+| 面板               | 数据来源                                                                                   | 新增依赖                                         | 安全边界                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| 审查 review        | 会话内 agent 文件改动聚合（已有 `fileChangeFeedback` / 审批记录）；git diff 需主进程新能力 | 无                                               | 只读                                                                                           |
+| 文件 files         | 主进程只读文件能力，preload 无通用 fs                                                      | 无                                               | 复用 `WorkspaceToolScope` 的路径/敏感文件/字节上限校验                                         |
+| 终端 terminal      | 主进程 `node-pty`（当前用户权限，非 OS 沙盒）                                              | `node-pty` + `@xterm/xterm` + `@xterm/addon-fit` | 用户手动命令通道：AI 不注册、不订阅、输出不入模；窄 IPC 只接受主进程签发的 projectId/sessionId |
+| 浏览器 browser     | 现有 `WebPreview` 渲染结果                                                                 | 完整浏览器需 `webviewTag` 或 `WebContentsView`   | `webviewTag` 会削弱当前 `sandbox: true` 边界                                                   |
+| 侧边聊天 side-chat | `WorkspaceChats` 每 chatId 稳定实例，主进程已支持并发 run                                  | 无                                               | 同一 chat 不得同时挂两个 surface                                                               |
 
 ## 终端面板（feat-workspace-terminal）
 
@@ -93,11 +93,11 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 
 ### 依赖与必要性
 
-| 依赖 | 层 | 为什么必需 |
-| --- | --- | --- |
-| `node-pty` | main | 唯一成熟的真实 PTY 绑定：TTY 行规程、作业控制、SIGWINCH 与 Ctrl+C/Ctrl+D 语义、TUI 全屏程序都依赖它。just-bash 是 JS 模拟器，不能运行本机程序。 |
-| `@xterm/xterm` | renderer | VT/ANSI 解析、滚动缓冲、选区与输入法；仓库内没有任何终端仿真实现可复用。 |
-| `@xterm/addon-fit` | renderer | 由容器尺寸计算 cols/rows，避免手写测量。 |
+| 依赖               | 层       | 为什么必需                                                                                                                                      |
+| ------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node-pty`         | main     | 唯一成熟的真实 PTY 绑定：TTY 行规程、作业控制、SIGWINCH 与 Ctrl+C/Ctrl+D 语义、TUI 全屏程序都依赖它。just-bash 是 JS 模拟器，不能运行本机程序。 |
+| `@xterm/xterm`     | renderer | VT/ANSI 解析、滚动缓冲、选区与输入法；仓库内没有任何终端仿真实现可复用。                                                                        |
+| `@xterm/addon-fit` | renderer | 由容器尺寸计算 cols/rows，避免手写测量。                                                                                                        |
 
 原生 ABI 与打包接线（已实测）：
 
@@ -122,16 +122,16 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 - 保活范围：切换会话、切换/关闭面板 tab（关闭 = 隐藏，不销毁进程）、隐藏 dock、切换工作区（仅解绑渲染；其它工作区的 shell 继续存活，切回时重新附着）。
 - 显式终止：面板的「终止」按钮，或用户在 shell 中输入 `exit`。终止后状态为 `exited`，面板给出「重新启动」，`restart` 以同一个 projectId 建立新会话（新 sessionId）。
 - 资源上限：每工作区最多 4 个存活会话（超出时 `+` 禁用并给出原因），保留的已退出 tab 每工作区最多 8 条；全局最多 8 个存活 PTY，超限时回收最久未使用的会话。会话在应用退出时全部清理。
-- 应用退出清理：先向会话进程组发 `SIGHUP`（交互 shell 会转发给作业），宽限 1.5s 后对仍存活的进程组发 `SIGKILL`。**脱离进程组/会话的 daemon（自行 `setsid`）不在清理保证内**，这一点在面板文案与文档中都明确，不假装覆盖。
+- 应用退出清理：POSIX 先向会话进程组发 `SIGHUP`（交互 shell 会转发给作业），宽限 1.5s 后对仍存活的进程组发 `SIGKILL`。**脱离进程组/会话的 daemon（自行 `setsid`）不在清理保证内**。Windows 通过 node-pty 关闭 PTY，不发送 POSIX 信号。
 
 ### 失败状态
 
-| 状态 | 触发 | 面板表现 |
-| --- | --- | --- |
-| `starting` | 已受理、PTY 未就绪 | 加载态，禁止输入 |
-| `running` | PTY 已启动 | 可输入、可 resize |
-| `exited` | shell 退出（`exit`、终止或信号） | 显示退出码/信号 + 重新启动 |
-| `failed` | spawn 抛错，或工作区目录不存在/不是目录 | 显示可读原因 + 重试；不伪造输出 |
+| 状态       | 触发                                    | 面板表现                        |
+| ---------- | --------------------------------------- | ------------------------------- |
+| `starting` | 已受理、PTY 未就绪                      | 加载态，禁止输入                |
+| `running`  | PTY 已启动                              | 可输入、可 resize               |
+| `exited`   | shell 退出（`exit`、终止或信号）        | 显示退出码/信号 + 重新启动      |
+| `failed`   | spawn 抛错，或工作区目录不存在/不是目录 | 显示可读原因 + 重试；不伪造输出 |
 
 后续对已退出会话的 `write`/`resize` 被拒绝（typed error），迟到事件与重复终止是幂等的，不会让状态回退。
 
@@ -148,7 +148,7 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 
 - 已验证：macOS 14.6 arm64、Electron 44.4.2、`node-pty` darwin-arm64 N-API prebuild、`electron-builder --mac --dir` 产物。
 - 不声称：Windows/Linux、非 arm64、跨应用重启恢复、`setsid` 脱离进程组的进程，以及除默认 `$SHELL` 之外 shell 的特殊配置。
-- 默认 shell：`$SHELL`，回退 `/bin/zsh`，以 login shell（`-l`）启动，与系统终端行为一致。
+- 默认 shell：POSIX 使用绝对路径 `$SHELL`，回退 `/bin/sh`；已知 shell 以 login 模式启动。Windows 使用绝对路径 `ComSpec`，回退到 PATH 中的 `cmd.exe`，不传入 POSIX 参数。Windows 路径已由模拟平台测试覆盖，实际 Windows 安装包与运行仍待目标系统验收。
 
 ## 当前形态（feat-panel-dock-skeleton + 三栏布局）
 

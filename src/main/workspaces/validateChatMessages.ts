@@ -1,6 +1,7 @@
 import { workspaceContextSchema } from '../../shared/workspaceContext.js'
 import { validateUIMessages, isStaticToolUIPart } from 'ai'
 import { pi } from '@ai-sdk/harness-pi'
+import { piDisplayEventSchema } from '../../shared/piDisplayEvent.js'
 
 // Host tools are registered per Pi run, so they are not present in the
 // built-in tool schema used to validate persisted history. Keep both spellings
@@ -21,7 +22,7 @@ const retiredTools = new Set([
 export async function validateChatMessages(input: unknown) {
   const messages = await validateUIMessages({
     messages: input,
-    dataSchemas: { 'workspace-context': workspaceContextSchema },
+    dataSchemas: { 'workspace-context': workspaceContextSchema, 'pi-event': piDisplayEventSchema },
   })
   // Retired calls remain readable, including interrupted calls, without
   // registering an executable tool or accepting them as current static tools.
@@ -33,7 +34,7 @@ export async function validateChatMessages(input: unknown) {
   }
   return validateUIMessages({
     messages,
-    dataSchemas: { 'workspace-context': workspaceContextSchema },
+    dataSchemas: { 'workspace-context': workspaceContextSchema, 'pi-event': piDisplayEventSchema },
     tools: pi.builtinTools,
   })
 }

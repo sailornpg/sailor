@@ -69,7 +69,7 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
           if (eventRunId !== runId || finished) return
 
           if (event.type === 'chunk') controller.enqueue(event.chunk)
-          else close()
+          else if (event.type === 'end') close()
         })
 
         abortHandler = () => {

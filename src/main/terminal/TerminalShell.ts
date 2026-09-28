@@ -1,18 +1,27 @@
-import { isAbsolute } from 'node:path'
+import { posix, win32 } from 'node:path'
 
 /** A PTY name/TERM value every interactive program in the panel can rely on. */
 export const TERMINAL_NAME = 'xterm-256color'
 
-const FALLBACK_SHELL = '/bin/zsh'
-const LOGIN_ARGS = ['-l'] as const
+const LOGIN_SHELLS = new Set(['bash', 'zsh', 'fish', 'ksh'])
 
 /**
- * The terminal belongs to the user, so it starts their login shell. A relative or
- * empty `$SHELL` is not executable, so it falls back to the macOS default.
+ * Use the user's shell for the host platform. Only known POSIX shells receive
+ * login arguments; the portable sh fallback and Windows cmd need none.
  */
-export function resolveShell(env: { SHELL?: string }): { file: string; args: string[] } {
+export function resolveShell(
+  env: { SHELL?: string; ComSpec?: string; COMSPEC?: string },
+  platform: NodeJS.Platform = process.platform,
+): { file: string; args: string[] } {
+  if (platform === 'win32') {
+    const windowsShell = env.ComSpec ?? env.COMSPEC
+    const configured = typeof windowsShell === 'string' ? windowsShell.trim() : ''
+    return { file: configured && win32.isAbsolute(configured) ? configured : 'cmd.exe', args: [] }
+  }
+
   const configured = typeof env.SHELL === 'string' ? env.SHELL.trim() : ''
-  return { file: configured && isAbsolute(configured) ? configured : FALLBACK_SHELL, args: [...LOGIN_ARGS] }
+  const file = configured && posix.isAbsolute(configured) ? configured : '/bin/sh'
+  return { file, args: LOGIN_SHELLS.has(posix.basename(file).toLowerCase()) ? ['-l'] : [] }
 }
 
 /**

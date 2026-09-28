@@ -28,10 +28,12 @@ test('sailor toolkit exposes stable backend UI renderers for the known tool name
     'write',
     'edit',
     'bash',
+    'host_exec',
     'web_search',
     'fetch_page',
     'ask_user',
     'update_plan',
+    'compaction',
   ])
   for (const [toolName, entry] of Object.entries(module.sailorToolkit) as [
     string,
@@ -42,6 +44,8 @@ test('sailor toolkit exposes stable backend UI renderers for the known tool name
     assert.equal('execute' in entry, false, `${toolName} must not define a frontend executor`)
   }
   assert.equal(module.sailorToolkit.read_document.render, module.SailorToolCall)
+  assert.equal(module.sailorToolkit.web_search.render, module.SailorToolCall)
+  assert.equal(module.sailorToolkit.fetch_page.render, module.SailorToolCall)
 })
 
 test('toolkit fallback resolves registered renderers and keeps hidden tools out of the message list', async () => {

@@ -10,6 +10,7 @@ Sailor 的核心边界是：**模型执行和文件访问只在 Electron main �
 - 配置 DeepSeek 或自定义模型提供商，支持 OpenAI Completions、OpenAI Responses 和 Anthropic Messages。
 - 通过 `/models` 获取模型目录，并维护上下文窗口、最大输出 token 和视觉能力；thinking level 在 composer 的模型菜单中按 Pi 标准等级选择，工作区权限默认是“工作区域默认执行”，可在 composer 中切换。
 - 使用 Pi 原生 `read`、`write`、`edit`、`bash`、`grep`、`glob`、`ls` 工具操作当前工作区。
+- Pi 自动压缩、手动 `/compact` 与自动重试会显示进行中状态和结果；结束记录随聊天历史恢复。
 - 使用 `host_exec` 在真实宿主环境运行 `npm`、`pnpm`、`node` 和项目测试；是否需要确认由 composer 中选择的工作区权限模式决定。
 - 计划 TodoList、`ask_user` 人机协作、工具审批、推理摘要、来源引用和结构化错误反馈。
 - 读取图片及 `xlsx`、`docx`、`pdf`、`csv/tsv`、文本附件。
@@ -53,10 +54,10 @@ Electron main
 ### 一次聊天请求
 
 1. `WorkspaceChats` 为每个打开的 `chatId` 保留一个 AI SDK `Chat` 实例。
-2. `IpcChatTransport` 将发送动作转成 preload IPC，并接收 `UIMessageChunk` 流。
+2. `IpcChatTransport` 将发送动作转成 preload IPC，并接收 `UIMessageChunk` 流；Pi 运行态通知由同一订阅按 chat/run 隔离展示。
 3. `AgentService` 校验 `chatId/runId`、锁定本次模型配置，并协调运行、取消和持久化。
 4. `PiRunner` 创建 Harness Pi 会话，恢复 Pi checkpoint，加载 Skills，并运行原生工具和 host/MCP 工具。
-5. 工具结果和模型输出一边回传 renderer，一边由 main 重建为 `UIMessage` 保存到工作区。
+5. 工具结果和模型输出一边回传 renderer，一边由 main 重建为 `UIMessage` 保存到工作区。Pi 事件在 checkpoint 保存后成为 `data-pi-event` 历史 part，不进入模型提示。
 
 ### 目录结构
 
@@ -98,7 +99,7 @@ docs/                               # 架构及专项设计文档
 
 ## 当前范围
 
-已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、composer thinking level、按工作区持久化的 Pi 与宿主命令权限、Pi 原生及真实宿主命令工具、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。
+已实现：本地工作区和持久化会话、独立后台运行、模型提供商设置、composer thinking level、按工作区持久化的 Pi 与宿主命令权限、Pi 原生及真实宿主命令工具、Pi 压缩与自动重试事件展示、工具审批、计划与 `ask_user`、文件浏览、附件读取、公共网页搜索、侧边聊天、真实终端和可扩展右侧面板。
 
 暂不实现：云端沙盒、远程工作区同步、自动发现项目目录、全局聊天搜索、聊天跨工作区移动、Git diff 收集，以及应用重启后自动续接正在生成的流。
 
@@ -161,4 +162,5 @@ telemetry 默认关闭，记录写入 `.devtools/`；不要在共享环境或生
 - [`docs/side-chat.md`](docs/side-chat.md)：侧边聊天生命周期和上下文继承。
 - [`docs/define-toolkit-refactor.md`](docs/define-toolkit-refactor.md)：工具 UI 注册表重构方案、风险与全量回归计划；当前实施仍有全量测试和 packaged Electron CDP 视觉验收 blocker。
 - [`docs/composer-thinking-and-workspace-permissions.md`](docs/composer-thinking-and-workspace-permissions.md)：composer thinking level、工作区权限策略、Pi 映射、持久化和审批续跑方案。
+- [`docs/pi-runtime-event-ui.md`](docs/pi-runtime-event-ui.md)：Pi 压缩与自动重试的事件契约、历史恢复和展示方案。
 - [`CLAUDE.md`](CLAUDE.md)：项目级协作、验证和安全约定。

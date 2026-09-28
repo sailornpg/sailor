@@ -503,6 +503,34 @@
       "status": "done",
       "archived_at": "2026-09-27T14:08:50.296Z",
       "archive_path": ".agent-harness/archive/feat-composer-input-directive-highlight"
+    },
+    {
+      "id": "fix-composer-chinese-ime",
+      "title": "修复 Composer 中文输入法",
+      "status": "done",
+      "archived_at": "2026-09-28T07:31:18.531Z",
+      "archive_path": ".agent-harness/archive/fix-composer-chinese-ime"
+    },
+    {
+      "id": "feat-pi-runtime-event-ui",
+      "title": "Pi 运行事件展示",
+      "status": "done",
+      "archived_at": "2026-09-28T07:31:18.602Z",
+      "archive_path": ".agent-harness/archive/feat-pi-runtime-event-ui"
+    },
+    {
+      "id": "fix-chat-external-links",
+      "title": "会话网页链接使用系统浏览器",
+      "status": "done",
+      "archived_at": "2026-09-28T07:31:18.671Z",
+      "archive_path": ".agent-harness/archive/fix-chat-external-links"
+    },
+    {
+      "id": "fix-cross-platform-terminal-shell",
+      "title": "终端按宿主平台选择 shell 与关闭方式",
+      "status": "done",
+      "archived_at": "2026-09-28T08:33:52.775Z",
+      "archive_path": ".agent-harness/archive/fix-cross-platform-terminal-shell"
     }
   ]
 }

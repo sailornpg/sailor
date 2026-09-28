@@ -42,7 +42,9 @@ function ComposerSurface() {
   const [caretPosition, setCaretPosition] = useState<number>()
   const [caretIsCollapsed, setCaretIsCollapsed] = useState(true)
   const [focused, setFocused] = useState(false)
+  const [composing, setComposing] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const composingRef = useRef(false)
   const definitions = useMemo(
     () =>
       toSlashCommandDefinitions(commands, (command) => {
@@ -90,12 +92,20 @@ function ComposerSurface() {
     setCaretIsCollapsed(start === end)
   }
 
-  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    updateCaret(event.currentTarget)
-    const value = event.currentTarget.value
+  const syncDirective = (input: HTMLTextAreaElement) => {
+    updateCaret(input)
+    const value = input.value
     setSelectedDirective((current) =>
       current && getComposerDirectiveParts(value, current) ? current : undefined,
     )
+  }
+  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (
+      composingRef.current ||
+      (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)
+    )
+      return
+    syncDirective(event.currentTarget)
   }
 
   const send = () => {
@@ -142,20 +152,34 @@ function ComposerSurface() {
                 selection={directiveActive ? selectedDirective : undefined}
                 caretPosition={caretPosition}
                 caretIsCollapsed={caretIsCollapsed}
-                focused={focused}
+                focused={focused && !composing}
               />
               <ComposerPrimitive.Input
                 ref={inputRef}
                 id="directive-input"
                 autoFocus
                 aria-label="任务描述"
+                spellCheck={false}
                 className={`min-h-12 w-full resize-none bg-transparent px-3 py-2 text-[15px] leading-6 outline-none ${directiveActive ? 'sailor-composer-input-tokenized' : ''}`}
                 onChange={handleChange}
+                onCompositionStart={() => {
+                  composingRef.current = true
+                  setComposing(true)
+                }}
+                onCompositionEnd={(event) => {
+                  composingRef.current = false
+                  setComposing(false)
+                  syncDirective(event.currentTarget)
+                }}
                 onClick={(event) => updateCaret(event.currentTarget)}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
-                onKeyUp={(event) => updateCaret(event.currentTarget)}
-                onSelect={(event) => updateCaret(event.currentTarget)}
+                onKeyUp={(event) => {
+                  if (!composingRef.current) updateCaret(event.currentTarget)
+                }}
+                onSelect={(event) => {
+                  if (!composingRef.current) updateCaret(event.currentTarget)
+                }}
                 placeholder="输入 / 查看命令"
               />
             </div>

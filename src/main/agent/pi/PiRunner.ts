@@ -12,6 +12,9 @@ import {
   type HarnessAgentResumeSessionState,
 } from '@ai-sdk/harness/agent'
 import { createSailorPi } from './createSailorPi.js'
+import { PiEventProjector } from './PiEventProjector.js'
+import { PiEventHistory } from './PiEventHistory.js'
+import { piDisplayEventSchema, type PiProjectedEvent } from '../../../shared/piDisplayEvent.js'
 import type {
   AgentRunRequest,
   ResolvedModel,
@@ -31,7 +34,7 @@ import type { WorkspaceToolContext } from '../../workspaces/WorkspaceToolScope.j
 import { DEFAULT_PI_CONTEXT_WINDOW, createPiConfiguration } from './createPiConfiguration.js'
 import { PiStorage, loadPiSkills, type PiLocalState } from './PiStorage.js'
 import { createStreamTransform } from '../createStreamTransform.js'
-import { createAgentErrorFormatter } from '../getAgentErrorMessage.js'
+import { createAgentErrorFormatter, getAgentErrorMessage } from '../getAgentErrorMessage.js'
 import { connectWebSearchMcp } from '../webSearchMcp.js'
 import { createReadDocumentTool } from '../documents/createReadDocumentTool.js'
 import {
@@ -59,18 +62,25 @@ export interface PiRunOptions {
   isSideChat?: boolean
   signal: AbortSignal
   updatePlan?: (plan: PlanTodoList) => Promise<void>
+  onPiEvent?: (event: PiProjectedEvent) => void
 }
 export interface PiCompactOptions {
   chatId: string
+  operationId: string
   config: ResolvedModel
   context?: WorkspaceToolContext
   isSideChat?: boolean
   signal: AbortSignal
+  onPiEvent?: (event: PiProjectedEvent) => void
+}
+export interface PiCompactOutcome {
+  event: import('../../../shared/piDisplayEvent.js').PiDisplayEvent
+  error?: string
 }
 export interface AgentRunner {
   deleteChat?(chatId: string): Promise<void>
   run(options: PiRunOptions): AsyncIterable<UIMessageChunk>
-  compact?(options: PiCompactOptions): Promise<void>
+  compact?(options: PiCompactOptions): Promise<PiCompactOutcome>
   respondToApproval?(response: WriteApprovalResponse): void
   respondToAskUser?(response: AskUserInteractionResponse): void
   revokeApprovals?(chatId: string): void
@@ -170,6 +180,10 @@ export class PiRunner implements AgentRunner {
 
   async *run(options: PiRunOptions): AsyncGenerator<UIMessageChunk> {
     const { request, signal, context } = options
+    const eventHistory = new PiEventHistory((event) => options.onPiEvent?.(event))
+    const events = new PiEventProjector(request.chatId, request.runId, (event) =>
+      eventHistory.accept(event),
+    )
     const dirty = this.pendingSaves.get(request.chatId)
     if (dirty) {
       await this.storage.save(request.chatId, dirty.state, dirty.resume)
@@ -270,6 +284,7 @@ export class PiRunner implements AgentRunner {
     const agent = new HarnessAgent({
       harness: createSailorPi({
         ...configured.settings,
+        onNativeEvent: (event) => events.accept(request.chatId, request.runId, event),
         // harness-pi emits zero usage on finish-step and session totals on finish.
         // Observe the native assistant message to retain per-call usage instead.
         extensionFactories: [
@@ -347,6 +362,8 @@ export class PiRunner implements AgentRunner {
         : SAILOR_INSTRUCTIONS,
     })
     let session: HarnessAgentSession | undefined
+    let finishChunk: UIMessageChunk | undefined
+    let eventChunks: UIMessageChunk[] = []
     try {
       const sessionId = `sailor-${createHash('sha256').update(request.chatId).digest('hex')}`
       session = await agent.createSession({
@@ -460,6 +477,7 @@ export class PiRunner implements AgentRunner {
         onError: createAgentErrorFormatter('agent 运行失败。'),
       })
       const calls = new Map<string, { toolCallId: string; toolName: string; input: unknown }>()
+      const hiddenCompactionCalls = new Set<string>()
       const deniedCalls = new Set(
         request.messages
           .at(-1)
@@ -473,6 +491,18 @@ export class PiRunner implements AgentRunner {
       )
       for await (const chunk of stream) {
         if (signal.aborted) break
+        if (chunk.type === 'finish') {
+          finishChunk = chunk
+          continue
+        }
+        if (
+          'toolCallId' in chunk &&
+          'toolName' in chunk &&
+          chunk.toolName === 'compaction' &&
+          eventHistory.hasCompaction()
+        )
+          hiddenCompactionCalls.add(chunk.toolCallId)
+        if ('toolCallId' in chunk && hiddenCompactionCalls.has(chunk.toolCallId)) continue
         // Pi reports execution-denied as a tool result. The UI stream must keep
         // the denial state; output-available + approved:false is invalid history.
         if (chunk.type === 'tool-output-available' && deniedCalls.has(chunk.toolCallId)) {
@@ -500,20 +530,31 @@ export class PiRunner implements AgentRunner {
         yield chunk
       }
     } finally {
-      await webSearch.client.close()
-      if (session) {
-        const unfinished = session.hasUnfinishedTurn()
-        const resume = await session.stop()
-        if (unfinished && !signal.aborted) this.pendingConfigs.set(request.chatId, frozen)
-        else this.pendingConfigs.delete(request.chatId)
-        this.pendingSaves.set(request.chatId, { state, resume })
-        await this.storage.save(request.chatId, state, resume)
-        this.pendingSaves.delete(request.chatId)
+      let saved = false
+      try {
+        await webSearch.client.close()
+        if (session) {
+          const unfinished = session.hasUnfinishedTurn()
+          const resume = await session.stop()
+          if (unfinished && !signal.aborted) this.pendingConfigs.set(request.chatId, frozen)
+          else this.pendingConfigs.delete(request.chatId)
+          this.pendingSaves.set(request.chatId, { state, resume })
+          eventChunks = await eventHistory.commitAfter(() =>
+            this.storage.save(request.chatId, state, resume),
+          )
+          this.pendingSaves.delete(request.chatId)
+          saved = true
+        }
+      } finally {
+        if (!saved) eventHistory.failUncommitted()
+        events.close()
       }
     }
+    for (const chunk of eventChunks) yield chunk
+    if (finishChunk) yield finishChunk
   }
 
-  async compact(options: PiCompactOptions): Promise<void> {
+  async compact(options: PiCompactOptions): Promise<PiCompactOutcome> {
     const dirty = this.pendingSaves.get(options.chatId)
     if (dirty) {
       await this.storage.save(options.chatId, dirty.state, dirty.resume)
@@ -523,8 +564,15 @@ export class PiRunner implements AgentRunner {
     if (!state.resume) throw new Error('当前会话没有可恢复的 Pi 上下文。')
     const skills = options.context ? await loadPiSkills(options.context.scope) : []
     const configured = createPiConfiguration(options.config, 'provider-default')
+    const eventHistory = new PiEventHistory((event) => options.onPiEvent?.(event))
+    const events = new PiEventProjector(options.chatId, options.operationId, (event) =>
+      eventHistory.accept(event),
+    )
     const agent = new HarnessAgent({
-      harness: createSailorPi(configured.settings),
+      harness: createSailorPi({
+        ...configured.settings,
+        onNativeEvent: (event) => events.accept(options.chatId, options.operationId, event),
+      }),
       model: configured.model,
       skills,
       permissionMode: options.isSideChat
@@ -538,6 +586,8 @@ export class PiRunner implements AgentRunner {
         : SAILOR_INSTRUCTIONS,
     })
     let session: HarnessAgentSession | undefined
+    let operationError: unknown
+    let eventChunks: UIMessageChunk[] = []
     try {
       const sessionId = `sailor-${createHash('sha256').update(options.chatId).digest('hex')}`
       session = await agent.createSession({
@@ -546,12 +596,50 @@ export class PiRunner implements AgentRunner {
         resumeFrom: state.resume,
         abortSignal: options.signal,
       })
-      await session.compact()
-    } finally {
-      if (session) {
-        const resume = await session.stop()
-        await this.storage.save(options.chatId, state, resume)
+      try {
+        await session.compact()
+      } catch (error) {
+        operationError = error
+        eventHistory.markFailed()
       }
+    } finally {
+      let saved = false
+      try {
+        if (session) {
+          const resume = await session.stop()
+          eventChunks = await eventHistory.commitAfter(() =>
+            this.storage.save(options.chatId, state, resume),
+          )
+          saved = true
+        }
+      } finally {
+        if (!saved) eventHistory.failUncommitted()
+        events.close()
+      }
+    }
+    const eventChunk = eventChunks.find((chunk) => chunk.type === 'data-pi-event')
+    const parsed = piDisplayEventSchema.safeParse(
+      eventChunk && 'data' in eventChunk ? eventChunk.data : undefined,
+    )
+    if (!parsed.success) {
+      if (operationError) throw operationError
+      throw new Error('Pi 未返回手动压缩结果。')
+    }
+    const event = parsed.data
+    const operationMessage = operationError
+      ? getAgentErrorMessage(operationError, '手动压缩失败。')
+      : undefined
+    return {
+      event,
+      ...(operationMessage
+        ? {
+            error: operationMessage.includes('Already compacted')
+              ? '上下文已经压缩；继续对话后可再次压缩。'
+              : operationMessage,
+          }
+        : event.phase === 'failed'
+          ? { error: '手动压缩失败。' }
+          : {}),
     }
   }
 }

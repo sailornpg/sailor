@@ -8,6 +8,7 @@ import type { UIMessage } from 'ai'
 import { sailorAttachmentAdapter } from './sailorAttachmentAdapter'
 import { getActiveAgentRunId } from '@/lib/IpcChatTransport'
 import { sailorToolkit } from '../tools/sailorToolkit'
+import { PiEventDataUI } from '../events/PiEventRecord'
 
 const sailorConfig = AuiConfig({ tools: Tools({ toolkit: sailorToolkit }) })
 
@@ -63,6 +64,7 @@ export function SailorChatProvider({ chat, children }: SailorChatProviderProps) 
         <SailorAskUserContext.Provider value={respondToAskUser}>
           <AssistantRuntimeProvider runtime={runtime} config={sailorConfig}>
             <WorkspaceContextRenderer />
+            <PiEventDataUI />
             {children}
           </AssistantRuntimeProvider>
         </SailorAskUserContext.Provider>

@@ -46,6 +46,13 @@ const chat = new Chat({
           output: searchResult,
         },
         {
+          type: 'tool-fetch_page',
+          toolCallId: 'fetch-1',
+          state: 'output-available',
+          input: { url: 'https://example.com/news' },
+          output: { url: 'https://example.com/news', mainText: '今日新闻正文' },
+        },
+        {
           type: 'tool-ask_user',
           toolCallId: 'ask-1',
           state: 'output-available',
@@ -123,7 +130,7 @@ const check = async (name: string, test: () => Promise<void>) => {
   }
 }
 
-await check('StrictMode 注册每个工具一次并渲染专用结果', async () => {
+await check('StrictMode 注册每个工具一次并用统一工具行展示搜索和网页', async () => {
   await render()
   await act(() => delay(300))
   for (const name of [
@@ -140,10 +147,27 @@ await check('StrictMode 注册每个工具一次并渲染专用结果', async ()
       latestRegistry[name] === 1,
       `${name} 应只有一个 registry renderer: ${JSON.stringify(latestRegistry)}`,
     )
-  assert(
-    document.querySelectorAll('[data-slot="web-search"]').length === 1,
-    `web_search 应由注册 renderer 展示一次: ${document.body.innerHTML.slice(0, 4000)}`,
+  const searchRows = [...document.querySelectorAll('[data-slot="tool-call"]')].filter((element) =>
+    element.textContent?.includes('web_search'),
   )
+  assert(
+    searchRows.length === 1,
+    `web_search 应由统一 ToolCall 展示一次: ${document.body.innerHTML.slice(0, 4000)}`,
+  )
+  assert(!document.querySelector('[data-slot="web-search"]'), '不应显示旧搜索卡片')
+  assert(!searchRows[0].textContent?.includes('Request'), 'web_search 默认应收起详情')
+  await act(() => searchRows[0].querySelector('button')?.click())
+  assert(searchRows[0].textContent?.includes('Request'), '展开后应显示搜索请求')
+  assert(searchRows[0].textContent?.includes('Result'), '展开后应显示搜索结果')
+  const fetchRows = [...document.querySelectorAll('[data-slot="tool-call"]')].filter((element) =>
+    element.textContent?.includes('fetch_page'),
+  )
+  assert(fetchRows.length === 1, 'fetch_page 应由统一 ToolCall 展示一次')
+  assert(fetchRows[0].textContent?.includes('https://example.com/news'), '工具行应显示目标 URL')
+  assert(!fetchRows[0].textContent?.includes('Request'), 'fetch_page 默认应收起详情')
+  await act(() => fetchRows[0].querySelector('button')?.click())
+  assert(fetchRows[0].textContent?.includes('Request'), '展开后应显示网页请求')
+  assert(fetchRows[0].textContent?.includes('今日新闻正文'), '展开后应显示网页结果')
   assert(!document.body.textContent?.includes('不应显示在消息区'), 'ask_user 不应出现在消息区')
   assert(
     !document.querySelector('[data-slot="tool-call"]')?.textContent?.includes('update_plan'),
