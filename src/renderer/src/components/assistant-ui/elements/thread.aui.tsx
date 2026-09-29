@@ -29,6 +29,7 @@ import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-ic
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/assistant-ui/elements/skeleton'
 import { cn } from '@/lib/utils'
+import { getTurnIdFromMessageMetadata } from '@/components/chat/review/turnFileReviewMetadata'
 import {
   ActionBarMorePrimitive,
   ActionBarPrimitive,
@@ -69,9 +70,11 @@ import {
 } from 'lucide-react'
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ComponentType,
   type FC,
@@ -94,6 +97,7 @@ export type ThreadGroupPart = MessagePrimitive.GroupedParts.GroupPart
  */
 export type ThreadComponents = {
   AssistantMessage?: ComponentType | undefined
+  FileChangeCard?: ComponentType<{ turnId: string }> | undefined
   Composer?: ComponentType<{ autoFocus?: boolean }> | undefined
   Welcome?: ComponentType | undefined
   ViewportNavigation?: ComponentType | undefined
@@ -198,12 +202,60 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
   entry,
 }) => {
   const isEmpty = entry ? entry.phase === 'welcome' : runtimeEmpty
+  const [autoScroll, setAutoScroll] = useState(true)
+  const autoScrollPaused = useRef(false)
+  const downwardScrollIntent = useRef(false)
+  const pointerScrollIntent = useRef(false)
+  const previousScrollTop = useRef(0)
   const {
     Welcome = ThreadWelcome,
     Composer: ComposerComponent = Composer,
     ViewportNavigation,
     RuntimeEventStatus,
   } = useContext(ThreadComponentsContext)
+  const handleViewportWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (event.deltaY < 0) {
+      autoScrollPaused.current = true
+      downwardScrollIntent.current = false
+      pointerScrollIntent.current = false
+      setAutoScroll(false)
+    } else if (event.deltaY > 0) {
+      downwardScrollIntent.current = true
+    }
+  }, [])
+  const handleViewportPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    pointerScrollIntent.current =
+      event.target instanceof Element &&
+      Boolean(event.target.closest('.aui-thread-scroll-to-bottom'))
+  }, [])
+  const handleViewportPointerUp = useCallback(() => {
+    pointerScrollIntent.current = false
+  }, [])
+  const handleViewportClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest('.aui-thread-scroll-to-bottom')) {
+      pointerScrollIntent.current = true
+    }
+  }, [])
+  const handleViewportScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const viewport = event.currentTarget
+    const atBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= 2
+    const movedUp = viewport.scrollTop < previousScrollTop.current
+    if (movedUp) {
+      autoScrollPaused.current = true
+      downwardScrollIntent.current = false
+      setAutoScroll(false)
+    }
+    const userResumedAtBottom =
+      atBottom &&
+      (!autoScrollPaused.current || downwardScrollIntent.current || pointerScrollIntent.current)
+    if (userResumedAtBottom) {
+      autoScrollPaused.current = false
+      downwardScrollIntent.current = false
+      pointerScrollIntent.current = false
+      setAutoScroll(true)
+    }
+    previousScrollTop.current = viewport.scrollTop
+  }, [])
 
   return (
     <ThreadPrimitive.Root
@@ -221,8 +273,19 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
           ThreadScrollToBottom. Keep this on `assistant-ui add thread` updates. */}
       <ThreadPrimitive.Viewport
         turnAnchor="bottom"
+        autoScroll={autoScroll}
+        // Do not plant a forced bottom-scroll intent on every run start. If the
+        // reader scrolls up while a run begins, assistant-ui otherwise replays
+        // that intent on the next content resize and pulls the viewport down.
+        scrollToBottomOnRunStart={false}
         data-slot="aui_thread-viewport"
-        className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
+        className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-scroll"
+        onWheel={handleViewportWheel}
+        onPointerDown={handleViewportPointerDown}
+        onPointerUp={handleViewportPointerUp}
+        onPointerCancel={handleViewportPointerUp}
+        onClick={handleViewportClick}
+        onScroll={handleViewportScroll}
       >
         {ViewportNavigation && <ViewportNavigation />}
         <div
@@ -259,7 +322,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
           <ThreadPrimitive.ViewportFooter
             ref={entry?.footerRef}
             className={cn(
-              'aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6',
+              'aui-thread-viewport-footer flex flex-col gap-4 overflow-visible pb-4 md:pb-6',
               !isEmpty && 'sticky bottom-0 mt-auto rounded-t-(--composer-radius)',
             )}
           >
@@ -387,15 +450,13 @@ const SpokenActionBar: FC = () => {
 
 const ThreadScrollToBottom: FC = () => {
   return (
-    // `instant` because the viewport is `scroll-smooth`: the default "auto"
-    // resolves to a smooth animation that keeps getting retargeted while tokens
-    // stream, so the view chases the tail instead of landing on it and the
-    // control never hides.
+    // `instant` keeps an explicit user request from being retargeted while
+    // streamed content grows.
     <ThreadPrimitive.ScrollToBottom behavior="instant" asChild>
       <TooltipIconButton
         tooltip="滚动到底部"
         variant="outline"
-        className="aui-thread-scroll-to-bottom dark:border-border dark:bg-background dark:hover:bg-accent absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible"
+        className="aui-thread-scroll-to-bottom dark:border-border dark:bg-background dark:hover:bg-accent relative z-10 self-center rounded-full p-4 disabled:invisible"
       >
         <ArrowDownIcon />
       </TooltipIconButton>
@@ -620,7 +681,10 @@ const AssistantMessage: FC = () => {
     ToolGroup,
     ReasoningGroup,
     TaskGroup: TaskGroupComponent,
+    FileChangeCard,
   } = useContext(ThreadComponentsContext)
+  const metadata = useAuiState((s) => s.message.metadata)
+  const turnId = getTurnIdFromMessageMetadata(metadata)
   const groupBy = TaskGroupComponent ? taskAwareGroupBy : messageGroupBy
 
   const ACTION_BAR_PT = 'pt-1.5'
@@ -702,6 +766,7 @@ const AssistantMessage: FC = () => {
         </MessagePrimitive.GroupedParts>
         <MessageError />
       </div>
+      {FileChangeCard && turnId && <FileChangeCard turnId={turnId} />}
 
       <div
         data-slot="aui_assistant-message-footer"

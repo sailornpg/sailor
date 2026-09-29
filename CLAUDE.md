@@ -27,7 +27,7 @@
 - Agent runtime：AI SDK `HarnessAgent` + `@ai-sdk/harness-pi`；本地工作区使用 Pi 默认工具，just-bash ReadWriteFs 挂载项目；原生写入、编辑和 bash 逐次审批。
 - Package manifest：`package.json`（sailor）。
 - 会话导航浮层：官方 Conversation Map 使用 `@base-ui/react` PreviewCard。
-- 关键依赖：`react@19.3.0`、`vite@7.3.6`、`typescript@7.0.2`、`tailwindcss@4.3.3`、`node-pty@1.1.0`、`@xterm/xterm@6.0.0`、`@xterm/addon-fit@0.11.0`。
+- 关键依赖：`react@19.3.0`、`vite@7.3.6`、`typescript@7.0.2`、`tailwindcss@4.3.3`、`node-pty@1.1.0`、`@xterm/xterm@6.0.0`、`@xterm/addon-fit@0.11.0`、`diff@9.0.0`（会话文件审查）。
 - 可用 scripts：`dev`、`build`、`preview`、`typecheck`、`lint`、`lint:js`、`lint:css`、`postinstall`（补 node-pty `spawn-helper` 执行位）、`prepare`（安装 Husky Git hook）。
 - 提交前工具：Husky `pre-commit` 调用 lint-staged，对暂存的受支持文件运行 Prettier，然后按文件类型运行 ESLint 或 Stylelint。TypeScript 7 由 Babel parser 提供 ESLint 语法解析，类型检查仍由 `typecheck` 执行。
 - Verification entrypoint 会运行：`pnpm run typecheck`、`pnpm run build`。

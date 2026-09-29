@@ -7,6 +7,7 @@ import {
 } from '@shared/contracts'
 
 const activeRunIds = new Map<string, string>()
+const activeTurnIds = new Map<string, string>()
 
 export function getActiveAgentRunId(chatId: string): string | undefined {
   return activeRunIds.get(chatId)
@@ -42,6 +43,10 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
     ReadableStream<UIMessageChunk>
   > {
     const runId = crypto.randomUUID()
+    const turnId = resumesToolApproval(messages)
+      ? (activeTurnIds.get(chatId) ?? crypto.randomUUID())
+      : crypto.randomUUID()
+    activeTurnIds.set(chatId, turnId)
     activeRunIds.set(chatId, runId)
     const thinkingLevel = normalizeThinkingLevel(this.getThinkingLevel())
     let unsubscribe: (() => void) | undefined
@@ -92,6 +97,7 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
               messages,
               thinkingLevel,
               runId,
+              turnId,
             }),
           )
         })().catch((error: unknown) => {

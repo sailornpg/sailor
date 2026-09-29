@@ -25,6 +25,7 @@ export interface HostExecToolInput {
   signal: AbortSignal
   resolveCwd: (cwd: string) => Promise<string>
   executor: Pick<HostCommandExecutor, 'run'>
+  onExecute?: () => Promise<void>
   enabled?: boolean
 }
 
@@ -38,6 +39,7 @@ export function createHostExecTool(input: HostExecToolInput): ToolSet {
       inputSchema: hostExecRequestSchema,
       execute: async (request): Promise<HostCommandResult> => {
         const cwd = await input.resolveCwd(request.cwd ?? '.')
+        await input.onExecute?.()
         return input.executor.run({
           rootPath: input.rootPath,
           cwd,

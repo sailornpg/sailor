@@ -19,9 +19,34 @@ const retiredTools = new Set([
   'web_search',
 ])
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function normalizeLegacyTerminalTools(input: unknown): unknown {
+  if (!Array.isArray(input)) return input
+  return input.map((message) => {
+    if (!isRecord(message) || !Array.isArray(message.parts)) return message
+    const parts = message.parts.map((part) => {
+      if (
+        !isRecord(part) ||
+        part.type !== 'dynamic-tool' ||
+        part.state !== 'output-available' ||
+        'input' in part
+      )
+        return part
+      // Older terminal calls could be persisted after output arrived before
+      // input streaming completed. Keep the output readable with an explicit
+      // unknown input instead of rejecting the whole chat history.
+      return { ...part, input: {} }
+    })
+    return { ...message, parts }
+  })
+}
+
 export async function validateChatMessages(input: unknown) {
   const messages = await validateUIMessages({
-    messages: input,
+    messages: normalizeLegacyTerminalTools(input),
     dataSchemas: { 'workspace-context': workspaceContextSchema, 'pi-event': piDisplayEventSchema },
   })
   // Retired calls remain readable, including interrupted calls, without

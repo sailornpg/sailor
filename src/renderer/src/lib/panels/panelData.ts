@@ -5,6 +5,7 @@ export interface WebPreviewState {
 }
 
 export interface PanelRuntimeData {
+  review?: { turnId?: string }
   file?: { projectId: string; path: string; nonce: string }
   preview?: WebPreviewState
   sideChat?: { chatId: string; parentChatId: string }
@@ -43,6 +44,7 @@ export function parsePanelOpenRequest(value: unknown): PanelOpenRequest | null {
     (typeof data.sideChat.chatId !== 'string' || typeof data.sideChat.parentChatId !== 'string')
   )
     return null
+  if (data?.review?.turnId !== undefined && typeof data.review.turnId !== 'string') return null
   return { panelId: candidate.panelId, data }
 }
 

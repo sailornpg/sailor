@@ -79,13 +79,13 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 
 ## 面板的边界与成本
 
-| 面板               | 数据来源                                                                                   | 新增依赖                                         | 安全边界                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| 审查 review        | 会话内 agent 文件改动聚合（已有 `fileChangeFeedback` / 审批记录）；git diff 需主进程新能力 | 无                                               | 只读                                                                                           |
-| 文件 files         | 主进程只读文件能力，preload 无通用 fs                                                      | 无                                               | 复用 `WorkspaceToolScope` 的路径/敏感文件/字节上限校验                                         |
-| 终端 terminal      | 主进程 `node-pty`（当前用户权限，非 OS 沙盒）                                              | `node-pty` + `@xterm/xterm` + `@xterm/addon-fit` | 用户手动命令通道：AI 不注册、不订阅、输出不入模；窄 IPC 只接受主进程签发的 projectId/sessionId |
-| 浏览器 browser     | 现有 `WebPreview` 渲染结果                                                                 | 完整浏览器需 `webviewTag` 或 `WebContentsView`   | `webviewTag` 会削弱当前 `sandbox: true` 边界                                                   |
-| 侧边聊天 side-chat | `WorkspaceChats` 每 chatId 稳定实例，主进程已支持并发 run                                  | 无                                               | 同一 chat 不得同时挂两个 surface                                                               |
+| 面板               | 数据来源                                                                                                                     | 新增依赖                                         | 安全边界                                                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| 审查 review        | 主进程 `ChatFileChangeJournal` 按 chatId/turnId 持久化 Pi 文件变更；提供 chat summary、turn summary/detail 和 changed 窄 IPC | `diff`（main）；官方 CodeDiff copied source      | 只读；默认审查当前 assistant turn，历史卡片可定位对应 turn；`host_exec` 与用户终端不计入文件数，执行后显示覆盖缺口 |
+| 文件 files         | 主进程只读文件能力，preload 无通用 fs                                                                                        | 无                                               | 复用 `WorkspaceToolScope` 的路径/敏感文件/字节上限校验                                                             |
+| 终端 terminal      | 主进程 `node-pty`（当前用户权限，非 OS 沙盒）                                                                                | `node-pty` + `@xterm/xterm` + `@xterm/addon-fit` | 用户手动命令通道：AI 不注册、不订阅、输出不入模；窄 IPC 只接受主进程签发的 projectId/sessionId                     |
+| 浏览器 browser     | 现有 `WebPreview` 渲染结果                                                                                                   | 完整浏览器需 `webviewTag` 或 `WebContentsView`   | `webviewTag` 会削弱当前 `sandbox: true` 边界                                                                       |
+| 侧边聊天 side-chat | `WorkspaceChats` 每 chatId 稳定实例，主进程已支持并发 run                                                                    | 无                                               | 同一 chat 不得同时挂两个 surface                                                                                   |
 
 ## 终端面板（feat-workspace-terminal）
 

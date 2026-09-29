@@ -17,6 +17,7 @@ const idSchema = z.string().min(1).max(200)
 const requestSchema = z
   .object({
     runId: idSchema,
+    turnId: idSchema.optional(),
     chatId: idSchema,
     messages: z.array(z.unknown()),
     thinkingLevel: z
@@ -320,7 +321,7 @@ export class WorkspaceService {
     try {
       const messages = await validateChatMessages(parsed.data.messages)
       projectWorkspaceMessages(messages, chat.projectId)
-      return { ...parsed.data, messages }
+      return { ...parsed.data, turnId: parsed.data.turnId ?? parsed.data.runId, messages }
     } catch (error) {
       throw new Error('会话消息格式无效。', { cause: error })
     }

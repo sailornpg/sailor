@@ -393,7 +393,7 @@ export function SailorComposer({
           </button>
         </div>
       )}
-      <div className="relative w-full">
+      <div className="sailor-composer-review-slot relative w-full">
         <ComposerPrimitive.Unstable_TriggerPopoverRoot>
           <ComposerPrimitive.Unstable_TriggerPopover
             char="/"

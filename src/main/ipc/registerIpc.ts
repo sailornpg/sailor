@@ -10,6 +10,7 @@ import { ProviderModelCatalog } from '../settings/ProviderModelCatalog.js'
 import { safeStorageCipher } from '../settings/SafeStorageCipher.js'
 import { SettingsService } from '../settings/SettingsService.js'
 import { WorkspaceFilesService } from '../workspaces/WorkspaceFilesService.js'
+import { ChatFileReviewService } from '../workspaces/ChatFileReviewService.js'
 import { TerminalService } from '../terminal/TerminalService.js'
 import { TerminalIpcHandler, type TerminalSender } from '../terminal/TerminalIpcHandler.js'
 import { createNodePtyAdapter } from '../terminal/NodePtyAdapter.js'
@@ -64,7 +65,10 @@ const writeApprovalResponseSchema = z.strictObject({
 
 export function registerIpc(window: BrowserWindow): () => void {
   const piStorageDirectory = join(app.getPath('userData'), 'pi-sessions')
-  const piStorage = new PiStorage(piStorageDirectory)
+  const fileChangesUpdated = (chatId: string) => {
+    if (!window.isDestroyed()) window.webContents.send(IPC.workspaceReviewChanged, chatId)
+  }
+  const piStorage = new PiStorage(piStorageDirectory, fileChangesUpdated)
   const settings = new SettingsService(
     join(app.getPath('userData'), 'model-providers.json'),
     safeStorageCipher,
@@ -116,6 +120,42 @@ export function registerIpc(window: BrowserWindow): () => void {
   const workspaceFiles = new WorkspaceFilesService((projectId) =>
     workspaces.resolveProjectRoot(projectId),
   )
+  const fileReview = new ChatFileReviewService({
+    resolveChat: (chatId) => workspaces.getChat(chatId),
+    resolveProjectRoot: (projectId) => workspaces.resolveProjectRoot(projectId),
+    journal: (chatId, rootPath) => piStorage.fileChanges(chatId, rootPath),
+  })
+  ipcMain.handle(IPC.workspaceReviewSummary, (_event, chatId: unknown) =>
+    fileReview.summary(z.string().min(1).max(200).parse(chatId)),
+  )
+  ipcMain.handle(IPC.workspaceReviewTurnSummary, (_event, input: unknown) => {
+    const value = z
+      .strictObject({
+        chatId: z.string().min(1).max(200),
+        turnId: z.string().min(1).max(200),
+      })
+      .parse(input)
+    return fileReview.turnSummary(value.chatId, value.turnId)
+  })
+  ipcMain.handle(IPC.workspaceReviewDetail, (_event, input: unknown) => {
+    const value = z
+      .strictObject({
+        chatId: z.string().min(1).max(200),
+        changeId: z.uuid(),
+      })
+      .parse(input)
+    return fileReview.detail(value.chatId, value.changeId)
+  })
+  ipcMain.handle(IPC.workspaceReviewTurnDetail, (_event, input: unknown) => {
+    const value = z
+      .strictObject({
+        chatId: z.string().min(1).max(200),
+        turnId: z.string().min(1).max(200),
+        changeId: z.uuid(),
+      })
+      .parse(input)
+    return fileReview.turnDetail(value.chatId, value.turnId, value.changeId)
+  })
   const workspaceFilesListSchema = z.object({
     projectId: z.string().min(1).max(200),
     path: z.string().max(1000).optional(),
@@ -141,6 +181,7 @@ export function registerIpc(window: BrowserWindow): () => void {
     {
       workspace: workspaces,
       piStorageDirectory,
+      onFileChange: fileChangesUpdated,
     },
   )
   const modelCatalog = new ProviderModelCatalog(settings)
@@ -264,6 +305,8 @@ export function registerIpc(window: BrowserWindow): () => void {
       IPC.workspaceSlashCommands,
       IPC.workspaceFilesList,
       IPC.workspaceFilesRead,
+      IPC.workspaceReviewSummary,
+      IPC.workspaceReviewDetail,
     ])
       ipcMain.removeHandler(channel)
     ipcMain.removeHandler(IPC.appVersion)

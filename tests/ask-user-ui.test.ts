@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import test from 'node:test'
 import { resolve } from 'node:path'
 import { createServer, type ViteDevServer } from 'vite'
+import { readFile } from 'node:fs/promises'
 
 let vite: ViteDevServer
 let card: typeof import('../src/renderer/src/components/chat/tools/SailorAskUserCard.tsx')
@@ -163,4 +164,18 @@ test('uses a stable value key for streamed ask_user props instead of object iden
   const second = { toolCallId: 'call-1', args: { question: '继续吗？' } }
   assert.equal(pending.pendingAskUserKey(first), pending.pendingAskUserKey(second))
   assert.equal(pending.pendingAskUserKey(undefined), '')
+})
+
+test('keeps long ask_user content inside a vertically scrollable popover', async () => {
+  const styles = await readFile(
+    resolve(process.cwd(), 'src/renderer/src/styles/globals.css'),
+    'utf8',
+  )
+  const askUserStyles = styles.match(/\.sailor-ask-user-popover\s*\{[^}]*\}/)?.[0] ?? ''
+  assert.match(askUserStyles, /overflow-y:\s*auto/)
+  assert.match(askUserStyles, /overflow-x:\s*hidden/)
+  assert.match(
+    styles,
+    /\.sailor-ask-user-popover h3,\s*\.sailor-ask-user-popover button,\s*\.sailor-ask-user-popover textarea\s*\{[^}]*overflow-wrap:\s*anywhere/s,
+  )
 })

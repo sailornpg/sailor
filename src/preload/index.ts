@@ -68,6 +68,20 @@ const api: SailorApi = {
       list: (input: WorkspaceFilesListInput) => ipcRenderer.invoke(IPC.workspaceFilesList, input),
       read: (input: WorkspaceFilesReadInput) => ipcRenderer.invoke(IPC.workspaceFilesRead, input),
     },
+    review: {
+      summary: (chatId: string) => ipcRenderer.invoke(IPC.workspaceReviewSummary, chatId),
+      turnSummary: (input: { chatId: string; turnId: string }) =>
+        ipcRenderer.invoke(IPC.workspaceReviewTurnSummary, input),
+      detail: (input: { chatId: string; changeId: string }) =>
+        ipcRenderer.invoke(IPC.workspaceReviewDetail, input),
+      turnDetail: (input: { chatId: string; turnId: string; changeId: string }) =>
+        ipcRenderer.invoke(IPC.workspaceReviewTurnDetail, input),
+      subscribe: (listener) => {
+        const handler = (_event: Electron.IpcRendererEvent, chatId: string) => listener(chatId)
+        ipcRenderer.on(IPC.workspaceReviewChanged, handler)
+        return () => ipcRenderer.removeListener(IPC.workspaceReviewChanged, handler)
+      },
+    },
   },
   settings: {
     getSnapshot: () => ipcRenderer.invoke(IPC.settingsProviders),

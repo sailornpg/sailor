@@ -8,11 +8,13 @@ import type { TerminalApi } from './terminal.js'
 import type { UIMessage, UIMessageChunk } from 'ai'
 import { askUserInteractionResponseSchema, type AskUserInteractionResponse } from './askUser.js'
 import type { PiProjectedEvent } from './piDisplayEvent.js'
+import type { ChatFileChangeSummary, FileChange, TurnFileChangeSummary } from './fileReview.js'
 
 export { askUserInteractionResponseSchema }
 export type { AskUserInteractionResponse }
 
 export type ChatId = string
+export type { ChatFileChangeSummary, FileChange, TurnFileChangeSummary }
 export type ThinkingLevel =
   'provider-default' | 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
 
@@ -85,6 +87,7 @@ export interface ChatSummary {
 
 export interface AgentRunRequest {
   runId: string
+  turnId: string
   chatId: ChatId
   messages: UIMessage[]
   thinkingLevel?: ThinkingLevel
@@ -245,6 +248,13 @@ export interface SailorApi {
       list(input: WorkspaceFilesListInput): Promise<WorkspaceFileTreePage>
       read(input: WorkspaceFilesReadInput): Promise<WorkspaceFilePreview>
     }
+    review: {
+      summary(chatId: ChatId): Promise<ChatFileChangeSummary>
+      turnSummary(input: { chatId: ChatId; turnId: string }): Promise<TurnFileChangeSummary>
+      detail(input: { chatId: ChatId; changeId: string }): Promise<FileChange>
+      turnDetail(input: { chatId: ChatId; turnId: string; changeId: string }): Promise<FileChange>
+      subscribe(listener: (chatId: ChatId) => void): () => void
+    }
   }
   settings: {
     getSnapshot(): Promise<SettingsSnapshot>
@@ -271,6 +281,11 @@ export const IPC = {
   workspaceSlashCommands: 'workspace:slash-commands',
   workspaceFilesList: 'workspace-files:list',
   workspaceFilesRead: 'workspace-files:read',
+  workspaceReviewSummary: 'workspace-review:summary',
+  workspaceReviewTurnSummary: 'workspace-review:turn-summary',
+  workspaceReviewDetail: 'workspace-review:detail',
+  workspaceReviewTurnDetail: 'workspace-review:turn-detail',
+  workspaceReviewChanged: 'workspace-review:changed',
   appVersion: 'app:version',
   appQuit: 'app:quit',
   agentStart: 'agent:start',

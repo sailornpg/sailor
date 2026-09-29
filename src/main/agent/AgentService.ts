@@ -12,6 +12,7 @@ type EventSink = (runId: string, event: AgentRunEvent) => void
 interface AgentServiceDependencies {
   runner: AgentRunner
   piStorageDirectory: string
+  onFileChange: (chatId: string) => void
   workspace: WorkspaceService
 }
 
@@ -29,7 +30,9 @@ export class AgentService {
   ) {
     this.runner =
       dependencies.runner ??
-      (dependencies.piStorageDirectory ? new PiRunner(dependencies.piStorageDirectory) : undefined)
+      (dependencies.piStorageDirectory
+        ? new PiRunner(dependencies.piStorageDirectory, undefined, dependencies.onFileChange)
+        : undefined)
     this.workspace = dependencies.workspace
   }
   async start(input: AgentRunRequest): Promise<void> {

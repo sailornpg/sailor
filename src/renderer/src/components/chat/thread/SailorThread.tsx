@@ -14,6 +14,7 @@ import { WorkspaceContextMessage } from './WorkspaceContextMessage'
 import { SelectionQuoteToolbar } from './SelectionQuoteToolbar'
 import { PiRuntimeEventStatus } from '../events/PiRuntimeEventStatus'
 import type { MessageQuote } from '@shared/messageQuote'
+import { TurnFileChangeCard } from '../review/TurnFileChangeCard'
 
 interface SailorThreadProps {
   chatId: string
@@ -61,6 +62,10 @@ function SailorPiRuntimeStatus() {
   return <PiRuntimeEventStatus chatId={useSailorThreadConfig().chatId} />
 }
 
+function SailorTurnFileChangeCard({ turnId }: { turnId: string }) {
+  return <TurnFileChangeCard chatId={useSailorThreadConfig().chatId} turnId={turnId} />
+}
+
 const THREAD_COMPONENTS: ThreadComponents = {
   ViewportNavigation: SailorConversationMap,
   Welcome: SailorWelcome,
@@ -69,6 +74,7 @@ const THREAD_COMPONENTS: ThreadComponents = {
   ToolGroup: SailorToolCalls,
   WorkspaceContext: WorkspaceContextMessage,
   RuntimeEventStatus: SailorPiRuntimeStatus,
+  FileChangeCard: SailorTurnFileChangeCard,
 }
 
 export function SailorThread(props: SailorThreadProps): ReactNode {

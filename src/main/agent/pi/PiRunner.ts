@@ -160,8 +160,9 @@ export class PiRunner implements AgentRunner {
   constructor(
     directory: string,
     hostCommands: Pick<HostCommandExecutor, 'run'> = new HostCommandExecutor(),
+    onFileChange: (chatId: string) => void = () => {},
   ) {
-    this.storage = new PiStorage(directory)
+    this.storage = new PiStorage(directory, onFileChange)
     this.hostCommands = hostCommands
   }
 
@@ -189,7 +190,12 @@ export class PiRunner implements AgentRunner {
       await this.storage.save(request.chatId, dirty.state, dirty.resume)
       this.pendingSaves.delete(request.chatId)
     }
-    const state = await this.storage.open(request.chatId, context?.rootPath)
+    const state = await this.storage.open(
+      request.chatId,
+      context?.rootPath,
+      request.runId,
+      request.turnId,
+    )
     if (options.isSideChat && !state.resume && !options.sideContextSnapshot)
       throw new Error('侧聊缺少可恢复的主会话上下文，无法继续。请重新创建侧聊。')
     const continuation = request.messages.at(-1)?.role === 'assistant'
@@ -279,6 +285,10 @@ export class PiRunner implements AgentRunner {
             signal,
             resolveCwd: (cwd) => context.scope.resolvePath(cwd, 'directory'),
             executor: this.hostCommands,
+            onExecute: () =>
+              this.storage
+                .fileChanges(request.chatId, context.rootPath)
+                .markHostExec(request.chatId),
           })
         : undefined
     const agent = new HarnessAgent({
@@ -551,7 +561,19 @@ export class PiRunner implements AgentRunner {
       }
     }
     for (const chunk of eventChunks) yield chunk
-    if (finishChunk) yield finishChunk
+    if (finishChunk) {
+      yield {
+        ...finishChunk,
+        messageMetadata: {
+          ...('messageMetadata' in finishChunk &&
+          finishChunk.messageMetadata &&
+          typeof finishChunk.messageMetadata === 'object'
+            ? finishChunk.messageMetadata
+            : {}),
+          turnId: request.turnId,
+        },
+      } as UIMessageChunk
+    }
   }
 
   async compact(options: PiCompactOptions): Promise<PiCompactOutcome> {
@@ -560,7 +582,11 @@ export class PiRunner implements AgentRunner {
       await this.storage.save(options.chatId, dirty.state, dirty.resume)
       this.pendingSaves.delete(options.chatId)
     }
-    const state = await this.storage.open(options.chatId, options.context?.rootPath)
+    const state = await this.storage.open(
+      options.chatId,
+      options.context?.rootPath,
+      options.operationId,
+    )
     if (!state.resume) throw new Error('当前会话没有可恢复的 Pi 上下文。')
     const skills = options.context ? await loadPiSkills(options.context.scope) : []
     const configured = createPiConfiguration(options.config, 'provider-default')

@@ -131,6 +131,31 @@ test('restored Pi data stays out of model messages and rejects malformed fields'
   )
 })
 
+test('legacy terminal dynamic tools without streamed input remain readable', async (t) => {
+  const vite = await createServer({ logLevel: 'silent', server: { middlewareMode: true } })
+  t.after(() => vite.close())
+  const { validateChatMessages } = await vite.ssrLoadModule(
+    '/src/main/workspaces/validateChatMessages.ts',
+  )
+  const input = [
+    {
+      id: 'assistant-legacy-host-exec',
+      role: 'assistant',
+      parts: [
+        {
+          type: 'dynamic-tool',
+          toolName: 'host_exec',
+          toolCallId: 'legacy-call',
+          state: 'output-available',
+          output: 'legacy host command result',
+        },
+      ],
+    },
+  ]
+  const restored = await validateChatMessages(input)
+  assert.deepEqual(restored[0].parts[0], { ...input[0].parts[0], input: {} })
+})
+
 test('AgentService relays live events and saves one recoverable final part', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'sailor-pi-events-'))
   t.after(() => rm(root, { recursive: true, force: true }))

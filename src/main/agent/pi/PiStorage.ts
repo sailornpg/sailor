@@ -1,4 +1,5 @@
 import { createWorkspaceFileSystem } from './WorkspaceFileSystem.js'
+import { ChatFileChangeJournal, createFileChangeTracker } from './ChatFileChangeJournal.js'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdir, open, readFile, readdir, rename, rm, stat } from 'node:fs/promises'
 import { join, posix } from 'node:path'
@@ -30,7 +31,12 @@ export interface PiLocalState {
 }
 
 export class PiStorage {
-  constructor(private readonly directory: string) {}
+  private readonly fileChangeJournals = new Map<string, ChatFileChangeJournal>()
+
+  constructor(
+    private readonly directory: string,
+    private readonly onFileChange: (chatId: string) => void = () => {},
+  ) {}
   async fork(parentChatId: string, sideChatId: string): Promise<boolean> {
     let saved: z.infer<typeof stateSchema>
     try {
@@ -82,6 +88,8 @@ export class PiStorage {
   }
   async delete(chatId: string): Promise<void> {
     await rm(this.path(chatId), { force: true })
+    await new ChatFileChangeJournal(this.changeDirectory()).delete(chatId)
+    this.fileChangeJournals.delete(chatId)
   }
   private path(chatId: string) {
     return join(this.directory, `${createHash('sha256').update(chatId).digest('hex')}.json`)
@@ -92,7 +100,32 @@ export class PiStorage {
     return `/home/sailor/.ai-sdk/harness-pi/${key}`
   }
 
-  async open(chatId: string, workspaceRoot?: string): Promise<PiLocalState> {
+  private changeDirectory(): string {
+    return join(this.directory, 'file-changes')
+  }
+
+  fileChanges(chatId: string, workspaceRoot?: string): ChatFileChangeJournal {
+    const existing = this.fileChangeJournals.get(chatId)
+    if (existing) {
+      if (workspaceRoot && existing.workspaceRoot !== workspaceRoot)
+        throw new Error('会话文件变更的工作区根目录不一致。')
+      return existing
+    }
+    const journal = new ChatFileChangeJournal(
+      this.changeDirectory(),
+      workspaceRoot,
+      this.onFileChange,
+    )
+    this.fileChangeJournals.set(chatId, journal)
+    return journal
+  }
+
+  async open(
+    chatId: string,
+    workspaceRoot?: string,
+    runId = 'unknown',
+    turnId = runId,
+  ): Promise<PiLocalState> {
     let saved: z.infer<typeof stateSchema> | undefined
     try {
       const path = this.path(chatId)
@@ -114,8 +147,15 @@ export class PiStorage {
       await fs.writeFile(path, Buffer.from(content, 'base64'))
     }
     const mounted = new MountableFs({ base: fs })
-    if (workspaceRoot)
-      mounted.mount('/home/sailor/workspace', createWorkspaceFileSystem(workspaceRoot))
+    if (workspaceRoot) {
+      const journal = this.fileChanges(chatId, workspaceRoot)
+      mounted.mount(
+        '/home/sailor/workspace',
+        createWorkspaceFileSystem(workspaceRoot, {
+          tracker: createFileChangeTracker(journal, chatId, turnId, runId),
+        }),
+      )
+    }
     const virtual = await Sandbox.create({
       fs: mounted,
       cwd: '/home/sailor',
