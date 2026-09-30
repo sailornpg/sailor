@@ -531,6 +531,48 @@
       "status": "done",
       "archived_at": "2026-09-28T08:33:52.775Z",
       "archive_path": ".agent-harness/archive/fix-cross-platform-terminal-shell"
+    },
+    {
+      "id": "feat-chat-file-diff-review",
+      "title": "会话文件变更与只读审查",
+      "status": "done",
+      "archived_at": "2026-09-29T11:03:06.603Z",
+      "archive_path": ".agent-harness/archive/feat-chat-file-diff-review"
+    },
+    {
+      "id": "feat-turn-file-diff-review-card",
+      "title": "Turn 级文件变更卡片与审查布局",
+      "status": "done",
+      "archived_at": "2026-09-29T11:03:06.696Z",
+      "archive_path": ".agent-harness/archive/feat-turn-file-diff-review-card"
+    },
+    {
+      "id": "fix-file-review-trigger-centering",
+      "title": "居中文件变更入口",
+      "status": "done",
+      "archived_at": "2026-09-29T11:03:06.826Z",
+      "archive_path": ".agent-harness/archive/fix-file-review-trigger-centering"
+    },
+    {
+      "id": "feat-turn-file-review-product-card",
+      "title": "按轮次展示文件审查产物",
+      "status": "done",
+      "archived_at": "2026-09-29T11:03:06.922Z",
+      "archive_path": ".agent-harness/archive/feat-turn-file-review-product-card"
+    },
+    {
+      "id": "fix-streaming-persistence-storm",
+      "title": "流式期间的持久化与广播节流",
+      "status": "done",
+      "archived_at": "2026-09-30T05:58:45.171Z",
+      "archive_path": ".agent-harness/archive/fix-streaming-persistence-storm"
+    },
+    {
+      "id": "fix-thread-scroll-arbitration",
+      "title": "流式滚动抖动与跟随失锁修复",
+      "status": "done",
+      "archived_at": "2026-09-30T05:58:47.011Z",
+      "archive_path": ".agent-harness/archive/fix-thread-scroll-arbitration"
     }
   ]
 }

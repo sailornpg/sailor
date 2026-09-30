@@ -33,6 +33,26 @@ async function setInput(window, value) {
   await wait()
 }
 
+async function insertAtSelection(window, value, position) {
+  await window.webContents.executeJavaScript(`(() => {
+    const input = document.querySelector('#directive-input')
+    window.__composerInputBeforeMiddleEdit = input
+    input.focus()
+    input.setSelectionRange(${position}, ${position})
+  })()`)
+  await window.webContents.debugger.sendCommand('Input.insertText', { text: value })
+  await wait()
+  return window.webContents.executeJavaScript(`(() => {
+    const input = document.querySelector('#directive-input')
+    return {
+      value: input.value,
+      selectionStart: input.selectionStart,
+      selectionEnd: input.selectionEnd,
+      sameElement: input === window.__composerInputBeforeMiddleEdit,
+    }
+  })()`)
+}
+
 async function composeChinese(window, prefix, composingScreenshotPath) {
   const debuggerApi = window.webContents.debugger
   if (!debuggerApi.isAttached()) debuggerApi.attach('1.3')
@@ -152,6 +172,18 @@ async function main() {
     check('普通输入保留中文文本', plainChinese === '你好吗', JSON.stringify({ plainChinese }))
     await setInput(window, '')
 
+    await setInput(window, 'abcdef')
+    const plainMiddleEdit = await insertAtSelection(window, 'X', 3)
+    check(
+      '普通文本中间输入保留光标位置',
+      plainMiddleEdit.value === 'abcXdef' &&
+        plainMiddleEdit.selectionStart === 4 &&
+        plainMiddleEdit.selectionEnd === 4 &&
+        plainMiddleEdit.sameElement,
+      JSON.stringify(plainMiddleEdit),
+    )
+    await setInput(window, '')
+
     await setInput(window, '/')
     await window.webContents.executeJavaScript(
       'document.querySelector(\'[data-command-id=\\"skill:ai-sdk\\"]\').click()',
@@ -213,6 +245,18 @@ async function main() {
       JSON.stringify(selected),
     )
     check('token 场景没有横向溢出', !selected.overflow, JSON.stringify(selected))
+    await setInput(window, '/skill:ai-sdk alpha beta')
+    const directiveMiddlePosition = '/skill:ai-sdk al'.length
+    const directiveMiddleEdit = await insertAtSelection(window, 'X', directiveMiddlePosition)
+    check(
+      'Skill 正文中间输入保留光标位置',
+      directiveMiddleEdit.value === '/skill:ai-sdk alXpha beta' &&
+        directiveMiddleEdit.selectionStart === directiveMiddlePosition + 1 &&
+        directiveMiddleEdit.selectionEnd === directiveMiddlePosition + 1 &&
+        directiveMiddleEdit.sameElement,
+      JSON.stringify(directiveMiddleEdit),
+    )
+    await setInput(window, '/skill:ai-sdk ')
     const skillChinese = await composeChinese(
       window,
       '已选 Skill 后',

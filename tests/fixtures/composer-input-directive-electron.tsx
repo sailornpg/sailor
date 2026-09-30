@@ -105,7 +105,8 @@ function ComposerSurface() {
       (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)
     )
       return
-    syncDirective(event.currentTarget)
+    const input = event.currentTarget
+    queueMicrotask(() => syncDirective(input))
   }
 
   const send = () => {
@@ -169,7 +170,8 @@ function ComposerSurface() {
                 onCompositionEnd={(event) => {
                   composingRef.current = false
                   setComposing(false)
-                  syncDirective(event.currentTarget)
+                  const input = event.currentTarget
+                  queueMicrotask(() => syncDirective(input))
                 }}
                 onClick={(event) => updateCaret(event.currentTarget)}
                 onFocus={() => setFocused(true)}

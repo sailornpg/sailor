@@ -1,6 +1,6 @@
 import { WorkspaceContextRenderer } from '../thread/WorkspaceContextMessage'
 import { sendWithWorkspaceContexts } from './sendWithWorkspaceContexts'
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import { useChat, type Chat, type UseChatHelpers } from '@ai-sdk/react'
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk'
 import { AssistantRuntimeProvider, AuiConfig, Tools } from '@assistant-ui/react'
@@ -12,7 +12,22 @@ import { PiEventDataUI } from '../events/PiEventRecord'
 
 const sailorConfig = AuiConfig({ tools: Tools({ toolkit: sailorToolkit }) })
 
-const SailorChatContext = createContext<UseChatHelpers<UIMessage> | null>(null)
+/**
+ * Only the fields that stay stable while an answer streams: exposing the whole
+ * `useChat` helpers object here re-rendered every consumer (composer, context
+ * rail) on every streamed delta, which froze the window on long answers.
+ * Message lists are read where they are used, through `useAuiState`.
+ */
+export type SailorChatActions = Pick<
+  UseChatHelpers<UIMessage>,
+  'sendMessage' | 'stop' | 'clearError' | 'error' | 'status'
+>
+const SailorChatContext = createContext<SailorChatActions | null>(null)
+/**
+ * Message lists stay in their own context: only the few slots that derive
+ * something from them re-render while an answer streams.
+ */
+const SailorChatMessagesContext = createContext<readonly UIMessage[]>([])
 const SailorChatIdContext = createContext<string | null>(null)
 const SailorAskUserContext = createContext<
   | ((toolCallId: string, response: import('@shared/askUser').AskUserResponse) => Promise<void>)
@@ -28,6 +43,12 @@ export function SailorChatProvider({ chat, children }: SailorChatProviderProps) 
   const chatState = useChat({ chat })
   const sendMessage = sendWithWorkspaceContexts(chat.id, chatState.sendMessage)
   const adapted = { ...chatState, sendMessage }
+  const { stop, clearError, error, status } = chatState
+  // Instance-bound methods are stable; error/status change at run boundaries.
+  const actions = useMemo<SailorChatActions>(
+    () => ({ sendMessage, stop, clearError, error, status }),
+    [sendMessage, stop, clearError, error, status],
+  )
   const runtime = useAISDKRuntime(adapted, {
     adapters: { attachments: sailorAttachmentAdapter },
     onRespondToToolApproval: async (response, { toolCallId, toolName, respondViaAISDK }) => {
@@ -59,16 +80,18 @@ export function SailorChatProvider({ chat, children }: SailorChatProviderProps) 
   }
 
   return (
-    <SailorChatContext.Provider value={adapted}>
-      <SailorChatIdContext.Provider value={chat.id}>
-        <SailorAskUserContext.Provider value={respondToAskUser}>
-          <AssistantRuntimeProvider runtime={runtime} config={sailorConfig}>
-            <WorkspaceContextRenderer />
-            <PiEventDataUI />
-            {children}
-          </AssistantRuntimeProvider>
-        </SailorAskUserContext.Provider>
-      </SailorChatIdContext.Provider>
+    <SailorChatContext.Provider value={actions}>
+      <SailorChatMessagesContext.Provider value={chatState.messages}>
+        <SailorChatIdContext.Provider value={chat.id}>
+          <SailorAskUserContext.Provider value={respondToAskUser}>
+            <AssistantRuntimeProvider runtime={runtime} config={sailorConfig}>
+              <WorkspaceContextRenderer />
+              <PiEventDataUI />
+              {children}
+            </AssistantRuntimeProvider>
+          </SailorAskUserContext.Provider>
+        </SailorChatIdContext.Provider>
+      </SailorChatMessagesContext.Provider>
     </SailorChatContext.Provider>
   )
 }
@@ -89,7 +112,11 @@ export function useSailorAskUserResponder() {
   )
 }
 
-export function useSailorChat(): UseChatHelpers<UIMessage> {
+export function useSailorChatMessages(): readonly UIMessage[] {
+  return useContext(SailorChatMessagesContext)
+}
+
+export function useSailorChat(): SailorChatActions {
   const chatState = useContext(SailorChatContext)
   if (!chatState) throw new Error('useSailorChat must be used inside SailorChatProvider')
   return chatState

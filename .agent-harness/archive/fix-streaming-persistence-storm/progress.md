@@ -1,0 +1,255 @@
+# Archived Feature Progress
+
+## Archived Metadata
+
+**Archived At:** 2026-09-30T05:58:45.171Z
+**Feature ID:** fix-streaming-persistence-storm
+**Feature Name:** 流式期间的持久化与广播节流
+**Archived Status:** done
+**Archive Source:** `.agent-harness/feature_list.json`
+**Active Feature At Archive Time:** fix-thread-scroll-arbitration
+
+## Archive Note
+
+This feature was not the active progress panel at archive time.
+This archive progress file is a structured summary synthesized from `.agent-harness/feature_list.json`.
+
+## Feature Summary
+
+流式生成期间主进程对每个 chunk 都做一次全量工作区 read + Zod 校验 + 整体写盘，并向 renderer 广播 workspaceChanged，renderer 随之整体刷新工作区快照，使主进程与渲染层在生成期间被饱和（表现为回答按大批次跳出、界面卡顿）。本 feature 把流式期间的落盘与通知改为按时间窗合并、终态必写必播，保持会话内容、历史恢复与 run 状态语义不变。
+
+## Dependencies
+
+- none
+
+## Evidence
+
+Verified by .agent-harness/feature_list.json checklist at 2026-09-29T11:24:09.664Z
+
+## Additional Fields Snapshot
+
+```json
+{
+  "trd_spec": "docs/architecture.md",
+  "checklist": [
+    {
+      "action": "让 AgentService 在流式期间合并 updateRun 持久化（按时间窗，例如 250-500ms 一次），并在 run 结束时补一次终态写入，保证历史恢复始终读到完整消息；新增 tests/agent-streaming-persistence.test.ts，用假 runner 断言 N 个 chunk 只产生有限次写入。",
+      "coverage": "integration",
+      "test": "node --test tests/agent-streaming-persistence.test.ts",
+      "verify": [
+        "node --test tests/agent-streaming-persistence.test.ts",
+        "node --test tests/agent-streaming.test.ts"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/agent-streaming-persistence.test.ts",
+        "verifiedAt": "2026-09-29T11:14:15.237Z",
+        "exitCode": 0,
+        "stdout": "✔ 合并流式消息落盘：写入次数不随 chunk 数增长 (1720.794334ms)\n✔ 流式期间按间隔合并写入，且每次都保留最新完整快照 (381.464084ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2373.181084",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/agent-streaming-persistence.test.ts",
+          "verifiedAt": "2026-09-29T11:14:17.037Z",
+          "exitCode": 0,
+          "stdout": "✔ 合并流式消息落盘：写入次数不随 chunk 数增长 (1084.12375ms)\n✔ 流式期间按间隔合并写入，且每次都保留最新完整快照 (395.202958ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1700.978",
+          "stderr": ""
+        },
+        {
+          "command": "node --test tests/agent-streaming.test.ts",
+          "verifiedAt": "2026-09-29T11:14:19.086Z",
+          "exitCode": 0,
+          "stdout": "✔ splits a coarse Chinese provider delta into incremental UI chunks before end (1065.023541ms)\n✔ aborting an active stream stops later chunks and emits one end event (673.999625ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1949.9705",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/agent-streaming-persistence.test.ts && node --test tests/agent-streaming.test.ts",
+        "verifiedAt": "2026-09-29T11:14:19.086Z",
+        "exitCode": 0,
+        "stdout": "✔ 合并流式消息落盘：写入次数不随 chunk 数增长 (1084.12375ms)\n✔ 流式期间按间隔合并写入，且每次都保留最新完整快照 (395.202958ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1700.978\n✔ splits a coarse Chinese provider delta into incremental UI chunks before end (1065.023541ms)\n✔ aborting an active stream stops later chunks and emits one end event (673.999625ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1949.9705",
+        "stderr": ""
+      }
+    },
+    {
+      "action": "让 WorkspaceStore 的写入路径不再每次 mutate 都 read() + JSON.parse + fileSchema.parse 整个工作区（改为内存态持有并在启动时校验一次，落盘只做序列化与原子替换），保持既有外键校验、损坏文件拒绝覆盖和并发写入语义；扩展 tests/workspace-store.test.ts 断言读取/校验次数与写入仍然原子。",
+      "coverage": "unit",
+      "test": "node --test tests/workspace-store.test.ts",
+      "verify": [
+        "node --test tests/workspace-store.test.ts",
+        "node --test tests/workspace-management.test.ts"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/workspace-store.test.ts",
+        "verifiedAt": "2026-09-29T11:16:51.549Z",
+        "exitCode": 0,
+        "stdout": "✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (391.635166ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (318.161166ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (309.126333ms)\n✔ 重复写入只加载一次工作区文件，不在每次 mutate 重读并重新校验 (317.022916ms)\n✔ 损坏和非法外键文件不被覆盖 (305.400708ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (305.039875ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2128.543458",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/workspace-store.test.ts",
+          "verifiedAt": "2026-09-29T11:16:53.802Z",
+          "exitCode": 0,
+          "stdout": "✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (386.237208ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (337.080041ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (311.635875ms)\n✔ 重复写入只加载一次工作区文件，不在每次 mutate 重读并重新校验 (326.928792ms)\n✔ 损坏和非法外键文件不被覆盖 (303.43ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (305.527875ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2149.632709",
+          "stderr": ""
+        },
+        {
+          "command": "node --test tests/workspace-management.test.ts",
+          "verifiedAt": "2026-09-29T11:16:55.140Z",
+          "exitCode": 0,
+          "stdout": "✔ 会话管理校验输入、阻止运行和未保存时修改，并清理 live 缓存 (1078.067417ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1240.402916",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/workspace-store.test.ts && node --test tests/workspace-management.test.ts",
+        "verifiedAt": "2026-09-29T11:16:55.140Z",
+        "exitCode": 0,
+        "stdout": "✔ 真实目录去重，包括符号链接；取消外的无效目录不能注册 (386.237208ms)\n✔ 会话外键、首条标题限长、完整 parts 和偏好在重启后恢复 (337.080041ms)\n✔ 并发写入不丢会话，旧 run 不能覆盖新 run (311.635875ms)\n✔ 重复写入只加载一次工作区文件，不在每次 mutate 重读并重新校验 (326.928792ms)\n✔ 损坏和非法外键文件不被覆盖 (303.43ms)\n✔ 手动重命名不被后续消息覆盖，归档恢复与删除在重启后保留 (305.527875ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2149.632709\n✔ 会话管理校验输入、阻止运行和未保存时修改，并清理 live 缓存 (1078.067417ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1240.402916",
+        "stderr": ""
+      }
+    },
+    {
+      "action": "合并流式期间的 workspaceChanged 通知：同一 chat 在节流窗口内最多广播一次、run 终态必须广播一次，并让 renderer 的快照刷新跟随合并后的通知而不是每个 token；新增 tests/workspace-change-notifications.test.ts 断言广播次数上限与终态可见性。",
+      "coverage": "integration",
+      "test": "node --test tests/workspace-change-notifications.test.ts",
+      "verify": [
+        "node --test tests/workspace-change-notifications.test.ts",
+        "node --test tests/workspace-ipc.test.ts"
+      ],
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node --test tests/workspace-change-notifications.test.ts",
+        "verifiedAt": "2026-09-29T11:19:20.798Z",
+        "exitCode": 0,
+        "stdout": "✔ 流式期间的多次持久化在节流窗口内只广播一次 (1264.528458ms)\n✔ run 终态一定在合并后广播到 renderer (307.794167ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1766.833208",
+        "stderr": ""
+      },
+      "verifyEvidenceList": [
+        {
+          "command": "node --test tests/workspace-change-notifications.test.ts",
+          "verifiedAt": "2026-09-29T11:19:22.162Z",
+          "exitCode": 0,
+          "stdout": "✔ 流式期间的多次持久化在节流窗口内只广播一次 (768.284916ms)\n✔ run 终态一定在合并后广播到 renderer (311.188334ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1269.15925",
+          "stderr": ""
+        },
+        {
+          "command": "node --test tests/workspace-ipc.test.ts",
+          "verifiedAt": "2026-09-29T11:19:23.126Z",
+          "exitCode": 0,
+          "stdout": "✔ 取消目录选择无记录，选择后可创建并读取会话 (562.294667ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (58.798208ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (41.039875ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 868.435875",
+          "stderr": ""
+        }
+      ],
+      "evidence": {
+        "command": "node --test tests/workspace-change-notifications.test.ts && node --test tests/workspace-ipc.test.ts",
+        "verifiedAt": "2026-09-29T11:19:23.126Z",
+        "exitCode": 0,
+        "stdout": "✔ 流式期间的多次持久化在节流窗口内只广播一次 (768.284916ms)\n✔ run 终态一定在合并后广播到 renderer (311.188334ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1269.15925\n✔ 取消目录选择无记录，选择后可创建并读取会话 (562.294667ms)\n✔ 根据 chatId 解析真实目录，拒绝非法消息和不存在会话 (58.798208ms)\n✔ 目录失效可读历史，但禁止运行；恢复消息用 SDK 验证 (41.039875ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 868.435875",
+        "stderr": ""
+      }
+    },
+    {
+      "action": "在真实 Electron 场景跑一段脚本化长回答流，从主进程侧统计 workspaces.json 写入次数与 workspaceChanged 广播次数，断言其随 chunk 数增长为亚线性且有上限，同时回答文本、会话历史、run 终态和重启恢复在结束后仍然正确；新增 fixture tests/fixtures/streaming-persistence-electron.cjs。",
+      "coverage": "e2e",
+      "test": "node tests/streaming-persistence-electron.test.mjs",
+      "verify": "node tests/streaming-persistence-electron.test.mjs",
+      "tdd": true,
+      "status": "done",
+      "testEvidence": {
+        "command": "node tests/streaming-persistence-electron.test.mjs",
+        "verifiedAt": "2026-09-29T11:22:26.886Z",
+        "exitCode": 0,
+        "stdout": "{\n  \"checks\": [\n    {\n      \"name\": \"每轮流式运行的持久化写入次数有上限\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"相同生成时长下写入次数不随 chunk 数增长\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"每轮运行的 workspaceChanged 广播次数有上限\",\n      \"ok\": true,\n      \"detail\": \"notifications: 40 chunks -> 2, 200 chunks -> 2\"\n    },\n    {\n      \"name\": \"UI 仍然逐 chunk 收到流式文本\",\n      \"ok\": true,\n      \"detail\": \"deltas: 40 chunks -> 40, 200 chunks -> 200\"\n    },\n    {\n      \"name\": \"run 终态写入工作区快照\",\n      \"ok\": true,\n      \"detail\": \"83795865-1263-4251-87a8-36f363159f73:completed, 0e0cba11-54bb-4d54-bd99-0b573795e3b2:completed\"\n    },\n    {\n      \"name\": \"重启后历史包含完整回答\",\n      \"ok\": true,\n      \"detail\": \"stored 1090 chars, expected 1090\"\n    },\n    {\n      \"name\": \"重启后历史保留用户提问\",\n      \"ok\": true,\n      \"detail\": \"roles: user,assistant\"\n    }\n  ]\n}",
+        "stderr": ""
+      },
+      "verifyEvidence": {
+        "command": "node tests/streaming-persistence-electron.test.mjs",
+        "verifiedAt": "2026-09-29T11:22:28.841Z",
+        "exitCode": 0,
+        "stdout": "{\n  \"checks\": [\n    {\n      \"name\": \"每轮流式运行的持久化写入次数有上限\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"相同生成时长下写入次数不随 chunk 数增长\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"每轮运行的 workspaceChanged 广播次数有上限\",\n      \"ok\": true,\n      \"detail\": \"notifications: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"UI 仍然逐 chunk 收到流式文本\",\n      \"ok\": true,\n      \"detail\": \"deltas: 40 chunks -> 40, 200 chunks -> 200\"\n    },\n    {\n      \"name\": \"run 终态写入工作区快照\",\n      \"ok\": true,\n      \"detail\": \"1aa8ecd5-2d9d-425e-acba-60c7306f3e23:completed, 5a66c787-261c-4192-add8-b1dbbc35a6c0:completed\"\n    },\n    {\n      \"name\": \"重启后历史包含完整回答\",\n      \"ok\": true,\n      \"detail\": \"stored 1090 chars, expected 1090\"\n    },\n    {\n      \"name\": \"重启后历史保留用户提问\",\n      \"ok\": true,\n      \"detail\": \"roles: user,assistant\"\n    }\n  ]\n}",
+        "stderr": ""
+      },
+      "evidence": {
+        "command": "node tests/streaming-persistence-electron.test.mjs",
+        "verifiedAt": "2026-09-29T11:22:28.841Z",
+        "exitCode": 0,
+        "stdout": "{\n  \"checks\": [\n    {\n      \"name\": \"每轮流式运行的持久化写入次数有上限\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"相同生成时长下写入次数不随 chunk 数增长\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"每轮运行的 workspaceChanged 广播次数有上限\",\n      \"ok\": true,\n      \"detail\": \"notifications: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"UI 仍然逐 chunk 收到流式文本\",\n      \"ok\": true,\n      \"detail\": \"deltas: 40 chunks -> 40, 200 chunks -> 200\"\n    },\n    {\n      \"name\": \"run 终态写入工作区快照\",\n      \"ok\": true,\n      \"detail\": \"1aa8ecd5-2d9d-425e-acba-60c7306f3e23:completed, 5a66c787-261c-4192-add8-b1dbbc35a6c0:completed\"\n    },\n    {\n      \"name\": \"重启后历史包含完整回答\",\n      \"ok\": true,\n      \"detail\": \"stored 1090 chars, expected 1090\"\n    },\n    {\n      \"name\": \"重启后历史保留用户提问\",\n      \"ok\": true,\n      \"detail\": \"roles: user,assistant\"\n    }\n  ]\n}",
+        "stderr": ""
+      }
+    },
+    {
+      "action": "运行范围 lint、typecheck、build、专用 Electron 冒烟与 clean-state，把流式写入与广播次数证据写入 harness，并同步 docs/architecture.md 中流式持久化与通知策略的说明。",
+      "coverage": "static",
+      "verify": [
+        "pnpm run lint:js",
+        "pnpm run lint:css",
+        "pnpm run typecheck",
+        "pnpm run build",
+        "node tests/streaming-persistence-electron.test.mjs",
+        "node .agent-harness/scripts/clean-state-check.mjs"
+      ],
+      "tdd": false,
+      "coverage_reason": "交付 gate 与文档同步本身不新增业务分支，行为证据来自前置测试与专用 Electron 冒烟。",
+      "status": "done",
+      "verifyEvidenceList": [
+        {
+          "command": "pnpm run lint:js",
+          "verifiedAt": "2026-09-29T11:23:44.279Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs"
+        },
+        {
+          "command": "pnpm run lint:css",
+          "verifiedAt": "2026-09-29T11:23:45.344Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ stylelint 'src/**/*.css'"
+        },
+        {
+          "command": "pnpm run typecheck",
+          "verifiedAt": "2026-09-29T11:23:46.597Z",
+          "exitCode": 0,
+          "stdout": "",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+        },
+        {
+          "command": "pnpm run build",
+          "verifiedAt": "2026-09-29T11:23:56.418Z",
+          "exitCode": 0,
+          "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 173ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 184ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3385 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B2eaKTlT.css                   215.46 kB\n../../out/renderer/assets/PanelPlaceholder-aBJ1JaHc.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BmJa3Y8C.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-fXotbLMQ.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-CnE3APe6.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DJRWmOf6.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-DNt8UkWz.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-C0fJL3xt.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DLeKFuQQ.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-Ceei3srM.js             4,725.90 kB\n../../out/renderer/assets/index-BfhaFzLa.js                  6,876.71 kB\n✓ built in 7.57s",
+          "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        },
+        {
+          "command": "node tests/streaming-persistence-electron.test.mjs",
+          "verifiedAt": "2026-09-29T11:23:58.597Z",
+          "exitCode": 0,
+          "stdout": "{\n  \"checks\": [\n    {\n      \"name\": \"每轮流式运行的持久化写入次数有上限\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"相同生成时长下写入次数不随 chunk 数增长\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"每轮运行的 workspaceChanged 广播次数有上限\",\n      \"ok\": true,\n      \"detail\": \"notifications: 40 chunks -> 2, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"UI 仍然逐 chunk 收到流式文本\",\n      \"ok\": true,\n      \"detail\": \"deltas: 40 chunks -> 40, 200 chunks -> 200\"\n    },\n    {\n      \"name\": \"run 终态写入工作区快照\",\n      \"ok\": true,\n      \"detail\": \"7014d5da-1a6c-44f5-a304-834664b69af7:completed, f7e88c60-bc7d-4499-931a-19baf9d08518:completed\"\n    },\n    {\n      \"name\": \"重启后历史包含完整回答\",\n      \"ok\": true,\n      \"detail\": \"stored 1090 chars, expected 1090\"\n    },\n    {\n      \"name\": \"重启后历史保留用户提问\",\n      \"ok\": true,\n      \"detail\": \"roles: user,assistant\"\n    }\n  ]\n}",
+          "stderr": ""
+        },
+        {
+          "command": "node .agent-harness/scripts/clean-state-check.mjs",
+          "verifiedAt": "2026-09-29T11:24:09.664Z",
+          "exitCode": 0,
+          "stdout": "=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 172ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 176ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3385 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B2eaKTlT.css                   215.46 kB\n../../out/renderer/assets/PanelPlaceholder-aBJ1JaHc.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BmJa3Y8C.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-fXotbLMQ.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-CnE3APe6.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DJRWmOf6.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-DNt8UkWz.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-C0fJL3xt.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DLeKFuQQ.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-Ceei3srM.js             4,725.90 kB\n../../out/renderer/assets/index-BfhaFzLa.js                  6,876.71 kB\n✓ built in 7.60s\n=== Verification 完成 ===\n\n下一步：\n1. 阅读 .agent-harness/feature_list.json，了解当前 feature state\n2. 只选择一个未完成 feature\n3. 只实现这个 feature\n4. 声称完成前重新运行 verification\n=== Clean-state passed ===",
+          "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+        }
+      ],
+      "evidence": {
+        "command": "pnpm run lint:js && pnpm run lint:css && pnpm run typecheck && pnpm run build && node tests/streaming-persistence-electron.test.mjs && node .agent-harness/scripts/clean-state-check.mjs",
+        "verifiedAt": "2026-09-29T11:24:09.664Z",
+        "exitCode": 0,
+        "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 173ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 184ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3385 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B2eaKTlT.css                   215.46 kB\n../../out/renderer/assets/PanelPlaceholder-aBJ1JaHc.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BmJa3Y8C.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-fXotbLMQ.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-CnE3APe6.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DJRWmOf6.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-DNt8UkWz.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-C0fJL3xt.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DLeKFuQQ.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-Ceei3srM.js             4,725.90 kB\n../../out/renderer/assets/index-BfhaFzLa.js                  6,876.71 kB\n✓ built in 7.57s\n{\n  \"checks\": [\n    {\n      \"name\": \"每轮流式运行的持久化写入次数有上限\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"相同生成时长下写入次数不随 chunk 数增长\",\n      \"ok\": true,\n      \"detail\": \"writes: 40 chunks -> 3, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"每轮运行的 workspaceChanged 广播次数有上限\",\n      \"ok\": true,\n      \"detail\": \"notifications: 40 chunks -> 2, 200 chunks -> 3\"\n    },\n    {\n      \"name\": \"UI 仍然逐 chunk 收到流式文本\",\n      \"ok\": true,\n      \"detail\": \"deltas: 40 chunks -> 40, 200 chunks -> 200\"\n    },\n    {\n      \"name\": \"run 终态写入工作区快照\",\n      \"ok\": true,\n      \"detail\": \"7014d5da-1a6c-44f5-a304-834664b69af7:completed, f7e88c60-bc7d-4499-931a-19baf9d08518:completed\"\n    },\n    {\n      \"name\": \"重启后历史包含完整回答\",\n      \"ok\": true,\n      \"detail\": \"stored 1090 chars, expected 1090\"\n    },\n    {\n      \"name\": \"重启后历史保留用户提问\",\n      \"ok\": true,\n      \"detail\": \"roles: user,assistant\"\n    }\n  ]\n}\n=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 172ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 176ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3385 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B2eaKTlT.css                   215.46 kB\n../../out/renderer/assets/PanelPlaceholder-aBJ1JaHc.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-BmJa3Y8C.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-fXotbLMQ.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-CnE3APe6.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-DJRWmOf6.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-DNt8UkWz.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-C0fJL3xt.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-DLeKFuQQ.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-Ceei3srM.js             4,725.90 kB\n../../out/\n... output truncated ...",
+        "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.p\n... output truncated ..."
+      }
+    }
+  ]
+}
+```

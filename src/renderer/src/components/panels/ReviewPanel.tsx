@@ -180,7 +180,8 @@ export default function ReviewPanel({ context, data }: PanelProps) {
                 currentDetail.addedLines === null ||
                 currentDetail.removedLines === null ? (
                   <p className="break-all text-xs leading-5 text-muted-foreground" role="status">
-                    {currentDetail.path} 的差异超限或不是可预览文本，无法可靠计算行数。
+                    {currentDetail.path}{' '}
+                    没有可用于逐行比较的文本快照；二进制文件或旧版本受限记录无法生成文本差异。
                   </p>
                 ) : (
                   <CodeDiff

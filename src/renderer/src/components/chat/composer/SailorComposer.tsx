@@ -2,7 +2,7 @@ import { WorkspaceContextChips } from './WorkspaceContextChips'
 import { ReferenceSummary } from './ReferenceSummary'
 import { sideChatQuoteDrafts } from '@/lib/sideChatQuoteDrafts'
 import { useWorkspaceContexts } from '@/lib/workspaceContextDrafts'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   ComposerPrimitive,
   unstable_useSlashCommandAdapter,
@@ -37,14 +37,15 @@ import {
   type ThinkingLevel,
   type WorkspacePermissionMode,
 } from '@shared/contracts'
-import type { WorkspaceChatSummary } from '@shared/workspaces'
+import type { RunStatus, WorkspaceChatSummary } from '@shared/workspaces'
+import type { PlanTodoList } from '@shared/planTodo'
 import type { MessageQuote } from '@shared/messageQuote'
 import { UNSUPPORTED_ATTACHMENT_MESSAGE } from '@shared/attachments'
-import { useSailorChat } from '../runtime/SailorChatProvider'
+import { useSailorChat, useSailorChatMessages } from '../runtime/SailorChatProvider'
 import { SailorComposerContext } from './SailorComposerContext'
 import { stopChatRun } from './composerPolicy'
 import { PlanTodoListView } from '../PlanTodoListView'
-import { SailorAskUserPopover, type SailorAskUserCardProps } from '../tools/SailorAskUserCard'
+import { SailorAskUserPopover } from '../tools/SailorAskUserCard'
 import { findPendingAskUser } from './pendingAskUser'
 import { hasPendingToolApproval } from './pendingToolApproval'
 import { ThinkingLevelSlider, thinkingLabels } from './ThinkingLevelSlider'
@@ -84,6 +85,42 @@ const permissionOptions: { id: WorkspacePermissionMode; name: string }[] = [
   { id: 'allow-all', name: permissionLabels['allow-all'] },
 ]
 
+const MemoPlanTodoListView = memo(PlanTodoListView)
+const MemoAskUserPopover = memo(SailorAskUserPopover)
+
+/**
+ * Message-derived slots subscribe here instead of in the composer shell.
+ *
+ * Streaming changes the message list many times per second; when the shell read
+ * it, the whole composer (including its autosizing textarea, which measures
+ * itself on every render) re-rendered per delta and froze the window.
+ */
+const PlanPanel = memo(function PlanPanel({
+  plan,
+  runStatus,
+  runId,
+}: {
+  plan?: PlanTodoList
+  runStatus?: RunStatus
+  runId?: string | null
+}) {
+  const messages = useSailorChatMessages()
+  const waitingForApproval = hasPendingToolApproval(messages)
+  return (
+    <MemoPlanTodoListView
+      plan={plan}
+      runStatus={runStatus}
+      runId={runId}
+      waitingForApproval={waitingForApproval}
+    />
+  )
+})
+
+const AskUserSlot = memo(function AskUserSlot({ runStatus }: { runStatus?: RunStatus }) {
+  const pending = useAuiState((state) => findPendingAskUser(state.thread.messages, runStatus))
+  return <MemoAskUserPopover pending={pending} />
+})
+
 export function SailorComposer({
   chatId,
   registry,
@@ -102,9 +139,8 @@ export function SailorComposer({
     const quote = sideChatQuoteDrafts.take(chatId)
     if (quote) aui.composer.setQuote(quote)
   }, [aui, chatId])
-  const { clearError, error, stop, sendMessage, messages } = useSailorChat()
+  const { clearError, error, stop, sendMessage } = useSailorChat()
   const runtimeRunning = useAuiState((state) => state.thread.isRunning)
-  const threadMessages = useAuiState((state) => state.thread.messages)
   const references = useWorkspaceContexts(chatId)
   const composerEmpty = useAuiState((state) => state.composer.isEmpty)
   const composerText = useAuiState((state) => state.composer.text)
@@ -217,13 +253,21 @@ export function SailorComposer({
       return getComposerDirectiveParts(value, current) ? current : undefined
     })
   }
+  const scheduleComposerDirectiveSync = (input: HTMLTextAreaElement) => {
+    // ComposerPrimitive.Input invokes this consumer handler before it writes the
+    // new controlled value into assistant-ui. Updating React state in that gap
+    // makes React restore the stale value and moves the native caret to the end.
+    queueMicrotask(() => {
+      if (composerInputRef.current === input) syncComposerDirective(input)
+    })
+  }
   const handleComposerInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     if (
       composerComposingRef.current ||
       (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)
     )
       return
-    syncComposerDirective(event.currentTarget)
+    scheduleComposerDirectiveSync(event.currentTarget)
   }
   const executeSlashCommand = useCallback(
     (command: ComposerSlashCommand) => {
@@ -348,11 +392,6 @@ export function SailorComposer({
     Boolean(summary?.archived) ||
     (composerEmpty && references.length === 0)
 
-  const pendingAskUser = useMemo<SailorAskUserCardProps | undefined>(
-    () => findPendingAskUser(threadMessages, summary?.status),
-    [summary?.status, threadMessages],
-  )
-
   useEffect(() => {
     registry.reasoning.set(chatId, thinkingLevel)
   }, [chatId, thinkingLevel, registry])
@@ -377,13 +416,12 @@ export function SailorComposer({
 
   return (
     <div className="sailor-composer-stack">
-      <PlanTodoListView
+      <PlanPanel
         plan={registry.getStablePlan(summary)}
         runStatus={runBusy ? 'running' : summary?.status}
         runId={summary?.runId}
-        waitingForApproval={hasPendingToolApproval(messages)}
       />
-      <SailorAskUserPopover pending={pendingAskUser} />
+      <AskUserSlot runStatus={summary?.status} />
       {transientError && <TransientErrorNotice key={transientError} message={transientError} />}
       {summary?.saveError && (
         <div className="runtime-error" role="alert">
@@ -462,8 +500,12 @@ export function SailorComposer({
                         }}
                         onCompositionEnd={(event) => {
                           composerComposingRef.current = false
-                          setComposerComposing(false)
-                          syncComposerDirective(event.currentTarget)
+                          const input = event.currentTarget
+                          queueMicrotask(() => {
+                            if (composerInputRef.current !== input) return
+                            setComposerComposing(false)
+                            syncComposerDirective(input)
+                          })
                         }}
                         onClick={(event) => {
                           if (!composerComposingRef.current)

@@ -1,4 +1,5 @@
 import { isToolUIPart, type ChatTransport, type UIMessage, type UIMessageChunk } from 'ai'
+import { FLUSH_INTERVAL_MS, StreamChunkCoalescer } from './streamChunkCoalescer'
 import {
   normalizeThinkingLevel,
   type AgentRunRequest,
@@ -52,8 +53,16 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
     let unsubscribe: (() => void) | undefined
     let abortHandler: (() => void) | undefined
     let finished = false
+    let flushTimer: number | undefined
+
+    const cancelFlush = () => {
+      if (flushTimer === undefined) return
+      window.clearTimeout(flushTimer)
+      flushTimer = undefined
+    }
 
     const cleanup = () => {
+      cancelFlush()
       unsubscribe?.()
       if (abortHandler) abortSignal?.removeEventListener('abort', abortHandler)
       unsubscribe = undefined
@@ -62,9 +71,28 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
 
     return new ReadableStream<UIMessageChunk>({
       start(controller) {
+        // Provider deltas arrive every few milliseconds. Handing each one to the
+        // runtime makes React re-render (composer, autosizing textarea, context
+        // rail, markdown) per token, which freezes the window on long answers;
+        // the coalescer keeps the runtime near frame rate instead.
+        const coalescer = new StreamChunkCoalescer()
+        const flushPending = () => {
+          cancelFlush()
+          for (const chunk of coalescer.flush()) controller.enqueue(chunk)
+        }
+        const push = (chunk: UIMessageChunk) => {
+          for (const ready of coalescer.push(chunk)) controller.enqueue(ready)
+          if (coalescer.pending() && flushTimer === undefined) {
+            flushTimer = window.setTimeout(() => {
+              flushTimer = undefined
+              for (const ready of coalescer.flush()) controller.enqueue(ready)
+            }, FLUSH_INTERVAL_MS)
+          }
+        }
         const close = () => {
           if (finished) return
           finished = true
+          flushPending()
           cleanup()
           if (activeRunIds.get(chatId) === runId) activeRunIds.delete(chatId)
           controller.close()
@@ -73,7 +101,7 @@ export class IpcChatTransport implements ChatTransport<UIMessage> {
         unsubscribe = window.sailor.agent.subscribe((eventRunId, event) => {
           if (eventRunId !== runId || finished) return
 
-          if (event.type === 'chunk') controller.enqueue(event.chunk)
+          if (event.type === 'chunk') push(event.chunk)
           else if (event.type === 'end') close()
         })
 

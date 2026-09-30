@@ -1,6 +1,7 @@
 import { getThreadMessageTokenUsage } from '@assistant-ui/ai-sdk'
+import { useAuiState } from '@assistant-ui/react'
+import { memo, useMemo, useRef } from 'react'
 import { ComposerContext } from '@/components/assistant-ui/elements/composer'
-import { useSailorChat } from '../runtime/SailorChatProvider'
 import {
   buildContextBreakdown,
   latestContextUsageState,
@@ -18,8 +19,21 @@ const SEGMENT_STYLE: Record<ContextSegmentKey, { label: string; tint: string }> 
   input: { label: '输入（最近一次调用）', tint: 'bg-foreground/45' },
 }
 
+/** Keeps a value stable while its signature is unchanged. */
+function useStableBySignature<T>(signature: string, create: () => T): T {
+  const cache = useRef<{ signature: string; value: T } | undefined>(undefined)
+  if (!cache.current || cache.current.signature !== signature) {
+    cache.current = { signature, value: create() }
+  }
+  return cache.current.value
+}
+
+const MemoComposerContext = memo(ComposerContext)
+
 export function SailorComposerContext() {
-  const { messages } = useSailorChat()
+  // Read the thread messages here rather than from the chat context: this
+  // component re-renders per streamed delta, and the rail below must not.
+  const messages = useAuiState((state) => state.thread.messages)
   // 总量走官方提取器（含 metadata.usage / custom.usage / steps 回退）；
   // 窗口上限与分类测量官方没有，由主进程写入的 contextUsage 补充。
   const { usage, pendingAfterCompaction } = latestContextUsageState(
@@ -28,15 +42,26 @@ export function SailorComposerContext() {
   )
   const breakdown = usage ? buildContextBreakdown(usage) : undefined
 
-  return (
-    <ComposerContext
-      segments={breakdown?.segments.map((segment) => ({
+  const signature = useMemo(
+    () =>
+      [
+        usage?.inputTokens ?? '',
+        usage?.contextWindow ?? '',
+        breakdown?.segments.map((segment) => `${segment.key}:${segment.tokens}`).join(',') ?? '',
+        pendingAfterCompaction ? 1 : 0,
+      ].join('|'),
+    [usage?.inputTokens, usage?.contextWindow, breakdown, pendingAfterCompaction],
+  )
+  const props = useStableBySignature(signature, () => ({
+    segments:
+      breakdown?.segments.map((segment) => ({
         ...SEGMENT_STYLE[segment.key],
         tokens: segment.tokens,
-      }))}
-      limit={usage?.contextWindow}
-      used={usage?.inputTokens}
-      unavailableLabel={pendingAfterCompaction ? '压缩后用量将在下次调用后更新' : undefined}
-    />
-  )
+      })) ?? [],
+    limit: usage?.contextWindow,
+    used: usage?.inputTokens,
+    unavailableLabel: pendingAfterCompaction ? '压缩后用量将在下次调用后更新' : undefined,
+  }))
+
+  return <MemoComposerContext {...props} />
 }

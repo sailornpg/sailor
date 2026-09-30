@@ -29,6 +29,11 @@ import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-ic
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/assistant-ui/elements/skeleton'
 import { cn } from '@/lib/utils'
+import {
+  initialScrollFollow,
+  nextScrollFollow,
+  type ScrollFollowEvent,
+} from '@/components/assistant-ui/utils/scrollFollow'
 import { getTurnIdFromMessageMetadata } from '@/components/chat/review/turnFileReviewMetadata'
 import {
   ActionBarMorePrimitive,
@@ -203,59 +208,68 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
 }) => {
   const isEmpty = entry ? entry.phase === 'welcome' : runtimeEmpty
   const [autoScroll, setAutoScroll] = useState(true)
-  const autoScrollPaused = useRef(false)
-  const downwardScrollIntent = useRef(false)
-  const pointerScrollIntent = useRef(false)
-  const previousScrollTop = useRef(0)
+  const follow = useRef(initialScrollFollow)
+  // Set while the viewport scrolls because we asked it to, so the resulting
+  // scroll event is never mistaken for the reader leaving the tail.
+  const programmaticScroll = useRef(false)
   const {
     Welcome = ThreadWelcome,
     Composer: ComposerComponent = Composer,
     ViewportNavigation,
     RuntimeEventStatus,
   } = useContext(ThreadComponentsContext)
-  const handleViewportWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
-    if (event.deltaY < 0) {
-      autoScrollPaused.current = true
-      downwardScrollIntent.current = false
-      pointerScrollIntent.current = false
-      setAutoScroll(false)
-    } else if (event.deltaY > 0) {
-      downwardScrollIntent.current = true
-    }
+  const applyFollowEvent = useCallback((event: ScrollFollowEvent) => {
+    const next = nextScrollFollow(follow.current, event)
+    if (next === follow.current) return
+    follow.current = next
+    setAutoScroll(next.following)
   }, [])
-  const handleViewportPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    pointerScrollIntent.current =
-      event.target instanceof Element &&
-      Boolean(event.target.closest('.aui-thread-scroll-to-bottom'))
-  }, [])
+  const handleViewportWheel = useCallback(
+    (event: React.WheelEvent<HTMLDivElement>) => {
+      programmaticScroll.current = false
+      applyFollowEvent({ kind: 'wheel', deltaY: event.deltaY })
+    },
+    [applyFollowEvent],
+  )
+  const handleViewportPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const pressed =
+        event.target instanceof Element &&
+        Boolean(event.target.closest('.aui-thread-scroll-to-bottom'))
+      if (pressed) programmaticScroll.current = true
+      applyFollowEvent({ kind: 'pin-control', pressed })
+    },
+    [applyFollowEvent],
+  )
   const handleViewportPointerUp = useCallback(() => {
-    pointerScrollIntent.current = false
-  }, [])
-  const handleViewportClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target instanceof Element && event.target.closest('.aui-thread-scroll-to-bottom')) {
-      pointerScrollIntent.current = true
-    }
-  }, [])
-  const handleViewportScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    const viewport = event.currentTarget
-    const atBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= 2
-    const movedUp = viewport.scrollTop < previousScrollTop.current
-    if (movedUp) {
-      autoScrollPaused.current = true
-      downwardScrollIntent.current = false
-      setAutoScroll(false)
-    }
-    const userResumedAtBottom =
-      atBottom &&
-      (!autoScrollPaused.current || downwardScrollIntent.current || pointerScrollIntent.current)
-    if (userResumedAtBottom) {
-      autoScrollPaused.current = false
-      downwardScrollIntent.current = false
-      pointerScrollIntent.current = false
-      setAutoScroll(true)
-    }
-    previousScrollTop.current = viewport.scrollTop
-  }, [])
+    applyFollowEvent({ kind: 'pin-control', pressed: false })
+  }, [applyFollowEvent])
+  const handleViewportClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (event.target instanceof Element && event.target.closest('.aui-thread-scroll-to-bottom')) {
+        programmaticScroll.current = true
+        applyFollowEvent({ kind: 'pin-control', pressed: true })
+      }
+    },
+    [applyFollowEvent],
+  )
+  const handleViewportScroll = useCallback(
+    (event: React.UIEvent<HTMLDivElement>) => {
+      const viewport = event.currentTarget
+      const programmatic = programmaticScroll.current
+      programmaticScroll.current = false
+      applyFollowEvent({
+        kind: 'scroll',
+        metrics: {
+          scrollTop: viewport.scrollTop,
+          scrollHeight: viewport.scrollHeight,
+          clientHeight: viewport.clientHeight,
+        },
+        programmatic,
+      })
+    },
+    [applyFollowEvent],
+  )
 
   return (
     <ThreadPrimitive.Root
@@ -270,7 +284,11 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
       {/* Sailor deviation from the upstream element, which pins the user turn to
           the top and stops following the tail. Bottom anchoring makes streaming
           follow the tail, pausing when the reader scrolls up and resuming from
-          ThreadScrollToBottom. Keep this on `assistant-ui add thread` updates. */}
+          ThreadScrollToBottom. The follow/pause decision itself lives in
+          `utils/scrollFollow.ts` so that anchoring and layout corrections above
+          the tail can never be mistaken for reader input, and this viewport opts
+          out of browser scroll anchoring (`overflow-anchor: none`) so the two
+          never fight over `scrollTop`. Keep this on `assistant-ui add thread`. */}
       <ThreadPrimitive.Viewport
         turnAnchor="bottom"
         autoScroll={autoScroll}
@@ -279,7 +297,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
         // that intent on the next content resize and pulls the viewport down.
         scrollToBottomOnRunStart={false}
         data-slot="aui_thread-viewport"
-        className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-scroll"
+        className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-scroll [overflow-anchor:none]"
         onWheel={handleViewportWheel}
         onPointerDown={handleViewportPointerDown}
         onPointerUp={handleViewportPointerUp}
@@ -314,9 +332,19 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean; entry: ThreadEntryL
             <ThreadHistorySkeleton />
           </AuiIf>
 
-          <div data-slot="aui_message-group" className="mb-8 flex flex-col gap-y-6 empty:hidden">
+          <div
+            data-slot="aui_message-group"
+            className="relative mb-8 flex flex-col gap-y-6 empty:hidden"
+          >
             <ThreadPrimitive.Messages>{() => <ThreadMessage />}</ThreadPrimitive.Messages>
-            {RuntimeEventStatus && <RuntimeEventStatus />}
+            {RuntimeEventStatus && (
+              // A transient runtime status lives in the group's bottom margin
+              // instead of the flow: mounting and clearing it must not resize the
+              // scroll box, or the tail jumps under the reader mid-stream.
+              <div data-slot="aui_runtime-event-slot" className="absolute inset-x-0 top-full">
+                <RuntimeEventStatus />
+              </div>
+            )}
           </div>
 
           <ThreadPrimitive.ViewportFooter
@@ -685,6 +713,9 @@ const AssistantMessage: FC = () => {
   } = useContext(ThreadComponentsContext)
   const metadata = useAuiState((s) => s.message.metadata)
   const turnId = getTurnIdFromMessageMetadata(metadata)
+  // The tail is the message being appended to; skipping its box would let the
+  // content-visibility placeholder replace the real height while it grows.
+  const isTail = useAuiState((s) => s.message.index === s.thread.messages.length - 1)
   const groupBy = TaskGroupComponent ? taskAwareGroupBy : messageGroupBy
 
   const ACTION_BAR_PT = 'pt-1.5'
@@ -695,7 +726,10 @@ const AssistantMessage: FC = () => {
     <MessagePrimitive.Root
       data-slot="aui_assistant-message-root"
       data-role="assistant"
-      className="fade-in slide-in-from-bottom-1 animate-in relative -mb-7.5 pb-7.5 duration-150 [contain-intrinsic-size:auto_200px] [content-visibility:auto]"
+      className={cn(
+        'fade-in slide-in-from-bottom-1 animate-in relative -mb-7.5 pb-7.5 duration-150',
+        !isTail && '[contain-intrinsic-size:auto_200px] [content-visibility:auto]',
+      )}
     >
       <div
         data-slot="aui_assistant-message-content"

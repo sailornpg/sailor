@@ -284,7 +284,7 @@ test('composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segm
 
   assert.match(
     composer,
-    /import \{ ContextBreakdown, type ContextSegment \} from "\.\/context-breakdown"/,
+    /import \{ ContextBreakdown, type ContextSegment \} from ['"]\.\/context-breakdown['"]/,
   )
   const card = composer.slice(composer.indexOf('<ContextBreakdown'))
   assert.match(card.slice(0, 240), /segments=\{/)
@@ -296,8 +296,11 @@ test('composer 上下文卡片渲染官方 ContextBreakdown 并接上真实 segm
   assert.doesNotMatch(composer, /usage\.system|usage\.tools/)
   // 总量必须来自官方 API，分类测量来自我们自己的字段。
   assert.match(slot, /import \{ getThreadMessageTokenUsage \} from '@assistant-ui\/ai-sdk'/)
-  assert.match(slot, /latestContextUsageState\(messages, getThreadMessageTokenUsage\)/)
-  assert.match(slot, /<ComposerContext[\s\S]{0,400}segments=\{/)
+  assert.match(slot, /latestContextUsageState\(\s*messages,\s*getThreadMessageTokenUsage,?\s*\)/)
+  // 消息改由 assistant-ui 状态读取，且卡片按用量签名 memo：流式增量不再重渲染整个 rail。
+  assert.match(slot, /useAuiState\(\(state\) => state\.thread\.messages\)/)
+  assert.match(slot, /memo\(ComposerContext\)/)
+  assert.match(slot, /<MemoComposerContext \{\.\.\.props\} \/>/)
   // 配色对齐官方 demo 的四类（灰阶两档 + 蓝色两档）。
   assert.match(slot, /bg-foreground\/45/)
   assert.match(slot, /bg-foreground\/25/)

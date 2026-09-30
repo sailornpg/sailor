@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const threadElement = 'src/renderer/src/components/assistant-ui/elements/thread.aui.tsx'
+const scrollFollow = 'src/renderer/src/components/assistant-ui/utils/scrollFollow.ts'
 const autoScrollHook =
   'node_modules/@assistant-ui/react/dist/primitives/thread/useThreadViewportAutoScroll.js'
 const scrollToBottomPrimitive =
@@ -29,10 +30,6 @@ test('bottom anchoring keeps the follow, pause and re-pin affordances wired', as
   // A run start must not enqueue a forced bottom scroll that can win a race
   // with a reader scrolling upward while streamed content resizes the thread.
   assert.match(source, /scrollToBottomOnRunStart=\{false\}/)
-  // A programmatic jump to the bottom during tool streaming must not clear a
-  // pause that was caused by the reader scrolling upward.
-  assert.match(source, /const autoScrollPaused = useRef\(false\)/)
-  assert.match(source, /const userResumedAtBottom =/)
   assert.match(source, /onPointerCancel=\{handleViewportPointerUp\}/)
   assert.match(source, /closest\('\.aui-thread-scroll-to-bottom'\)/)
 
@@ -46,4 +43,32 @@ test('bottom anchoring keeps the follow, pause and re-pin affordances wired', as
   const primitive = await readFile(scrollToBottomPrimitive, 'utf8')
   // The control only exists while the reader is away from the bottom.
   assert.match(primitive, /if \(isAtBottom\) return null/)
+})
+
+test('the viewport delegates follow arbitration to the pure decision module', async () => {
+  const source = await readFile(threadElement, 'utf8')
+
+  // The element only observes input and forwards it; the decision table lives in
+  // the pure module covered by tests/thread-scroll-intent.test.ts.
+  assert.match(source, /nextScrollFollow\(follow\.current, event\)/)
+  assert.match(source, /kind: 'wheel'/)
+  assert.match(source, /kind: 'pin-control'/)
+  assert.match(source, /kind: 'scroll'/)
+  assert.match(source, /programmaticScroll/)
+
+  // A programmatic jump to the bottom during tool streaming must not clear a
+  // pause that was caused by the reader scrolling upward.
+  assert.match(source, /programmatic/)
+
+  // Browser scroll anchoring must not move `scrollTop` behind the decision
+  // module's back, or a layout correction above the tail reads as reader input.
+  assert.match(source, /\[overflow-anchor:none\]/)
+
+  const decision = await readFile(scrollFollow, 'utf8')
+  // Only an upward gesture that leaves the scroll height untouched is reader
+  // intent; a correction above a growing answer moves the offset too.
+  assert.match(decision, /state\.scrollHeight === scrollHeight/)
+  // A paused reader is not resumed by a programmatic scroll landing at the
+  // bottom; it needs their own downward wheel or the scroll-to-bottom control.
+  assert.match(decision, /state\.downwardIntent \|\| state\.pinIntent/)
 })

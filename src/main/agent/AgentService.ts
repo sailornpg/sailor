@@ -5,6 +5,7 @@ import { type AgentRunEvent, type AgentRunRequest } from '@shared/contracts.js'
 import type { SettingsService } from '../settings/SettingsService.js'
 import type { WorkspaceService } from '../workspaces/WorkspaceService.js'
 import { getAgentErrorMessage } from './getAgentErrorMessage.js'
+import { RunMessageWriter } from './runMessageWriter.js'
 import type { WriteApprovalResponse } from '../../shared/contracts.js'
 import type { AskUserInteractionResponse } from './pi/AskUserInteraction.js'
 
@@ -14,6 +15,8 @@ interface AgentServiceDependencies {
   piStorageDirectory: string
   onFileChange: (chatId: string) => void
   workspace: WorkspaceService
+  /** Test seam for the streamed-message persistence interval. */
+  runPersistIntervalMs?: number
 }
 
 export class AgentService {
@@ -23,6 +26,7 @@ export class AgentService {
   private readonly compactions = new Map<string, AbortController>()
   private readonly runner?: AgentRunner
   private readonly workspace?: WorkspaceService
+  private readonly runPersistIntervalMs?: number
   constructor(
     private readonly emit: EventSink,
     private readonly settings: SettingsService,
@@ -34,6 +38,7 @@ export class AgentService {
         ? new PiRunner(dependencies.piStorageDirectory, undefined, dependencies.onFileChange)
         : undefined)
     this.workspace = dependencies.workspace
+    this.runPersistIntervalMs = dependencies.runPersistIntervalMs
   }
   async start(input: AgentRunRequest): Promise<void> {
     if (
@@ -98,19 +103,27 @@ export class AgentService {
         const workspace = this.workspace
         const lastMessage = request.messages.at(-1)
         const persistenceMessage = lastMessage?.role === 'assistant' ? lastMessage : undefined
+        const requestedMessages = request.messages
+        const writer = new RunMessageWriter((message) => {
+          if (!message.id) return Promise.resolve()
+          // A resumed assistant message replaces the copy the request carried.
+          const history =
+            lastMessage?.id === message.id ? requestedMessages.slice(0, -1) : requestedMessages
+          return workspace.updateRun(request.chatId, request.runId, [...history, message])
+        }, this.runPersistIntervalMs)
         const save = async () => {
-          for await (const message of readUIMessageStream({
-            message: persistenceMessage,
-            stream: persistenceStream,
-            onError: () => {
-              failure ??= '任务流读取失败。'
-            },
-          })) {
-            const previous = request.messages.at(-1)
-            const history =
-              previous?.id === message.id ? request.messages.slice(0, -1) : request.messages
-            if (message.id)
-              await workspace.updateRun(request.chatId, request.runId, [...history, message])
+          try {
+            for await (const message of readUIMessageStream({
+              message: persistenceMessage,
+              stream: persistenceStream,
+              onError: () => {
+                failure ??= '任务流读取失败。'
+              },
+            })) {
+              writer.write(message)
+            }
+          } finally {
+            await writer.flush()
           }
         }
         await Promise.all([forward(clientStream), save()])

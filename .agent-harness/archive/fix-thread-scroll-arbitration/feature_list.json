@@ -1,0 +1,191 @@
+{
+  "features": [
+    {
+      "id": "fix-thread-scroll-arbitration",
+      "name": "流式滚动抖动与跟随失锁修复",
+      "description": "流式生成期间 Thread viewport 被多路写入者争抢：assistant-ui 在每个 DOM mutation 后 scrollTo 到底部、浏览器 scroll anchoring 同时改 scrollTop、sticky footer 内块高度变化，再加上本地 autoScroll 状态机把任何 scrollTop 下降都当成用户上滚，导致视口在贴底与落后数百像素之间高频跳动、真实滚动被吞。本 feature 让跟随判定只认真实用户输入、关闭锚定干扰、稳定流式尾部高度，保留「跟随尾部 / 上滚暂停 / 点回底部恢复」的既有语义。建议在 fix-streaming-persistence-storm 之后实施，便于独立测量抖动阈值。",
+      "status": "done",
+      "dependencies": [],
+      "trd_spec": "docs/architecture.md",
+      "test_case_spec": "tests/thread-autoscroll.test.ts",
+      "checklist": [
+        {
+          "action": "把 thread.aui.tsx 中的跟随/暂停判定抽成不依赖 DOM 的纯函数（输入前后 scrollTop/scrollHeight/clientHeight、是否真实输入事件、是否程序化滚动），使布局或锚定引起的 scrollTop 下降不再被判定为用户上滚；新增 tests/thread-scroll-intent.test.ts 覆盖真实上滚、程序化滚动、内容增长、贴底恢复四类分支。",
+          "coverage": "unit",
+          "test": "node --test tests/thread-scroll-intent.test.ts",
+          "verify": "node --test tests/thread-scroll-intent.test.ts",
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node --test tests/thread-scroll-intent.test.ts",
+            "verifiedAt": "2026-09-29T11:36:26.882Z",
+            "exitCode": 0,
+            "stdout": "✔ 布局或锚定引起的上移不再被判定为用户上滚 (0.610875ms)\n✔ 真实的用户上滚（滚动高度不变）暂停跟随 (0.051375ms)\n✔ 滚轮上滚立即暂停跟随，不依赖随后的滚动事件 (0.046959ms)\n✔ 程序化滚动期间的上移不改变跟随状态 (0.044125ms)\n✔ 内容增长与贴底保持跟随 (0.049042ms)\n✔ 程序化滚到底部不算用户恢复阅读尾部 (0.039125ms)\n✔ 用户向下滚动到底部后恢复跟随 (0.044583ms)\n✔ 点击回到底部控件后恢复跟随 (0.033208ms)\n✔ 无变化的滚动事件返回同一个状态对象，避免无谓重渲染 (0.0495ms)\n✔ 远离底部时的亚像素回弹不算用户上滚 (0.059667ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 281.572375",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node --test tests/thread-scroll-intent.test.ts",
+            "verifiedAt": "2026-09-29T11:36:27.253Z",
+            "exitCode": 0,
+            "stdout": "✔ 布局或锚定引起的上移不再被判定为用户上滚 (1.011084ms)\n✔ 真实的用户上滚（滚动高度不变）暂停跟随 (0.058208ms)\n✔ 滚轮上滚立即暂停跟随，不依赖随后的滚动事件 (0.051625ms)\n✔ 程序化滚动期间的上移不改变跟随状态 (0.049917ms)\n✔ 内容增长与贴底保持跟随 (0.073042ms)\n✔ 程序化滚到底部不算用户恢复阅读尾部 (0.044334ms)\n✔ 用户向下滚动到底部后恢复跟随 (0.053958ms)\n✔ 点击回到底部控件后恢复跟随 (0.037458ms)\n✔ 无变化的滚动事件返回同一个状态对象，避免无谓重渲染 (0.050875ms)\n✔ 远离底部时的亚像素回弹不算用户上滚 (0.060375ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 269.676875",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node --test tests/thread-scroll-intent.test.ts",
+            "verifiedAt": "2026-09-29T11:36:27.253Z",
+            "exitCode": 0,
+            "stdout": "✔ 布局或锚定引起的上移不再被判定为用户上滚 (1.011084ms)\n✔ 真实的用户上滚（滚动高度不变）暂停跟随 (0.058208ms)\n✔ 滚轮上滚立即暂停跟随，不依赖随后的滚动事件 (0.051625ms)\n✔ 程序化滚动期间的上移不改变跟随状态 (0.049917ms)\n✔ 内容增长与贴底保持跟随 (0.073042ms)\n✔ 程序化滚到底部不算用户恢复阅读尾部 (0.044334ms)\n✔ 用户向下滚动到底部后恢复跟随 (0.053958ms)\n✔ 点击回到底部控件后恢复跟随 (0.037458ms)\n✔ 无变化的滚动事件返回同一个状态对象，避免无谓重渲染 (0.050875ms)\n✔ 远离底部时的亚像素回弹不算用户上滚 (0.060375ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 269.676875",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "在 thread viewport 上关闭浏览器滚动锚定（overflow-anchor: none），让程序化 scrollTo 期间产生的 scroll 事件不参与用户意图判定，并保留 scrollToBottomOnRunStart={false} 与回到底部控件的 instant 语义；同步更新 tests/thread-autoscroll.test.ts 与 thread.aui.tsx 中的 Sailor deviation 注释。",
+          "coverage": "static",
+          "verify": ["node --test tests/thread-autoscroll.test.ts"],
+          "tdd": false,
+          "coverage_reason": "滚动结果依赖真实布局与滚动容器几何，Node 侧没有布局引擎；源码接线由既有静态回归测试守护，真实滚动行为由本 feature 的 Electron 冒烟验收。",
+          "status": "done",
+          "verifyEvidence": {
+            "command": "node --test tests/thread-autoscroll.test.ts",
+            "verifiedAt": "2026-09-29T11:38:32.561Z",
+            "exitCode": 0,
+            "stdout": "✔ Thread viewport anchors the turn at the bottom so streaming follows the tail (1.877875ms)\n✔ bottom anchoring keeps the follow, pause and re-pin affordances wired (1.615958ms)\n✔ the viewport delegates follow arbitration to the pure decision module (0.636375ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 131.762542",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node --test tests/thread-autoscroll.test.ts",
+            "verifiedAt": "2026-09-29T11:38:32.561Z",
+            "exitCode": 0,
+            "stdout": "✔ Thread viewport anchors the turn at the bottom so streaming follows the tail (1.877875ms)\n✔ bottom anchoring keeps the follow, pause and re-pin affordances wired (1.615958ms)\n✔ the viewport delegates follow arbitration to the pure decision module (0.636375ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 131.762542",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "让流式期间尾部会挂载/卸载或改变高度的块（RuntimeEventStatus 行、turn 文件变更卡、composer 内 plan/todo 与审批块）不再改变滚动盒高度或从底部做补偿，并让正在流式的最后一条 message 不使用 content-visibility:auto；在真实 Electron 下断言这些块出现与消失时最后一行文本位置与 scrollTop 不跳动，浅色、深色和窄窗口各验一次；新增 fixture tests/fixtures/thread-scroll-stability-electron.cjs/.html/.tsx（复用真实 Thread 与脚本化流式注入）。",
+          "coverage": "e2e",
+          "test": "node tests/thread-scroll-stability-electron.test.mjs",
+          "verify": "node tests/thread-scroll-stability-electron.test.mjs",
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/thread-scroll-stability-electron.test.mjs",
+            "verifiedAt": "2026-09-29T12:07:58.403Z",
+            "exitCode": 0,
+            "stdout": "PASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node tests/thread-scroll-stability-electron.test.mjs",
+            "verifiedAt": "2026-09-29T12:08:10.640Z",
+            "exitCode": 0,
+            "stdout": "PASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node tests/thread-scroll-stability-electron.test.mjs",
+            "verifiedAt": "2026-09-29T12:08:10.640Z",
+            "exitCode": 0,
+            "stdout": "PASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "在同一 Electron 冒烟中验证滚动行为矩阵：流式期间 isAtBottom 不再高频翻转、视口位移抖动幅度在阈值内、用户滚轮上滚后视口保持位置不被拉回、点击回到底部恢复跟随、生成结束后滚动完全正常，并记录每项断言的实际测量值。",
+          "coverage": "e2e",
+          "test": "node tests/thread-scroll-stability-electron.test.mjs",
+          "verify": "node tests/thread-scroll-stability-electron.test.mjs",
+          "tdd": true,
+          "status": "done",
+          "testEvidence": {
+            "command": "node tests/thread-scroll-stability-electron.test.mjs",
+            "verifiedAt": "2026-09-29T12:08:28.545Z",
+            "exitCode": 0,
+            "stdout": "PASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证",
+            "stderr": ""
+          },
+          "verifyEvidence": {
+            "command": "node tests/thread-scroll-stability-electron.test.mjs",
+            "verifiedAt": "2026-09-29T12:08:40.897Z",
+            "exitCode": 0,
+            "stdout": "PASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证",
+            "stderr": ""
+          },
+          "evidence": {
+            "command": "node tests/thread-scroll-stability-electron.test.mjs",
+            "verifiedAt": "2026-09-29T12:08:40.897Z",
+            "exitCode": 0,
+            "stdout": "PASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证",
+            "stderr": ""
+          }
+        },
+        {
+          "action": "运行 lint、typecheck、build、专用 Electron 冒烟与 clean-state，把滚动行为与尾部几何的实测证据写入 harness，并同步 docs/architecture.md 中 viewport 跟随与滚动仲裁的说明。",
+          "coverage": "static",
+          "verify": [
+            "pnpm run lint:js",
+            "pnpm run lint:css",
+            "pnpm run typecheck",
+            "pnpm run build",
+            "node tests/thread-scroll-stability-electron.test.mjs",
+            "node .agent-harness/scripts/clean-state-check.mjs"
+          ],
+          "tdd": false,
+          "coverage_reason": "交付 gate 与文档同步不新增业务分支；行为证据来自纯函数测试、静态接线回归与专用 Electron 冒烟。",
+          "status": "done",
+          "verifyEvidenceList": [
+            {
+              "command": "pnpm run lint:js",
+              "verifiedAt": "2026-09-29T12:09:37.990Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs"
+            },
+            {
+              "command": "pnpm run lint:css",
+              "verifiedAt": "2026-09-29T12:09:39.234Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ stylelint 'src/**/*.css'"
+            },
+            {
+              "command": "pnpm run typecheck",
+              "verifiedAt": "2026-09-29T12:09:40.871Z",
+              "exitCode": 0,
+              "stdout": "",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+            },
+            {
+              "command": "pnpm run build",
+              "verifiedAt": "2026-09-29T12:09:52.167Z",
+              "exitCode": 0,
+              "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 234ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 244ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3386 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B8xBRngg.css                   215.55 kB\n../../out/renderer/assets/PanelPlaceholder-bbiNTd3S.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Wbfo6MS2.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DRN8-1FH.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-9i2S0FDA.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CC1Duj33.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-1cjNLc0h.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-BTaoiVEk.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BQdhumOW.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-dj8ZCZG_.js             4,725.90 kB\n../../out/renderer/assets/index-Bhw4nvOu.js                  6,879.48 kB\n✓ built in 8.58s",
+              "stderr": "$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            },
+            {
+              "command": "node tests/thread-scroll-stability-electron.test.mjs",
+              "verifiedAt": "2026-09-29T12:10:04.418Z",
+              "exitCode": 0,
+              "stdout": "PASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证",
+              "stderr": ""
+            },
+            {
+              "command": "node .agent-harness/scripts/clean-state-check.mjs",
+              "verifiedAt": "2026-09-29T12:10:16.735Z",
+              "exitCode": 0,
+              "stdout": "=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 195ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 203ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3386 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B8xBRngg.css                   215.55 kB\n../../out/renderer/assets/PanelPlaceholder-bbiNTd3S.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Wbfo6MS2.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DRN8-1FH.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-9i2S0FDA.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CC1Duj33.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-1cjNLc0h.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-BTaoiVEk.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BQdhumOW.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-dj8ZCZG_.js             4,725.90 kB\n../../out/renderer/assets/index-Bhw4nvOu.js                  6,879.48 kB\n✓ built in 8.18s\n=== Verification 完成 ===\n\n下一步：\n1. 阅读 .agent-harness/feature_list.json，了解当前 feature state\n2. 只选择一个未完成 feature\n3. 只实现这个 feature\n4. 声称完成前重新运行 verification\n=== Clean-state passed ===",
+              "stderr": "$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues."
+            }
+          ],
+          "evidence": {
+            "command": "pnpm run lint:js && pnpm run lint:css && pnpm run typecheck && pnpm run build && node tests/thread-scroll-stability-electron.test.mjs && node .agent-harness/scripts/clean-state-check.mjs",
+            "verifiedAt": "2026-09-29T12:10:16.735Z",
+            "exitCode": 0,
+            "stdout": "vite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 234ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 244ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3386 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B8xBRngg.css                   215.55 kB\n../../out/renderer/assets/PanelPlaceholder-bbiNTd3S.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Wbfo6MS2.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DRN8-1FH.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-9i2S0FDA.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CC1Duj33.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-1cjNLc0h.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-BTaoiVEk.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BQdhumOW.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-dj8ZCZG_.js             4,725.90 kB\n../../out/renderer/assets/index-Bhw4nvOu.js                  6,879.48 kB\n✓ built in 8.58s\nPASS 流式中的最后一条消息不使用 content-visibility:auto\nPASS viewport 关闭浏览器滚动锚定\nPASS 运行时事件行出现与消失不移动尾部文本\nPASS composer 计划面板出现后视口仍在底部\nPASS 尾部以上块塌缩时跟随保持\nPASS 跟随流式期间视口不离开底部\nPASS 用户上滚后不被拉回\nPASS 点击回到底部恢复跟随\nPASS turn 文件变更卡出现后视口仍在底部\nPASS 生成结束后滚动保持自由\nPASS 深色窄窗口下尾部几何一致\nPASS 浅色宽窗口截图取证\n=== Harness 初始化 ===\n=== pnpm run typecheck ===\n=== pnpm run build ===\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 53 modules transformed.\nrendering chunks...\nout/main/index-DuZ9XxME.js   16.24 kB\nout/main/index.js           198.19 kB\n✓ built in 195ms\nvite v7.3.6 building ssr environment for production...\ntransforming...\n✓ 98 modules transformed.\nrendering chunks...\nout/preload/index.cjs  174.58 kB\n✓ built in 203ms\nvite v7.3.6 building client environment for production...\ntransforming...\n✓ 3386 modules transformed.\nrendering chunks...\n../../out/renderer/index.html                                    1.43 kB\n../../out/renderer/assets/index-B8xBRngg.css                   215.55 kB\n../../out/renderer/assets/PanelPlaceholder-bbiNTd3S.js           0.73 kB\n../../out/renderer/assets/BrowserPreviewPanel-Wbfo6MS2.js        1.40 kB\n../../out/renderer/assets/addon-fit-D89xfLfG.js                  1.42 kB\n../../out/renderer/assets/SideChatPanel-DRN8-1FH.js              4.68 kB\n../../out/renderer/assets/ParticleSailboatScene-9i2S0FDA.js      5.28 kB\n../../out/renderer/assets/ChatParticleScene-CC1Duj33.js          7.21 kB\n../../out/renderer/assets/ReviewPanel-1cjNLc0h.js               11.84 kB\n../../out/renderer/assets/TerminalPanel-BTaoiVEk.js             21.70 kB\n../../out/renderer/assets/xterm-R4LLEgbX.js                    411.70 kB\n../../out/renderer/assets/react-three-fiber.esm-BQdhumOW.js  2,017.80 kB\n../../out/renderer/assets/FilesPanel-dj8ZCZG_.js             4,725.90 kB\n../../out/renderer/assets/index-Bhw4nvOu.js                  6,879.48 kB\n✓ built in 8.18s\n=== Verification 完成 ===\n\n下一步：\n1. 阅读 .agent-harness/feature_list.json，了解当前 feature state\n2. 只选择一个未完成 feature\n3. 只实现这个 feature\n4. 声称完成前重新运行 verification\n=== Clean-state passed ===",
+            "stderr": "$ eslint src tests scripts .agent-harness/scripts electron.vite.config.ts eslint.config.mjs\n$ stylelint 'src/**/*.css'\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\n$ pnpm run typecheck && electron-vite build\n$ tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js (400:0): A comment\n\n\"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle.\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/util.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\nnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.p\n... output truncated ..."
+          }
+        }
+      ],
+      "evidence": "Verified by .agent-harness/feature_list.json checklist at 2026-09-29T12:10:16.736Z"
+    }
+  ]
+}

@@ -37,10 +37,16 @@ const permissionSchema = z.object({
   mode: z.enum(['allow-reads', 'allow-edits', 'allow-all']),
 })
 
+/** One renderer notification per window is enough; each one re-reads the snapshot. */
+const NOTIFY_INTERVAL_MS = 120
+
 export class WorkspaceService {
   private readonly live = new Map<string, WorkspaceChat>()
   private readonly pendingWrites = new Map<string, Promise<void>>()
-  private readonly changed: () => void
+  private readonly notify: () => void
+  private notifyTimer: ReturnType<typeof setTimeout> | undefined
+  private notifyPending = false
+  private notifyLastAt = 0
   private readonly managing = new Set<string>()
   private viewedChatId: string | null | undefined
   protected readonly store: WorkspaceStore
@@ -48,12 +54,39 @@ export class WorkspaceService {
   constructor(
     store: WorkspaceStore,
     selectDirectory: () => Promise<string | null>,
-    changed: () => void = () => {},
+    notify: () => void = () => {},
     private readonly forkPiSession?: (parentId: string, sideId: string) => Promise<boolean>,
   ) {
-    this.changed = changed
+    this.notify = notify
     this.store = store
     this.selectDirectory = selectDirectory
+  }
+  /**
+   * Coalesces workspace-change notifications. The first change in a window is
+   * reported immediately, changes inside the window collapse into one trailing
+   * report, so a streaming run cannot flood the renderer with snapshot fetches
+   * while a terminal run state still always reaches it.
+   */
+  private notifyChanged(): void {
+    const now = Date.now()
+    if (this.notifyTimer === undefined && now - this.notifyLastAt >= NOTIFY_INTERVAL_MS) {
+      this.notifyLastAt = now
+      this.notify()
+      return
+    }
+    this.notifyPending = true
+    if (this.notifyTimer) return
+    this.notifyTimer = setTimeout(
+      () => {
+        this.notifyTimer = undefined
+        if (!this.notifyPending) return
+        this.notifyPending = false
+        this.notifyLastAt = Date.now()
+        this.notify()
+      },
+      Math.max(0, NOTIFY_INTERVAL_MS - (now - this.notifyLastAt)),
+    )
+    this.notifyTimer.unref?.()
   }
   async snapshot() {
     const snapshot = await this.store.snapshot()
@@ -75,13 +108,13 @@ export class WorkspaceService {
   async pickProject() {
     const path = await this.selectDirectory()
     const project = path === null ? null : await this.store.addProject(path)
-    this.changed()
+    this.notifyChanged()
     return project
   }
   async createChat(projectId: unknown) {
     const chat = await this.store.createChat(idSchema.parse(projectId))
     this.viewedChatId = chat.id
-    this.changed()
+    this.notifyChanged()
     return chat
   }
   async createSideChat(parentChatId: unknown) {
@@ -127,7 +160,7 @@ export class WorkspaceService {
         await this.store.manageChat(side.id, { action: 'delete' })
         throw error
       }
-      this.changed()
+      this.notifyChanged()
       return side
     } finally {
       this.managing.delete(id)
@@ -158,12 +191,12 @@ export class WorkspaceService {
         await this.persist(live.id)
       } else await this.store.updateChat(parsed.activeChatId, { unread: false })
     }
-    this.changed()
+    this.notifyChanged()
   }
   async setPermission(input: unknown) {
     const parsed = permissionSchema.parse(input)
     await this.store.setProjectPermission(parsed.projectId, parsed.mode)
-    this.changed()
+    this.notifyChanged()
   }
   async manageChat(chatId: unknown, input: unknown) {
     const id = idSchema.parse(chatId)
@@ -202,7 +235,7 @@ export class WorkspaceService {
       }
       if ((change.action === 'archive' || change.action === 'delete') && this.viewedChatId === id)
         this.viewedChatId = null
-      this.changed()
+      this.notifyChanged()
       return deletedIds
     } finally {
       for (const chatId of ids) this.managing.delete(chatId)
@@ -229,7 +262,7 @@ export class WorkspaceService {
       })
       const saved = await this.store.updateChat(chat.id, chat)
       this.live.set(chat.id, saved)
-      this.changed()
+      this.notifyChanged()
     } finally {
       this.managing.delete(request.chatId)
     }
@@ -270,7 +303,7 @@ export class WorkspaceService {
     if (!chat || chat.runId !== runId) throw new Error('计划运行已失效。')
     chat.plan = await this.store.updatePlan(chatId, runId, plan)
     chat.updatedAt = Date.now()
-    this.changed()
+    this.notifyChanged()
   }
   async finishRun(chatId: string, runId: string, status: RunStatus, error: string | null = null) {
     const chat = this.live.get(chatId)
@@ -303,7 +336,7 @@ export class WorkspaceService {
       } catch {
         chat.saveError = '会话保存失败，输出仍保留在本次应用内；请重试保存。'
       }
-      this.changed()
+      this.notifyChanged()
     })
     this.pendingWrites.set(chatId, operation)
     return operation

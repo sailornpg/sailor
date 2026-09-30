@@ -10,10 +10,6 @@ import type {
 } from '../../../shared/fileReview.js'
 
 const VERSION = 1
-const MAX_SNAPSHOT_BYTES = 512 * 1024
-const MAX_RECORDS = 500
-const MAX_JOURNAL_BYTES = 8 * 1024 * 1024
-const MAX_RETURN_LINES = 2_000
 
 type Snapshot = {
   hash: string
@@ -69,8 +65,7 @@ async function snapshot(root: string, path: string): Promise<Snapshot> {
     }
     const content = await readFile(absolute)
     const digest = hash(content)
-    if (content.byteLength > MAX_SNAPSHOT_BYTES || content.includes(0))
-      return { hash: digest, lineable: false, existed: true }
+    if (content.includes(0)) return { hash: digest, lineable: false, existed: true }
     try {
       return {
         hash: digest,
@@ -95,7 +90,7 @@ function diff(
 ): { lines: DiffLine[]; added: number; removed: number; truncated: boolean } {
   if (!before.lineable || !after.lineable || before.text === undefined || after.text === undefined)
     return { lines: [], added: 0, removed: 0, truncated: true }
-  const chunks = diffLines(before.text, after.text, { maxEditLength: 2_000, timeout: 50 })
+  const chunks = diffLines(before.text, after.text)
   if (!chunks) return { lines: [], added: 0, removed: 0, truncated: true }
   const result: DiffLine[] = []
   let added = 0
@@ -107,15 +102,14 @@ function diff(
     for (const text of rows) {
       if (kind === 'added') added++
       if (kind === 'removed') removed++
-      if (result.length < MAX_RETURN_LINES) result.push({ kind, text })
+      result.push({ kind, text })
     }
   }
-  const clipped = chunks.reduce((sum, chunk) => sum + chunk.count, 0) > MAX_RETURN_LINES
   return {
     lines: result,
     added,
     removed,
-    truncated: clipped,
+    truncated: false,
   }
 }
 
@@ -157,8 +151,6 @@ export class ChatFileChangeJournal {
           at: Date.now(),
           ...(discontinuous ? { discontinuous: true } : {}),
         })
-        if (current.records.length > MAX_RECORDS)
-          current.records.splice(0, current.records.length - MAX_RECORDS)
         await this.save(current)
         this.changed(chatId)
       })
@@ -339,11 +331,7 @@ export class ChatFileChangeJournal {
     await mkdir(this.directory, { recursive: true, mode: 0o700 })
     const target = this.path(value.chatId)
     const temporary = `${target}.${randomUUID()}.tmp`
-    let content = JSON.stringify(value)
-    while (Buffer.byteLength(content) > MAX_JOURNAL_BYTES && value.records.length > 1) {
-      value.records.shift()
-      content = JSON.stringify(value)
-    }
+    const content = JSON.stringify(value)
     try {
       await writeFile(temporary, content, { mode: 0o600 })
       await rename(temporary, target)

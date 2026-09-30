@@ -54,28 +54,34 @@ type State = Omit<z.infer<typeof fileSchema>, 'chats'> & { chats: WorkspaceChat[
 
 export class WorkspaceStore {
   private operation: Promise<unknown> = Promise.resolve()
+  private cached: State | undefined
   private readonly filePath: string
-  constructor(filePath: string) {
+  private readonly readFileText: (path: string) => Promise<string>
+  constructor(
+    filePath: string,
+    readFileText: (path: string) => Promise<string> = (path) => readFile(path, 'utf8'),
+  ) {
     this.filePath = filePath
+    this.readFileText = readFileText
   }
 
   async snapshot(): Promise<WorkspaceSnapshot> {
     await this.operation
-    const { projects, chats, activeChatId, collapsedProjectIds } = await this.read()
+    const { projects, chats, activeChatId, collapsedProjectIds } = await this.state()
     return {
-      projects,
+      projects: structuredClone(projects),
       chats: chats
         .map(({ messages: _messages, contextSnapshot: _contextSnapshot, ...chat }) => chat)
         .sort((a, b) => b.updatedAt - a.updatedAt),
       activeChatId,
-      collapsedProjectIds,
+      collapsedProjectIds: [...collapsedProjectIds],
     }
   }
   async getChat(id: string): Promise<WorkspaceChat> {
     await this.operation
-    const chat = (await this.read()).chats.find((chat) => chat.id === id)
+    const chat = (await this.state()).chats.find((chat) => chat.id === id)
     if (!chat) throw new Error('会话不存在。')
-    return chat
+    return structuredClone(chat)
   }
   async addProject(selectedPath: string) {
     let rootPath: string
@@ -237,7 +243,7 @@ export class WorkspaceStore {
   }
   private mutate<T>(update: (state: State) => T): Promise<T> {
     const result = this.operation.then(async () => {
-      const state = await this.read()
+      const state = await this.state()
       const value = update(state)
       await mkdir(dirname(this.filePath), { recursive: true })
       const temporary = `${this.filePath}.${randomUUID()}.tmp`
@@ -256,9 +262,21 @@ export class WorkspaceStore {
     )
     return result
   }
-  private async read(): Promise<State> {
+  /**
+   * Reads, validates and keeps the workspace file once per instance.
+   *
+   * Re-reading and re-validating the whole workspace on every mutation made a
+   * streaming run pay O(workspace) per chunk; the file is loaded on first use and
+   * served from memory afterwards. Every read path hands out clones, so callers
+   * can keep treating the result as a private copy.
+   */
+  private async state(): Promise<State> {
+    this.cached ??= await this.loadState()
+    return this.cached
+  }
+  private async loadState(): Promise<State> {
     try {
-      const state = fileSchema.parse(JSON.parse(await readFile(this.filePath, 'utf8'))) as State
+      const state = fileSchema.parse(JSON.parse(await this.readFileText(this.filePath))) as State
       const ids = new Set(state.projects.map((p) => p.id))
       const chats = new Set(state.chats.map((c) => c.id))
       if (
