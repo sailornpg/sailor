@@ -6,6 +6,7 @@
 // navigation, accessibility snapshot, click and screenshot all hit a real page.
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { createServer } = require('node:http')
+const { execFileSync } = require('node:child_process')
 const { mkdtempSync, readFileSync, rmSync, writeFileSync } = require('node:fs')
 const { join, resolve } = require('node:path')
 const { tmpdir } = require('node:os')
@@ -17,6 +18,12 @@ app.disableHardwareAcceleration()
 const evidenceDir = resolve('.agent-harness/evidence/sidebar-browser')
 const results = []
 let finished = false
+
+/**
+ * 原生子视图不参与 `capturePage`，所以圆角、裁剪这类原生侧外观只能靠窗口级截图检查。
+ * 默认关闭：需要屏幕录制权限，且会把窗口摆到屏幕上；要检查时设 SAILOR_BROWSER_SCREENSHOT=1。
+ */
+const screenShot = process.env.SAILOR_BROWSER_SCREENSHOT === '1'
 
 function check(name, ok, detail) {
   results.push({ name, ok: Boolean(ok), detail: detail === undefined ? null : detail })
@@ -107,6 +114,16 @@ function waitFor(predicate, timeoutMs = 15_000) {
   })
 }
 
+/** 和 waitFor 同一套轮询，但超时不抛错：断言自己报结果，便于定位是哪一条失败。 */
+async function settled(predicate, timeoutMs = 5000) {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    if (predicate()) return true
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
+  }
+  return predicate()
+}
+
 function finish(code) {
   if (finished) return
   finished = true
@@ -132,7 +149,12 @@ async function main() {
   const siteHtml = readFileSync(resolve('tests/fixtures/browser-electron-site.html'), 'utf8')
   const siteServer = createServer((_request, response) => {
     response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-    response.end(siteHtml)
+    // 深色页面让原生视图的圆角在窗口级截图里看得清。
+    response.end(
+      screenShot
+        ? siteHtml.replace('<body>', '<body style="background:#101820;color:#e8e8e8">')
+        : siteHtml,
+    )
   })
   await new Promise((resolvePromise) => siteServer.listen(0, '127.0.0.1', resolvePromise))
   const siteUrl = `http://127.0.0.1:${siteServer.address().port}/`
@@ -165,7 +187,9 @@ async function main() {
   const { createBrowserTools } = await mainServer.ssrLoadModule('/src/main/browser/browserTools.ts')
 
   const win = new BrowserWindow({
-    show: false,
+    show: screenShot,
+    x: screenShot ? 120 : undefined,
+    y: screenShot ? 120 : undefined,
     width: 1280,
     height: 820,
     webPreferences: {
@@ -358,6 +382,47 @@ async function main() {
       `${png.byteLength} bytes`,
     )
     writeFileSync(join(evidenceDir, 'browser-page.png'), png)
+
+    // 4.5) 面板选择下拉：菜单飞到 dock 左侧，浏览器页面必须留在屏幕上（不能整块消失）。
+    check('展开前原生视图挂在窗口上', win.contentView.children.length >= 1)
+    await win.webContents.executeJavaScript('window.__fixtureOpenPicker(true)')
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 600))
+    check(
+      '面板选择下拉展开时浏览器页面保持可见（原生视图没被摘掉）',
+      win.contentView.children.length >= 1,
+      `children=${win.contentView.children.length}`,
+    )
+    writeFileSync(
+      join(evidenceDir, 'panel-picker-left.png'),
+      (await win.webContents.capturePage()).toPNG(),
+    )
+    // 原生子视图不参与 capturePage：要同时看到"菜单 + 浏览器页面 + 圆角卡片"，只能用窗口级截图。
+    if (screenShot) {
+      try {
+        execFileSync('screencapture', [
+          '-x',
+          '-R',
+          '120,120,1280,880',
+          join(evidenceDir, 'native-view.png'),
+        ])
+        check('窗口级截图取到原生视图（含圆角）', true)
+      } catch (error) {
+        check('窗口级截图取到原生视图（含圆角）', false, String(error))
+      }
+    }
+    await win.webContents.executeJavaScript('window.__fixtureOpenPicker(false)')
+
+    // 4.6) 兜底：别处的浮层真的落到面板上时，原生视图让位，菜单才不会被页面盖住。
+    await win.webContents.executeJavaScript('window.__fixtureOpenFallbackMenu(true)')
+    const detached = await settled(() => win.contentView.children.length === 0)
+    check(
+      '压在面板上的浮层让原生视图让位（菜单不被页面盖住）',
+      detached,
+      `children=${win.contentView.children.length}`,
+    )
+    await win.webContents.executeJavaScript('window.__fixtureOpenFallbackMenu(false)')
+    const restored = await settled(() => win.contentView.children.length >= 1)
+    check('兜底浮层收起后原生视图恢复挂载', restored, `children=${win.contentView.children.length}`)
 
     // 5) 默认允许的最强证据：用户把标签页全关掉（甚至关掉面板）之后，
     //    Agent 不需要任何用户动作就能重新拿到浏览器并操作真实页面。

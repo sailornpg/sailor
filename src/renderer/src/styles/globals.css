@@ -1311,6 +1311,8 @@ kbd {
   flex: 1;
   min-height: 0;
   min-width: 0;
+  /* 内容区包成一张圆角卡片，不贴着 dock 的边缘；原生视图跟着这块矩形走。 */
+  margin: 8px;
   background: var(--surface-subtle);
 }
 .panel-web-surface[data-hidden='true'] {

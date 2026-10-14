@@ -126,7 +126,7 @@ AppShell 用既有的 `requestPanelOpen({ panelId: 'browser' })` 通道把右侧
 ### 可见性边界
 
 默认允许不等于"偷偷浏览"：页面本身由 `WebContentsView` 承载，只在面板打开并且几何被上报时才挂在窗口上；
-面板关掉、切到别的面板 tab、应用对话框遮挡、窗口不可见时，renderer 立即上报 `null`，main 把原生视图摘掉。
+面板关掉、切到别的面板 tab、对话框或下拉菜单遮住面板、窗口不可见时，renderer 立即上报 `null`，main 把原生视图摘掉。
 也就是说——**用户没在看的时候，浏览器不在屏幕上；用户打开面板时看到的就是 Agent 正在操作的那个页面**，
 可以随时用地址栏或鼠标接管。
 
@@ -139,8 +139,9 @@ AppShell 用既有的 `requestPanelOpen({ panelId: 'browser' })` 通道把右侧
 - 顶部工具条：后退 / 前进 / 刷新 / 停止、地址栏（可编辑，回车导航）、新建 tab。
 - tab 条：与终端面板一致的心智，显示标题与加载状态点；`+` 新建，关闭即销毁该 tab。
 - 内容区只上报几何：`BrowserPanel` 用一个填满剩余空间的占位 div，`ResizeObserver` 把它的
-  `getBoundingClientRect()` 发给 main，main 据此 `setBounds`。
-- 几何失效即隐藏：面板不可见、tab 被切换、窗口失焦/最小化、应用级对话框打开时，
+  `getBoundingClientRect()` 发给 main，main 据此 `setBounds`。这块 div 是留边 8px 的圆角卡片，
+  原生视图按同一半径切角（`setBorderRadius`），所以页面看起来就是容器里的一张圆角卡片。
+- 几何失效即隐藏：面板不可见、tab 被切换、窗口失焦/最小化、对话框或压在面板上的下拉菜单打开时，
   renderer 上报 `null` bounds，main 把 view 移除或设为不可见，避免浮层遮挡与"幽灵页面"。
 - 空态：没有 tab 时显示官方设计的空态（不是伪造的页面）。
 

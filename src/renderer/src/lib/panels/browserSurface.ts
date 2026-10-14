@@ -71,9 +71,56 @@ export function shouldRevealBrowserFor(
   return revealedProjectId === activeProjectId
 }
 
-/** 对话框、菜单这类浮层会盖住面板区域；原生 WebContentsView 永远在页面之上。 */
-export const OVERLAY_SELECTOR = '[data-slot="dialog-overlay"], [role="dialog"]'
+/**
+ * 会盖住面板区域的浮层；原生 WebContentsView 永远画在页面之上，这些层出现时必须把视图摘掉。
+ * radix 的下拉菜单走 portal 挂到 body 上，不受 dock 的 overflow 约束，所以被盖住的是菜单自己。
+ * 刻意不含 tooltip：悬停提示是瞬时反馈，浏览器面板自己的工具条按钮就带 tooltip，一悬停就摘视图会闪。
+ */
+export const OVERLAY_SELECTOR = [
+  '[role="dialog"]',
+  '[data-slot="dialog-overlay"]',
+  '[role="menu"]',
+  '[data-slot="dropdown-menu-content"]',
+  '[data-slot="dropdown-menu-sub-content"]',
+  '[data-slot="select-content"]',
+].join(', ')
 
-export function hasBlockingOverlay(root: ParentNode): boolean {
-  return root.querySelector(OVERLAY_SELECTOR) !== null
+/** 零尺寸矩形永远不算相交：布局还没稳定时不能把它误判成"被盖住"。 */
+export function rectsOverlap(left: RectLike, right: RectLike): boolean {
+  if (left.width <= 0 || left.height <= 0 || right.width <= 0 || right.height <= 0) return false
+  return (
+    left.x < right.x + right.width &&
+    right.x < left.x + left.width &&
+    left.y < right.y + right.height &&
+    right.y < left.y + left.height
+  )
+}
+
+/**
+ * 是否有浮层真的压在面板区域上。只认相交：侧栏和 composer 里的菜单离面板很远，
+ * 不该让浏览器页面跟着闪一下。没有浮层时连几何都不读——流式输出会高频触发 DOM 变更，
+ * 每次测量都会强制一次同步布局。
+ */
+export function hasBlockingOverlay(root: ParentNode, panel: Element): boolean {
+  const layers = root.querySelectorAll(OVERLAY_SELECTOR)
+  if (layers.length === 0) return false
+  const area = panel.getBoundingClientRect()
+  for (const layer of layers) {
+    if (rectsOverlap(layer.getBoundingClientRect(), area)) return true
+  }
+  return false
+}
+
+/** 面板选择菜单与 dock 内边之间留的间距。 */
+export const PICKER_GAP = 8
+
+/**
+ * 面板选择菜单的横向偏移：让它的右边缘落在 dock 左侧 `gap` 像素处。
+ *
+ * dock 的内容区被原生 WebContentsView 占着，菜单只要压上去，原生视图就必须让位，
+ * 浏览器页面会整块消失。所以菜单默认飞到 dock 左侧的对话区上空——那里是普通 DOM，
+ * 菜单完整可见的同时页面一直留在屏幕上。偏移按当前几何算，dock 拖宽后仍然成立。
+ */
+export function pickerSideOffset(trigger: RectLike, dock: RectLike, gap = PICKER_GAP): number {
+  return Math.max(gap, Math.round(trigger.x - dock.x + gap))
 }

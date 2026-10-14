@@ -1,7 +1,7 @@
 import { ArrowLeft, ArrowRight, Globe, Plus, RotateCw, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { BrowserSiteState, BrowserTabBounds } from '@shared/browser'
-import { browserTargetFromInput } from '@shared/browser'
+import { BROWSER_SURFACE_RADIUS_PX, browserTargetFromInput } from '@shared/browser'
 import { Button } from '@/components/ui/button'
 import type { PanelProps } from '@/lib/panels/registry'
 import {
@@ -32,6 +32,7 @@ export default function BrowserPanel({ context, data }: PanelProps) {
   const [documentHidden, setDocumentHidden] = useState(
     typeof document === 'undefined' ? false : document.hidden,
   )
+  const panelRef = useRef<HTMLDivElement | null>(null)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
   const lastBoundsRef = useRef<BrowserTabBounds | null>(null)
   const handledPreviewRef = useRef<string | null>(null)
@@ -71,13 +72,25 @@ export default function BrowserPanel({ context, data }: PanelProps) {
     }
   }, [projectId])
 
-  // 原生视图永远画在页面之上，所以只要可能被盖住就必须主动摘掉。
+  // 原生视图永远画在页面之上，所以只要被浮层盖住就必须主动摘掉。菜单是 portal，
+  // 不受 dock 的 overflow 约束，被盖住的只会是菜单自己（例如面板选择下拉）。
+  // 这里量的是面板外壳而不是内容区：内容区被摘掉时会变成 display:none，
+  // 拿它当基准会来回翻转。
   useEffect(() => {
-    const update = () => setOverlayed(hasBlockingOverlay(document))
+    const update = () => {
+      const panel = panelRef.current
+      setOverlayed(panel !== null && hasBlockingOverlay(document, panel))
+    }
     update()
     const observer = new MutationObserver(update)
-    observer.observe(document.body, { childList: true, subtree: true })
-    return () => observer.disconnect()
+    // attributes 也必须看：radix 的浮层是插入后才在下一帧写入坐标的，
+    // 只看 childList 会漏掉"插入时还没定位、之后才落到面板上"这一步。
+    observer.observe(document.body, { childList: true, attributes: true, subtree: true })
+    window.addEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
   }, [])
 
   useEffect(() => {
@@ -159,7 +172,7 @@ export default function BrowserPanel({ context, data }: PanelProps) {
   }
 
   return (
-    <div className="panel-web">
+    <div className="panel-web" ref={panelRef}>
       <div className="panel-web-toolbar">
         <Button
           aria-label="后退"
@@ -269,7 +282,13 @@ export default function BrowserPanel({ context, data }: PanelProps) {
       {error !== null && <p className="panel-web-error">{error}</p>}
 
       {/* 原生视图只覆盖这个占位区；工具条与 tab 条始终由页面自己渲染。 */}
-      <div className="panel-web-surface" data-hidden={!visible} ref={surfaceRef}>
+      <div
+        className="panel-web-surface"
+        data-hidden={!visible}
+        ref={surfaceRef}
+        // 原生视图只覆盖这块圆角矩形，所以半径必须由 main 侧的 setBorderRadius 一起用。
+        style={{ borderRadius: BROWSER_SURFACE_RADIUS_PX }}
+      >
         {state?.tabs.length === 0 && <div className="panel-web-empty">还没有标签页</div>}
       </div>
     </div>

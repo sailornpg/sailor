@@ -3,11 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "description": "A local-first AI coding workspace built with Electron, AI SDK, and assistant-ui.",
+  "author": "sailornpg",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sailornpg/sailor.git"
+  },
   "main": "./out/main/index.js",
   "type": "module",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "pnpm run typecheck && electron-vite build",
+    "dist": "pnpm run build && electron-builder --mac --win --publish never",
+    "dist:mac": "pnpm run build && electron-builder --mac --publish never",
+    "dist:win": "pnpm run build && electron-builder --win --publish never",
+    "release": "pnpm run build && electron-builder --mac --win --publish always",
     "postinstall": "node scripts/ensure-node-pty-helper.mjs",
     "prepare": "husky",
     "preview": "electron-vite preview",
@@ -104,6 +113,14 @@
       "**/node_modules/node-pty/**"
     ],
     "npmRebuild": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "sailornpg",
+        "repo": "sailor",
+        "releaseType": "draft"
+      }
+    ],
     "extraResources": [
       {
         "from": "resources/icon.png",
@@ -112,15 +129,31 @@
     ],
     "mac": {
       "icon": "resources/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "artifactName": "Sailor-${version}-${arch}.${ext}",
       "target": [
-        "dmg"
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ]
     },
     "win": {
       "icon": "resources/icon.ico",
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
+    },
+    "nsis": {
+      "artifactName": "Sailor-${version}-setup-${arch}.${ext}"
     },
     "linux": {
       "icon": "resources/icon.png",

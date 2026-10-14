@@ -93,6 +93,13 @@ export interface BrowserTabBounds {
   height: number
 }
 
+/**
+ * 浏览器内容区容器的圆角（CSS 像素）。renderer 用它画圆角卡片，main 用它把原生视图切同样的角：
+ * 原生视图永远画在页面之上，不切角就会用自己的方形角盖住容器的圆角。
+ * 数值与 `--radius-lg` 对齐。
+ */
+export const BROWSER_SURFACE_RADIUS_PX = 10
+
 export interface BrowserSiteState {
   projectId: string
   activeTabId: string | null

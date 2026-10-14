@@ -1,5 +1,5 @@
 import { session, WebContentsView, type BrowserWindow } from 'electron'
-import { isAllowedBrowserUrl } from '../../shared/browser.js'
+import { BROWSER_SURFACE_RADIUS_PX, isAllowedBrowserUrl } from '../../shared/browser.js'
 import type {
   BrowserTab,
   BrowserTabBounds,
@@ -46,6 +46,8 @@ class ElectronBrowserTab implements BrowserTab {
         partition: BROWSER_SESSION_PARTITION,
       },
     })
+    // 面板把内容区画成圆角容器，原生视图得切同样的角，否则方形页面会盖住容器圆角。
+    this.#view.setBorderRadius(BROWSER_SURFACE_RADIUS_PX)
     const { webContents } = this.#view
     webContents.setWindowOpenHandler(({ url }) => {
       // 子窗口在侧边栏里没有意义：同标签页继续导航，非法地址直接丢弃。

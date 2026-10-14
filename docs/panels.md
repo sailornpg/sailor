@@ -167,7 +167,9 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 「浏览器」是 project scope 的真实浏览器，不是预览卡片：main 用 `WebContentsView` 持有页面，renderer 只测量并上报内容区矩形。
 
 - 工具条：后退 / 前进 / 刷新（加载中变停止）/ 地址栏（回车导航，Esc 还原）；下一行是标签页条与 `+`。
-- 内容区是一个空占位 div，`ResizeObserver` + 窗口 resize + 首帧 rAF 上报几何；面板切走、应用级对话框出现、`document.hidden` 时上报 `null`，main 立刻把原生视图摘下来（原生浮层永远画在页面之上，不摘会遮住对话框）。
+- 内容区是一张不贴边的圆角卡片：`.panel-web-surface` 四边各留 8px、圆角取 `--radius-lg`。原生视图跟着同一块矩形走，所以 main 用 `setBorderRadius(BROWSER_SURFACE_RADIUS_PX)` 切同样的角，否则方形页面会盖住容器圆角；半径由 `shared/browser.ts` 的常量同时供两侧使用。
+- 内容区是一个空占位 div，`ResizeObserver` + 窗口 resize + 首帧 rAF 上报几何；面板切走、浮层（对话框、下拉菜单）压在面板上、`document.hidden` 时上报 `null`，main 立刻把原生视图摘下来（原生浮层永远画在页面之上，不摘就会盖住浮层）。遮挡判定按矩形相交，所以侧栏和 composer 里的菜单不会让浏览器页面跟着闪。注意 radix 的浮层是插入后才在下一帧写入坐标的，`MutationObserver` 必须同时观察 `attributes`，只看 `childList` 会漏掉面板选择下拉这一类。
+- 面板选择下拉默认**飞到 dock 左侧的对话区上空**（`PanelPickerMenu` 按当前几何算 `sideOffset`，`side="left"`）：菜单压在 dock 内容区上时原生视图就得让位、浏览器页面会整块消失；对话区是普通 DOM，菜单完整可见的同时页面留在屏幕上。只有几何真的容不下（窗口很窄 / dock 很宽）时 radix 才会把菜单翻回面板上，那时才走"摘掉原生视图"的兜底。
 - 打开面板 = 要一个浏览器：没有标签页时自动补一个 `about:blank`；切面板 tab 只把视图摘下来，页面与登录态留在 main（站点按 LRU 最多保留 4 个工作区）。
 - 地址校验两处都做：地址栏提交时用 `browserTargetFromInput`（缺协议补 https、回环补 http），main 在 `loadURL` 前再用 `isAllowedBrowserUrl` 拦一次；`file:` / `javascript:` / `data:` / `devtools:` 一律拒绝。
 - 抓取类工具（`fetch_page`）仍通过 `requestPanelOpen({ panelId: 'browser', data: { preview } })` 打开面板，现在会**真的导航**到那条 URL，而不是渲染一段文本。
@@ -179,10 +181,13 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 
 ```bash
 node --test tests/browser-panel.test.ts tests/browser-ipc.test.ts tests/browser-site.test.ts
-node tests/browser-electron-smoke.mjs   # 真实 Electron：几何契约 + 真实导航 + ref 点击 + 截图 + 默认允许 + 自动展示 + agent 回合
+node tests/browser-electron-smoke.mjs   # 真实 Electron：几何契约 + 真实导航 + ref 点击 + 截图 + 圆角卡片 + 面板选择下拉 + 默认允许 + 自动展示 + agent 回合
+SAILOR_BROWSER_SCREENSHOT=1 node tests/browser-electron-smoke.mjs   # 额外把窗口摆到屏幕上抓一张窗口级截图
 ```
 
-证据目录 `.agent-harness/evidence/sidebar-browser/`：`app-window.png` 是面板外壳（工具条 + tab 条；原生视图不参与 `capturePage`，所以内容区是空的），`browser-page.png` 是被点击后的页面截图，`sidebar-browser-report.json` 是逐项断言结果。
+证据目录 `.agent-harness/evidence/sidebar-browser/`：`app-window.png` 是面板外壳（工具条 + tab 条；原生视图不参与 `capturePage`，所以内容区是空的），`browser-page.png` 是被点击后的页面截图，`panel-picker-left.png` 是面板选择下拉展开时的整窗截图（菜单落在对话区，浏览器内容区仍然可见），`sidebar-browser-report.json` 是逐项断言结果。
+
+原生子视图不参与 `capturePage`，圆角、裁剪这类原生侧外观只能用窗口级截图看：`SAILOR_BROWSER_SCREENSHOT=1` 会把窗口摆到屏幕左上角、用深色 fixture 页面抓一张 `native-view.png`（需要屏幕录制权限），默认关闭。本次就是靠它确认圆角真的切出来了（两个上角都是半径 10px 的圆弧）。
 
 ## 新增一个面板的步骤
 
