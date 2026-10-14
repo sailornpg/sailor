@@ -36,10 +36,13 @@ export const panelDescriptors: readonly PanelDescriptor[] = [
     title: '浏览器',
     icon: Globe,
     shortcut: { key: 't', meta: true },
-    scope: 'global',
+    scope: 'project',
     multiplicity: 'single',
-    availability: () => ({ available: true }),
-    load: () => import('@/components/panels/BrowserPreviewPanel'),
+    availability: (context) =>
+      context.projectId
+        ? { available: true }
+        : { available: false, reason: '先关联一个工作区，再使用浏览器。' },
+    load: () => import('@/components/panels/BrowserPanel'),
   },
   {
     id: 'files',

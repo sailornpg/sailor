@@ -9,6 +9,7 @@ import type { UIMessage, UIMessageChunk } from 'ai'
 import { askUserInteractionResponseSchema, type AskUserInteractionResponse } from './askUser.js'
 import type { PiProjectedEvent } from './piDisplayEvent.js'
 import type { ChatFileChangeSummary, FileChange, TurnFileChangeSummary } from './fileReview.js'
+import type { BrowserSiteState, BrowserTabBounds } from './browser.js'
 
 export { askUserInteractionResponseSchema }
 export type { AskUserInteractionResponse }
@@ -265,6 +266,27 @@ export interface SailorApi {
   }
   /** User-driven host terminal; the agent runtime never receives this surface. */
   terminal: TerminalApi
+  /** Sidebar browser. Renderer reports geometry and user intent; main owns the views. */
+  browser: {
+    attach(input: { projectId: string }): Promise<BrowserSiteState>
+    detach(input: { projectId: string }): Promise<void>
+    setBounds(input: { projectId: string; bounds: BrowserTabBounds | null }): Promise<void>
+    navigate(input: { projectId: string; input: string }): Promise<BrowserSiteState>
+    history(input: { projectId: string; direction: 'back' | 'forward' }): Promise<BrowserSiteState>
+    reload(input: { projectId: string }): Promise<BrowserSiteState>
+    stop(input: { projectId: string }): Promise<BrowserSiteState>
+    newTab(input: { projectId: string; url?: string }): Promise<BrowserSiteState>
+    closeTab(input: { projectId: string; tabId: string }): Promise<BrowserSiteState>
+    activateTab(input: { projectId: string; tabId: string }): Promise<BrowserSiteState>
+    /** Reads a capture the main process saved; renderer never gets a filesystem path. */
+    readCapture(input: { chatId: string; captureId: string }): Promise<string>
+    subscribe(listener: (state: BrowserSiteState) => void): () => void
+    /**
+     * Agent 开始用浏览器时，main 会通知 renderer 打开浏览器面板，
+     * 让用户始终看得到被操作的那个页面。
+     */
+    onReveal(listener: (payload: { projectId: string }) => void): () => void
+  }
 }
 
 export const IPC = {
@@ -308,4 +330,17 @@ export const IPC = {
   terminalResize: 'terminal:resize',
   terminalTerminate: 'terminal:terminate',
   terminalEvent: 'terminal:event',
+  browserAttach: 'browser:attach',
+  browserDetach: 'browser:detach',
+  browserSetBounds: 'browser:set-bounds',
+  browserNavigate: 'browser:navigate',
+  browserHistory: 'browser:history',
+  browserReload: 'browser:reload',
+  browserStop: 'browser:stop',
+  browserNewTab: 'browser:new-tab',
+  browserCloseTab: 'browser:close-tab',
+  browserActivateTab: 'browser:activate-tab',
+  browserReadCapture: 'browser:read-capture',
+  browserState: 'browser:state',
+  browserReveal: 'browser:reveal',
 } as const

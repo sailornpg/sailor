@@ -8,6 +8,7 @@ import { getAgentErrorMessage } from './getAgentErrorMessage.js'
 import { RunMessageWriter } from './runMessageWriter.js'
 import type { WriteApprovalResponse } from '../../shared/contracts.js'
 import type { AskUserInteractionResponse } from './pi/AskUserInteraction.js'
+import type { BrowserAgentAccess } from '../browser/BrowserRegistry.js'
 
 type EventSink = (runId: string, event: AgentRunEvent) => void
 interface AgentServiceDependencies {
@@ -15,6 +16,8 @@ interface AgentServiceDependencies {
   piStorageDirectory: string
   onFileChange: (chatId: string) => void
   workspace: WorkspaceService
+  /** 侧边栏浏览器；未配置时浏览器工具不会注册。 */
+  browser: BrowserAgentAccess
   /** Test seam for the streamed-message persistence interval. */
   runPersistIntervalMs?: number
 }
@@ -35,7 +38,12 @@ export class AgentService {
     this.runner =
       dependencies.runner ??
       (dependencies.piStorageDirectory
-        ? new PiRunner(dependencies.piStorageDirectory, undefined, dependencies.onFileChange)
+        ? new PiRunner(
+            dependencies.piStorageDirectory,
+            undefined,
+            dependencies.onFileChange,
+            dependencies.browser,
+          )
         : undefined)
     this.workspace = dependencies.workspace
     this.runPersistIntervalMs = dependencies.runPersistIntervalMs

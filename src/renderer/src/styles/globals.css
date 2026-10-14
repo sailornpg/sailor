@@ -1168,32 +1168,178 @@ kbd {
   font-size: 12px;
   line-height: 1.7;
 }
-.panel-browser {
+.panel-web {
   display: flex;
   height: 100%;
   min-height: 0;
+  min-width: 0;
   flex-direction: column;
+  container-type: inline-size;
 }
-.panel-browser-body {
+.panel-web-toolbar {
   display: flex;
-  height: 100%;
-  min-height: 9rem;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  overflow: auto;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
 }
-.panel-browser-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 550;
+.panel-web-toolbar > button {
+  flex-shrink: 0;
 }
-.panel-browser-content {
+.panel-web-address {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-field);
+  height: 26px;
+}
+.panel-web-address input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12px;
+  outline: none;
+}
+.panel-web-address[data-loading='true'] .panel-web-address-status {
+  color: var(--text-secondary);
+}
+.panel-web-address-status {
+  flex: 0 0 auto;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.panel-web-tabs {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+/* 列表滚动，新建按钮在任何宽度都留在原位。 */
+.panel-web-tabs-scroll {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.panel-web-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+@container (max-width: 400px) {
+  .panel-web-tab-label {
+    max-width: 64px;
+  }
+}
+.panel-web-tab {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  border-radius: 6px;
+}
+.panel-web-tab[data-active='true'] {
+  background: var(--surface-active);
+}
+.panel-web-tab:hover {
+  background: var(--surface-hover);
+}
+.panel-web-tab[data-active='true']:hover {
+  background: var(--surface-active);
+}
+.panel-web-tab-trigger {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+}
+.panel-web-tab[data-active='true'] .panel-web-tab-trigger {
+  color: var(--foreground);
+}
+.panel-web-tab-label {
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.panel-web-tab-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  background: var(--text-faint);
+}
+.panel-web-tab-dot[data-loading='true'] {
+  background: var(--success);
+}
+.panel-web-tab-close {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 3px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.panel-web-tab-close:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+/* 浏览器视图是 main 侧的原生浮层，这里只负责占位与上报几何。 */
+.panel-web-surface {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  background: var(--surface-subtle);
+}
+.panel-web-surface[data-hidden='true'] {
+  display: none;
+}
+.panel-web-error {
   margin: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--destructive);
   font-size: 12px;
   line-height: 1.7;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
+}
+.panel-web-empty {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+.panel-web-agent {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
 }
 .panel-picker {
   width: 272px;

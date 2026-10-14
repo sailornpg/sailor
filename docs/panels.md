@@ -79,13 +79,13 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 
 ## 面板的边界与成本
 
-| 面板               | 数据来源                                                                                                                     | 新增依赖                                         | 安全边界                                                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| 审查 review        | 主进程 `ChatFileChangeJournal` 按 chatId/turnId 持久化 Pi 文件变更；提供 chat summary、turn summary/detail 和 changed 窄 IPC | `diff`（main）；官方 CodeDiff copied source      | 只读；默认审查当前 assistant turn，历史卡片可定位对应 turn；`host_exec` 与用户终端不计入文件数，执行后显示覆盖缺口 |
-| 文件 files         | 主进程只读文件能力，preload 无通用 fs                                                                                        | 无                                               | 复用 `WorkspaceToolScope` 的路径/敏感文件/字节上限校验                                                             |
-| 终端 terminal      | 主进程 `node-pty`（当前用户权限，非 OS 沙盒）                                                                                | `node-pty` + `@xterm/xterm` + `@xterm/addon-fit` | 用户手动命令通道：AI 不注册、不订阅、输出不入模；窄 IPC 只接受主进程签发的 projectId/sessionId                     |
-| 浏览器 browser     | 现有 `WebPreview` 渲染结果                                                                                                   | 完整浏览器需 `webviewTag` 或 `WebContentsView`   | `webviewTag` 会削弱当前 `sandbox: true` 边界                                                                       |
-| 侧边聊天 side-chat | `WorkspaceChats` 每 chatId 稳定实例，主进程已支持并发 run                                                                    | 无                                               | 同一 chat 不得同时挂两个 surface                                                                                   |
+| 面板               | 数据来源                                                                                                                     | 新增依赖                                                            | 安全边界                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 审查 review        | 主进程 `ChatFileChangeJournal` 按 chatId/turnId 持久化 Pi 文件变更；提供 chat summary、turn summary/detail 和 changed 窄 IPC | `diff`（main）；官方 CodeDiff copied source                         | 只读；默认审查当前 assistant turn，历史卡片可定位对应 turn；`host_exec` 与用户终端不计入文件数，执行后显示覆盖缺口                |
+| 文件 files         | 主进程只读文件能力，preload 无通用 fs                                                                                        | 无                                                                  | 复用 `WorkspaceToolScope` 的路径/敏感文件/字节上限校验                                                                            |
+| 终端 terminal      | 主进程 `node-pty`（当前用户权限，非 OS 沙盒）                                                                                | `node-pty` + `@xterm/xterm` + `@xterm/addon-fit`                    | 用户手动命令通道：AI 不注册、不订阅、输出不入模；窄 IPC 只接受主进程签发的 projectId/sessionId                                    |
+| 浏览器 browser     | 主进程 `BrowserRegistry`（每工作区一个站点、每个站点最多 4 个标签页）；面板只上报几何与用户意图                              | 无（用 Electron 自带的 `WebContentsView` + `webContents.debugger`） | 独立 `persist:sailor-browser` 分区、无 preload、只允许 http/https/about、一律拒绝站点权限申请；Agent 默认可操作，无需用户先开面板 |
+| 侧边聊天 side-chat | `WorkspaceChats` 每 chatId 稳定实例，主进程已支持并发 run                                                                    | 无                                                                  | 同一 chat 不得同时挂两个 surface                                                                                                  |
 
 ## 终端面板（feat-workspace-terminal）
 
@@ -155,12 +155,34 @@ reducer action：`open` / `close` / `activate` / `setVisible` / `setWidth`（后
 - 注册表、布局 reducer、版本化持久化、快捷键表、可用性解析。
 - `PanelDock` / `PanelMenu` / `PanelTabStrip` / `PanelHost`，替换硬编码的 `InspectorPanel`。
 - 功能入口只有两条、互不重复：有 tab 时由 tab 条右侧的 `+` 下拉（`PanelPickerMenu` / `PanelAddButton`，注册表驱动）新增；没有 tab 时整份功能列表垂直居中作为 dock 内容。两者都可点选打开并激活，不可用项保留条目与真实原因。
-- 注册五个面板：审查、文件、终端、浏览器（承载现有只读预览）、侧边聊天；文件、终端、浏览器为真实实现，审查与侧边聊天仍为带真实原因的占位。
+- 注册五个面板：审查、文件、终端、浏览器、侧边聊天；五个都是真实实现（浏览器已从只读预览升级为真实浏览器，见下节）。
 - 终端面板按 project scope 绑定工作区，走独立的窄 IPC（见下节）；其余面板不读取终端状态。
 - 退役 `sailor:web-preview` 全局事件，改为类型化面板打开动作。
 - `ChatWorkspace` 顶栏只保留一个面板可见性开关（`PanelToolbar`），不再与选择菜单重复。
 
 不做（后续 feature）：git diff、只读文件树、第二 chat surface、分屏、拖拽排序、per-chat 布局持久化。（终端已从「只读执行记录」升级为真实交互终端，见上节。）
+
+## 浏览器面板（feat-sidebar-browser-agent-control）
+
+「浏览器」是 project scope 的真实浏览器，不是预览卡片：main 用 `WebContentsView` 持有页面，renderer 只测量并上报内容区矩形。
+
+- 工具条：后退 / 前进 / 刷新（加载中变停止）/ 地址栏（回车导航，Esc 还原）；下一行是标签页条与 `+`。
+- 内容区是一个空占位 div，`ResizeObserver` + 窗口 resize + 首帧 rAF 上报几何；面板切走、应用级对话框出现、`document.hidden` 时上报 `null`，main 立刻把原生视图摘下来（原生浮层永远画在页面之上，不摘会遮住对话框）。
+- 打开面板 = 要一个浏览器：没有标签页时自动补一个 `about:blank`；切面板 tab 只把视图摘下来，页面与登录态留在 main（站点按 LRU 最多保留 4 个工作区）。
+- 地址校验两处都做：地址栏提交时用 `browserTargetFromInput`（缺协议补 https、回环补 http），main 在 `loadURL` 前再用 `isAllowedBrowserUrl` 拦一次；`file:` / `javascript:` / `data:` / `devtools:` 一律拒绝。
+- 抓取类工具（`fetch_page`）仍通过 `requestPanelOpen({ panelId: 'browser', data: { preview } })` 打开面板，现在会**真的导航**到那条 URL，而不是渲染一段文本。
+- 自动展示：Agent 一调用 `browser_*`，main 就发 `browser:reveal`，AppShell 用既有的 `requestPanelOpen({ panelId: 'browser' })` 通道把右侧栏打开并切到浏览器面板（只在该工作区就是当前工作区时响应）。用户自己点地址栏、切 tab 不会触发这条信号。
+- 默认允许：没有授权开关。模型第一次调用 `browser_*` 时，main 若发现该工作区还没有站点或标签页，会自己建一个空白标签页再执行；用户不需要先开面板、也不需要点任何开关。页面只在面板打开时可见（几何由 renderer 上报），面板一关原生视图就被摘掉，因此不存在"看不到的后台浏览"——用户随时能在面板里看到同一个页面并接管。失败只发生在"工作区无效 / 站点建不出来 / 标签页数打满"，都返回结构化错误与恢复指引。
+- 未做（后续 feature）：把浏览器写操作接进逐次审批（需要改 `WriteApprovalResponse.toolName` 契约）、截图回灌给模型、站点白名单、`browser_network`。
+
+### 浏览器面板的验收
+
+```bash
+node --test tests/browser-panel.test.ts tests/browser-ipc.test.ts tests/browser-site.test.ts
+node tests/browser-electron-smoke.mjs   # 真实 Electron：几何契约 + 真实导航 + ref 点击 + 截图 + 默认允许 + 自动展示 + agent 回合
+```
+
+证据目录 `.agent-harness/evidence/sidebar-browser/`：`app-window.png` 是面板外壳（工具条 + tab 条；原生视图不参与 `capturePage`，所以内容区是空的），`browser-page.png` 是被点击后的页面截图，`sidebar-browser-report.json` 是逐项断言结果。
 
 ## 新增一个面板的步骤
 

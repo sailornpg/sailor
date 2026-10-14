@@ -14,6 +14,10 @@ import { ChatFileReviewService } from '../workspaces/ChatFileReviewService.js'
 import { TerminalService } from '../terminal/TerminalService.js'
 import { TerminalIpcHandler, type TerminalSender } from '../terminal/TerminalIpcHandler.js'
 import { createNodePtyAdapter } from '../terminal/NodePtyAdapter.js'
+import { BrowserCaptures } from '../browser/BrowserCaptures.js'
+import { BrowserRegistry } from '../browser/BrowserRegistry.js'
+import { BrowserIpcHandler, type BrowserSender } from '../browser/BrowserIpcHandler.js'
+import { createElectronBrowserTabFactory } from '../browser/ElectronBrowserTabs.js'
 import {
   IPC,
   type AgentRunRequest,
@@ -173,6 +177,35 @@ export function registerIpc(window: BrowserWindow): () => void {
     const value = workspaceFilesReadSchema.parse(input)
     return workspaceFiles.read(value.projectId, value.path)
   })
+  const browserCaptures = new BrowserCaptures(app.getPath('userData'))
+  const browserSender = (contents: Electron.WebContents): BrowserSender => ({
+    id: contents.id,
+    isDestroyed: () => contents.isDestroyed(),
+    send: (payload) => {
+      if (!contents.isDestroyed()) contents.send(IPC.browserState, payload)
+    },
+  })
+  const browser = new BrowserRegistry(
+    {
+      createFactory: () => createElectronBrowserTabFactory(window),
+      resolveProjectRoot: (projectId) => workspaces.resolveProjectRoot(projectId),
+      onChange: (projectId) => {
+        if (window.isDestroyed()) return
+        browserSender(window.webContents).send(browser.snapshot(projectId))
+      },
+      // Agent 一动浏览器就请 renderer 打开右侧栏并切到浏览器面板。
+      onAgentActivity: (projectId) => {
+        if (window.isDestroyed()) return
+        window.webContents.send(IPC.browserReveal, { projectId })
+      },
+    },
+    browserCaptures,
+  )
+  const browserIpc = new BrowserIpcHandler({
+    registry: browser,
+    // Only the window created here may place a browser view over the app.
+    isTrustedSender: (sender) => !window.isDestroyed() && sender.id === window.webContents.id,
+  })
   const agent = new AgentService(
     (runId, event) => {
       if (!window.isDestroyed()) window.webContents.send(IPC.agentEvent, { runId, event })
@@ -182,6 +215,7 @@ export function registerIpc(window: BrowserWindow): () => void {
       workspace: workspaces,
       piStorageDirectory,
       onFileChange: fileChangesUpdated,
+      browser,
     },
   )
   const modelCatalog = new ProviderModelCatalog(settings)
@@ -287,11 +321,45 @@ export function registerIpc(window: BrowserWindow): () => void {
   ipcMain.handle(IPC.terminalTerminate, (event, input: unknown) =>
     terminalIpc.terminate(terminalSender(event.sender), input),
   )
+  ipcMain.handle(IPC.browserAttach, (event, input: unknown) =>
+    browserIpc.attach(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserDetach, (event, input: unknown) =>
+    browserIpc.detach(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserSetBounds, (event, input: unknown) =>
+    browserIpc.setBounds(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserNavigate, (event, input: unknown) =>
+    browserIpc.navigate(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserHistory, (event, input: unknown) =>
+    browserIpc.history(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserReload, (event, input: unknown) =>
+    browserIpc.reload(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserStop, (event, input: unknown) =>
+    browserIpc.stop(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserNewTab, (event, input: unknown) =>
+    browserIpc.newTab(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserCloseTab, (event, input: unknown) =>
+    browserIpc.closeTab(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserActivateTab, (event, input: unknown) =>
+    browserIpc.activateTab(browserSender(event.sender), input),
+  )
+  ipcMain.handle(IPC.browserReadCapture, (event, input: unknown) =>
+    browserIpc.readCapture(browserSender(event.sender), input),
+  )
 
   return () => {
     agent.abortAll()
     terminalIpc.dispose()
     void terminals.disposeAll()
+    browser.disposeAll()
     for (const channel of [
       IPC.workspaceManageChat,
       IPC.workspaceRetrySave,
@@ -329,5 +397,16 @@ export function registerIpc(window: BrowserWindow): () => void {
     ipcMain.removeHandler(IPC.terminalWrite)
     ipcMain.removeHandler(IPC.terminalResize)
     ipcMain.removeHandler(IPC.terminalTerminate)
+    ipcMain.removeHandler(IPC.browserAttach)
+    ipcMain.removeHandler(IPC.browserDetach)
+    ipcMain.removeHandler(IPC.browserSetBounds)
+    ipcMain.removeHandler(IPC.browserNavigate)
+    ipcMain.removeHandler(IPC.browserHistory)
+    ipcMain.removeHandler(IPC.browserReload)
+    ipcMain.removeHandler(IPC.browserStop)
+    ipcMain.removeHandler(IPC.browserNewTab)
+    ipcMain.removeHandler(IPC.browserCloseTab)
+    ipcMain.removeHandler(IPC.browserActivateTab)
+    ipcMain.removeHandler(IPC.browserReadCapture)
   }
 }

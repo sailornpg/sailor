@@ -14,10 +14,15 @@ import { ParticleSailboat } from '@/components/home/ParticleSailboat'
 import { SIDEBAR_WIDTH_MAX, SIDEBAR_WIDTH_MIN } from '@/lib/layout/uiLayout'
 import { useUiLayout } from '@/lib/layout/useUiLayout'
 import { panelDescriptors } from '@/lib/panels/descriptors'
-import { subscribePanelRequests, type PanelRuntimeData } from '@/lib/panels/panelData'
+import {
+  requestPanelOpen,
+  subscribePanelRequests,
+  type PanelRuntimeData,
+} from '@/lib/panels/panelData'
 import { createPanelRegistry } from '@/lib/panels/registry'
 import { detectPanelPlatform } from '@/lib/panels/shortcuts'
 import { usePanelLayout, usePanelShortcuts } from '@/lib/panels/usePanelLayout'
+import { shouldRevealBrowserFor } from '@/lib/panels/browserSurface'
 import { PaneResizer } from './PaneResizer'
 import { PanelDock } from './PanelDock'
 import { PanelToolbar } from './PanelToolbar'
@@ -130,6 +135,18 @@ export function AppShell() {
         panels.open(request.panelId)
       }),
     [panels.open],
+  )
+  // Agent 一开始用浏览器，就把右侧栏打开并切到浏览器面板：用户必须看得到它在动哪个页面。
+  const activeProjectId = project?.id ?? null
+  const activeProjectIdRef = useRef(activeProjectId)
+  activeProjectIdRef.current = activeProjectId
+  useEffect(
+    () =>
+      window.sailor.browser.onReveal(({ projectId }) => {
+        if (!shouldRevealBrowserFor(projectId, activeProjectIdRef.current)) return
+        requestPanelOpen({ panelId: 'browser' })
+      }),
+    [],
   )
   const openPanel = (panelId: string) => {
     panels.open(panelId)

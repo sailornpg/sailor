@@ -275,41 +275,42 @@ test('隐藏状态与空布局不渲染 dock 外壳', async () => {
   }
 })
 
-test('浏览器面板渲染真实预览，缺数据时给出真实空态', async () => {
+test('浏览器面板按工作区可用，未关联工作区时给出真实原因', async () => {
   const vite = await createServer({
     logLevel: 'silent',
     server: { middlewareMode: true },
     resolve: { alias },
   })
   try {
-    const { default: BrowserPreviewPanel } = await vite.ssrLoadModule(
-      '/src/renderer/src/components/panels/BrowserPreviewPanel.tsx',
+    const { default: BrowserPanel } = await vite.ssrLoadModule(
+      '/src/renderer/src/components/panels/BrowserPanel.tsx',
     )
     const props = {
       instanceId: 'browser',
       panelId: 'browser',
-      scopeId: '',
+      scopeId: 'project-1',
       context: { chatId: null, projectId: null },
+      data: {},
     }
 
-    const withPreview = renderToStaticMarkup(
-      React.createElement(BrowserPreviewPanel, {
+    const noProject = renderToStaticMarkup(React.createElement(BrowserPanel, props))
+    assert.match(noProject, /先关联一个工作区/)
+    assert.doesNotMatch(noProject, /panel-web-surface/)
+
+    const withProject = renderToStaticMarkup(
+      React.createElement(BrowserPanel, {
         ...props,
-        data: {
-          preview: { url: 'https://example.com/docs', content: '抓取到的正文', title: '示例页面' },
-        },
+        context: { chatId: 'chat-1', projectId: 'project-1' },
       }),
     )
-    assert.match(withPreview, /data-slot="web-preview"/)
-    assert.match(withPreview, /example\.com/)
-    assert.match(withPreview, /示例页面/)
-    assert.match(withPreview, /抓取到的正文/)
-
-    const withoutPreview = renderToStaticMarkup(
-      React.createElement(BrowserPreviewPanel, { ...props, data: {} }),
-    )
-    assert.match(withoutPreview, /还没有可渲染的预览内容/)
-    assert.doesNotMatch(withoutPreview, /web-preview/)
+    // 工具条、tab 条与"只上报几何"的占位区都在；没有活动标签页时占位区不显示。
+    assert.match(withProject, /panel-web-toolbar/)
+    assert.match(withProject, /panel-web-tabs/)
+    assert.match(withProject, /panel-web-surface/)
+    assert.match(withProject, /data-hidden="true"/)
+    assert.match(withProject, /aria-label="地址"/)
+    // 浏览器默认允许 Agent 操作，面板上不再有授权开关。
+    assert.doesNotMatch(withProject, /允许 Agent 操作/)
   } finally {
     await vite.close()
   }

@@ -22,6 +22,7 @@ import type {
   TerminalSessionInput,
   TerminalWriteInput,
 } from '@shared/terminal.js'
+import type { BrowserSiteState } from '@shared/browser.js'
 
 const api: SailorApi = {
   app: {
@@ -106,6 +107,31 @@ const api: SailorApi = {
         listener(payload)
       ipcRenderer.on(IPC.terminalEvent, handler)
       return () => ipcRenderer.removeListener(IPC.terminalEvent, handler)
+    },
+  },
+  browser: {
+    attach: (input) => ipcRenderer.invoke(IPC.browserAttach, input),
+    detach: (input) => ipcRenderer.invoke(IPC.browserDetach, input),
+    setBounds: (input) => ipcRenderer.invoke(IPC.browserSetBounds, input),
+    navigate: (input) => ipcRenderer.invoke(IPC.browserNavigate, input),
+    history: (input) => ipcRenderer.invoke(IPC.browserHistory, input),
+    reload: (input) => ipcRenderer.invoke(IPC.browserReload, input),
+    stop: (input) => ipcRenderer.invoke(IPC.browserStop, input),
+    newTab: (input) => ipcRenderer.invoke(IPC.browserNewTab, input),
+    closeTab: (input) => ipcRenderer.invoke(IPC.browserCloseTab, input),
+    activateTab: (input) => ipcRenderer.invoke(IPC.browserActivateTab, input),
+    readCapture: (input) => ipcRenderer.invoke(IPC.browserReadCapture, input),
+    subscribe: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, state: BrowserSiteState) =>
+        listener(state)
+      ipcRenderer.on(IPC.browserState, handler)
+      return () => ipcRenderer.removeListener(IPC.browserState, handler)
+    },
+    onReveal: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: { projectId: string }) =>
+        listener(payload)
+      ipcRenderer.on(IPC.browserReveal, handler)
+      return () => ipcRenderer.removeListener(IPC.browserReveal, handler)
     },
   },
 }

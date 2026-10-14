@@ -46,6 +46,8 @@ import {
 import { measureContextPayload, type ContextPayloadMeasure } from './contextPayload.js'
 import { HostCommandExecutor } from '../host/HostCommandExecutor.js'
 import { createHostExecTool, hostExecApprovalFor, HOST_EXEC_TOOL } from '../host/hostExecTool.js'
+import { createBrowserTools } from '../../browser/browserTools.js'
+import type { BrowserAgentAccess } from '../../browser/BrowserRegistry.js'
 
 /**
  * Pi 看到的系统提示词。payload 测量与 agent 必须共用这一份，否则卡片里的
@@ -107,6 +109,7 @@ export class PiRunner implements AgentRunner {
     await this.storage.delete(chatId)
   }
   private readonly storage: PiStorage
+  private readonly browser?: BrowserAgentAccess
   private readonly hostCommands: Pick<HostCommandExecutor, 'run'>
   private readonly askUsers = new AskUserInteractionStore()
   private readonly approvals = new Map<
@@ -161,9 +164,11 @@ export class PiRunner implements AgentRunner {
     directory: string,
     hostCommands: Pick<HostCommandExecutor, 'run'> = new HostCommandExecutor(),
     onFileChange: (chatId: string) => void = () => {},
+    browser?: BrowserAgentAccess,
   ) {
     this.storage = new PiStorage(directory, onFileChange)
     this.hostCommands = hostCommands
+    this.browser = browser
   }
 
   private async createTelemetry() {
@@ -291,6 +296,24 @@ export class PiRunner implements AgentRunner {
                 .markHostExec(request.chatId),
           })
         : undefined
+    // 浏览器工具只在「有工作区 + 会话不是侧聊 + Agent 运行时有浏览器能力」时注册。
+    const browserTools =
+      context && !options.isSideChat && this.browser
+        ? createBrowserTools({
+            access: this.browser,
+            projectId: context.projectId,
+            chatId: request.chatId,
+          })
+        : {}
+    const instructions = `${
+      options.isSideChat
+        ? `${SAILOR_INSTRUCTIONS} This is a read-only side chat. Do not modify workspace files or run shell commands.`
+        : SAILOR_INSTRUCTIONS
+    }${
+      Object.keys(browserTools).length > 0
+        ? ' 用户打开了侧边栏浏览器并允许你操作它。浏览器工具都以 browser_ 开头：先 browser_read_page 拿到 ref 再点击或输入，不要凭猜测操作；不要触发 alert/confirm/prompt 这类模态框；同一个动作连续失败 2-3 次就停下来问用户。'
+        : ''
+    }`
     const agent = new HarnessAgent({
       harness: createSailorPi({
         ...configured.settings,
@@ -333,6 +356,7 @@ export class PiRunner implements AgentRunner {
         ...webSearch.tools,
         ...readDocument,
         ...(hostExec ?? {}),
+        ...browserTools,
         ...createAskUserTool({
           store: this.askUsers,
           chatId: request.chatId,
@@ -367,9 +391,7 @@ export class PiRunner implements AgentRunner {
         : {}),
       telemetry,
       sandboxConfig: { workDir: 'workspace' },
-      instructions: options.isSideChat
-        ? `${SAILOR_INSTRUCTIONS} This is a read-only side chat. Do not modify workspace files or run shell commands.`
-        : SAILOR_INSTRUCTIONS,
+      instructions,
     })
     let session: HarnessAgentSession | undefined
     let finishChunk: UIMessageChunk | undefined
@@ -415,7 +437,7 @@ export class PiRunner implements AgentRunner {
       // 测量口径以最终 prompt 为准：它已经过文档附件提示替换与旧会话文本导入，
       // 与真正交给 harness 的内容一致。
       payload = measureContextPayload({
-        instructions: SAILOR_INSTRUCTIONS,
+        instructions,
         skills,
         tools: agent.tools,
         messages: prompt,

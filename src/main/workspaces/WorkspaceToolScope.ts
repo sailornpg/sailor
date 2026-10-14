@@ -216,6 +216,8 @@ export class WorkspaceToolScope {
 export interface WorkspaceToolContext {
   chatId: string
   runId: string
+  /** 会话所属工作区；浏览器面板与 Agent 授权都按它绑定。 */
+  projectId: string
   rootPath: string
   scope: WorkspaceToolScope
   signal: AbortSignal

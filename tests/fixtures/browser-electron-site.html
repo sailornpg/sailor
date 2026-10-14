@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fixture 首页</title>
+  </head>
+  <body>
+    <h1>Fixture 首页</h1>
+    <button id="action" type="button">点我</button>
+    <p id="result">尚未点击</p>
+    <script>
+      document.getElementById('action').addEventListener('click', () => {
+        document.getElementById('result').textContent = '已点击'
+        document.title = 'Fixture 已点击'
+      })
+    </script>
+  </body>
+</html>

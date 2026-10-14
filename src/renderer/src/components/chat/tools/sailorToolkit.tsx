@@ -6,6 +6,7 @@ import {
 import { StructuredToolFallback } from './StructuredToolFallback'
 import { SailorToolCall, toolCallNeedsFallback } from './SailorToolCall'
 import { PiLegacyCompactionRecord } from '../events/PiEventRecord'
+import { SailorBrowserTool } from './SailorBrowserTool'
 
 export { SailorToolCall }
 
@@ -26,6 +27,16 @@ export const sailorToolkit = defineToolkit({
   fetch_page: backendTool(SailorToolCall),
   ask_user: backendTool(AskUserMessage),
   update_plan: backendTool(UpdatePlanMessage),
+  browser_navigate: backendTool(SailorBrowserTool),
+  browser_read_page: backendTool(SailorBrowserTool),
+  browser_read_text: backendTool(SailorBrowserTool),
+  browser_click: backendTool(SailorBrowserTool),
+  browser_type: backendTool(SailorBrowserTool),
+  browser_key: backendTool(SailorBrowserTool),
+  browser_scroll: backendTool(SailorBrowserTool),
+  browser_screenshot: backendTool(SailorBrowserTool),
+  browser_console: backendTool(SailorBrowserTool),
+  browser_tabs: backendTool(SailorBrowserTool),
   compaction: { type: 'backend', display: 'standalone', render: PiLegacyCompactionRecord },
 })
 

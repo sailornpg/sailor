@@ -371,6 +371,7 @@ export class WorkspaceService {
     return {
       chatId: chat.id,
       runId,
+      projectId: project.id,
       rootPath: scope.rootPath,
       scope,
       signal,
