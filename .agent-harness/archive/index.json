@@ -573,6 +573,13 @@
       "status": "done",
       "archived_at": "2026-09-30T05:58:47.011Z",
       "archive_path": ".agent-harness/archive/fix-thread-scroll-arbitration"
+    },
+    {
+      "id": "feat-sidebar-browser-agent-control",
+      "title": "侧边栏浏览器与 Agent 浏览器操作",
+      "status": "done",
+      "archived_at": "2026-10-14T06:10:13.793Z",
+      "archive_path": ".agent-harness/archive/feat-sidebar-browser-agent-control"
     }
   ]
 }
